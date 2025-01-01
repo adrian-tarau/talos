@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>net.microfalx.maven</groupId>
+    <artifactId>maven</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <parent>
+        <groupId>net.microfalx</groupId>
+        <artifactId>pom</artifactId>
+        <version>1.0.3</version>
+    </parent>
+
+    <name>Maven</name>
+    <description>All things Maven related</description>
+    <url>https://github.com/adrian-tarau/maven</url>
+
+    <organization>
+        <name>Adrian Tarau</name>
+        <url>https://github.com/adrian-tarau</url>
+    </organization>
+
+    <scm>
+        <connection>scm:git:https://github.com/adrian-tarau/maven</connection>
+        <developerConnection>scm:git:https://github.com/adrian-tarau/maven</developerConnection>
+        <url>https://github.com/adrian-tarau/maven/tree/main</url>
+    </scm>
+
+    <modules>
+        <module>core</module>
+        <module>boot</module>
+        <module>docker</module>
+        <module>junit</module>
+        <module>plugin</module>
+        <module>demo</module>
+    </modules>
+
+    <issueManagement>
+        <system>github</system>
+        <url>https://github.com/adrian-tarau/maven/issues</url>
+    </issueManagement>
+
+    <inceptionYear>2024</inceptionYear>
+
+    <properties>
+        <bom.version>1.0.3</bom.version>
+        <lang.version>1.0.0-SNAPSHOT</lang.version>
+        <meters.version>1.0.0-SNAPSHOT</meters.version>
+        <maven.version>3.6.3</maven.version>
+        <maven-plugin-annotations.version>3.6.2</maven-plugin-annotations.version>
+
+        <jacoco.file>jacoco.exec</jacoco.file>
+        <jacoco.ut.dest>${project.build.directory}/${jacoco.file}</jacoco.ut.dest>
+        <jacoco.reports>${project.reporting.outputDirectory}/jacoco</jacoco.reports>
+    </properties>
+
+    <developers>
+        <developer>
+            <name>Adrian Tarau</name>
+            <email>adrian@tarau.net</email>
+        </developer>
+    </developers>
+
+    <dependencyManagement>
+        <dependencies>
+
+            <dependency>
+                <groupId>net.microfalx.bom</groupId>
+                <artifactId>bom-base</artifactId>
+                <version>${bom.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx.lang</groupId>
+                <artifactId>lang</artifactId>
+                <version>${lang.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx.metrics</groupId>
+                <artifactId>metrics</artifactId>
+                <version>${meters.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-plugin-api</artifactId>
+                <version>${maven.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-core</artifactId>
+                <version>${maven.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.maven.plugin-tools</groupId>
+                <artifactId>maven-plugin-annotations</artifactId>
+                <version>${maven-plugin-annotations.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+
+        <!-- Runtime -->
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.metrics</groupId>
+            <artifactId>metrics</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.lang</groupId>
+            <artifactId>lang</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-core</artifactId>
+        </dependency>
+
+        <!-- Tests -->
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-generator-annprocess</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+</project>

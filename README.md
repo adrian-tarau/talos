@@ -1,2 +1,3 @@
-# maven
-All things Maven
+# Maven
+
+Utilities and plugins for Java projects using Maven.
