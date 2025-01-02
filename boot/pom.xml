@@ -37,46 +37,6 @@
 
     <dependencies>
 
-        <dependency>
-            <groupId>net.microfalx.lang</groupId>
-            <artifactId>lang</artifactId>
-        </dependency>
-
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <minimizeJar>true</minimizeJar>
-                            <artifactSet>
-                                <includes>
-                                    <include>net.microfalx.lang:*</include>
-                                </includes>
-                            </artifactSet>
-                            <createDependencyReducedPom>false</createDependencyReducedPom>
-                            <relocations>
-                                <relocation>
-                                    <pattern>net.microfalx.lang</pattern>
-                                    <shadedPattern>net.microfalx.maven.boot.shaded.lang</shadedPattern>
-                                    <includes>
-                                        <include>net.microfalx.lang.*</include>
-                                    </includes>
-                                </relocation>
-                            </relocations>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 
 </project>

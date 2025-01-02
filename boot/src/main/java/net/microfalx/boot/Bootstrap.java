@@ -1,8 +1,5 @@
 package net.microfalx.boot;
 
-import net.microfalx.lang.ExceptionUtils;
-import net.microfalx.lang.StringUtils;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -14,7 +11,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
+import static net.microfalx.boot.BootstrapUtils.isNotEmpty;
+
 
 /**
  * The main class which bootstraps a Java application.
@@ -129,7 +127,7 @@ public class Bootstrap {
         try {
             Class<?> mainClass = Class.forName(mainClassName, false, classLoader);
             mainMethod = mainClass.getMethod("main", String[].class);
-            log("Application class '{0}' loaded successfully", mainClassName);
+            log("Application class ''{0}'' loaded successfully", mainClassName);
         } catch (ClassNotFoundException e) {
             log("Application class ''{0}'' does not exists", mainClassName);
         } catch (NoSuchMethodException e) {
@@ -152,7 +150,7 @@ public class Bootstrap {
             mainMethod.invoke(null, new Object[]{args});
             log("Application started successfully");
         } catch (Exception e) {
-            log("Failed to start the application, stack trace\n{0}", ExceptionUtils.getStackTrace(e));
+            log("Failed to start the application, stack trace\n{0}", BootstrapUtils.getStackTrace(e));
             abort();
         }
     }
@@ -161,7 +159,7 @@ public class Bootstrap {
         try {
             writer = new FileWriter(new File(applicationBuilder.getLogsDirectory(), "boot.log"));
         } catch (IOException e) {
-            System.err.println("Failed to create bootstrap logger, root cause: " + getRootCauseMessage(e));
+            System.err.println("Failed to create bootstrap logger, root cause: " + e.getMessage());
         }
     }
 
@@ -187,7 +185,7 @@ public class Bootstrap {
      */
     static boolean getSystemProperty(String name, boolean defaultValue) {
         String value = getSystemProperty(name);
-        if (StringUtils.isNotEmpty(value)) {
+        if (isNotEmpty(value)) {
             return Boolean.parseBoolean(value);
         }
         return defaultValue;

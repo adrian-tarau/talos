@@ -28,10 +28,25 @@ class BootstrapTest extends AbstractBootstrapTestCase {
                 .contains("does not have a main method");
     }
 
+    @Test
+    void failedMainMethod() {
+        bootstrap.start(new String[]{"net.microfalx.boot.BootstrapTest$FailedApplicationMain"});
+        Assertions.assertThat(bootstrap.getLog()).contains("Starting application")
+                .contains("loaded successfully")
+                .contains("Failed to start the application");
+    }
+
     public static class ApplicationMain {
 
         public static void main(String[] args) {
             System.out.println("Starting Application");
+        }
+    }
+
+    public static class FailedApplicationMain {
+
+        public static void main(String[] args) {
+            throw new IllegalStateException("Failed");
         }
     }
 

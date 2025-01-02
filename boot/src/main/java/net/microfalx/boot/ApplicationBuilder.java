@@ -11,9 +11,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
-import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.FormatterUtils.formatBytes;
-import static net.microfalx.lang.StringUtils.isEmpty;
+import static net.microfalx.boot.BootstrapUtils.isEmpty;
+import static net.microfalx.boot.BootstrapUtils.requireNonNull;
 
 /**
  * Builds the application class path based on files discovered in ~/lib directory.
@@ -82,7 +81,7 @@ public class ApplicationBuilder {
         Bootstrap.get().log("Build class path from ''{0}''", libDirectory.getAbsolutePath());
         if (jars != null) {
             long totalSize = Arrays.stream(jars).mapToLong(File::length).sum();
-            Bootstrap.get().log("Found {0} libraries, size {1}", jars.length, formatBytes(totalSize));
+            Bootstrap.get().log("Found {0} libraries, size {1}", jars.length, BootstrapUtils.formatBytes(totalSize));
             this.files.addAll(Arrays.asList(jars));
         }
     }
