@@ -2,6 +2,7 @@ package net.microfalx.maven.docker;
 
 import net.microfalx.lang.*;
 import net.microfalx.resource.ClassPathResource;
+import net.microfalx.resource.Resource;
 import org.apache.commons.io.FileUtils;
 import org.mandas.docker.client.DockerClient;
 import org.mandas.docker.client.ProgressHandler;
@@ -10,11 +11,12 @@ import org.mandas.docker.client.exceptions.DockerCertificateException;
 import org.mandas.docker.client.exceptions.DockerException;
 import org.mandas.docker.client.messages.ImageInfo;
 import org.mandas.docker.client.messages.ProgressMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -35,6 +37,13 @@ import static net.microfalx.lang.TimeUtils.toLocalDateTime;
  */
 public final class ImageBuilder extends NamedIdentityAware<String> {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ImageBuilder.class.getName());
+
+    public static final String DOMAIN_NAME = "microfalx";
+    public static final String GROUP_ID = "net.microfalx.maven";
+    public static final String ARTIFACT_ID_PREFIX = "maven-";
+    public static final String BOOT_ARTIFACT_ID = "maven-boot";
+
     private static final String RUN_CMD = "RUN set -eux && ";
     private static final String STAGING_PATH = "staging";
     private static final String DEFAULT_TAG = "latest";
@@ -51,7 +60,9 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     private final Map<String, String> environment = new LinkedHashMap<>();
     private String mainClass;
     private final List<String> arguments = new ArrayList<>();
-    private final List<File> libraries = new ArrayList<>();
+    private final List<Resource> libraries = new ArrayList<>();
+    private final Map<Resource, String> libraryNamespaces = new HashMap<>();
+    private String libraryNamespaceSeparator = "@";
     private String version = "1.0.0";
 
     private final StringBuilder builder = new StringBuilder();
@@ -174,22 +185,54 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
      *
      * @return a non-null instance
      */
-    public Collection<File> getLibraries() {
+    public Collection<Resource> getLibraries() {
         return unmodifiableCollection(libraries);
+    }
+
+    /**
+     * Returns the separator between namespace and the library name.
+     *
+     * @return a non-null instance
+     */
+    public String getLibraryNamespaceSeparator() {
+        return libraryNamespaceSeparator;
+    }
+
+    /**
+     * Changes the separator between namespace and the library name.
+     *
+     * @param libraryNamespaceSeparator the new separator
+     * @return self
+     */
+    public ImageBuilder setLibraryNamespaceSeparator(String libraryNamespaceSeparator) {
+        this.libraryNamespaceSeparator = libraryNamespaceSeparator;
+        return this;
     }
 
     /**
      * Adds a new library.
      *
-     * @param file the path to the library
+     * @param resource the resource for the library
      * @return self
      */
-    public ImageBuilder addLibrary(File file) {
-        requireNonNull(file);
-        if (file.isDirectory()) {
-            throw new IllegalArgumentException("Only files can be registered as libraries: " + file);
+    public ImageBuilder addLibrary(Resource resource) {
+        return addLibrary(resource, null);
+    }
+
+    /**
+     * Adds a new library.
+     *
+     * @param resource  the resource for the library
+     * @param namespace the namespace to be used when the library is deployed
+     * @return self
+     */
+    public ImageBuilder addLibrary(Resource resource, String namespace) {
+        requireNonNull(resource);
+        if (resource.isDirectory()) {
+            throw new IllegalArgumentException("Only files can be registered as libraries: " + resource);
         }
-        this.libraries.add(file);
+        libraries.add(resource);
+        if (StringUtils.isNotEmpty(namespace)) libraryNamespaces.put(resource, namespace);
         return this;
     }
 
@@ -412,6 +455,7 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     public Image build() {
         writeDescriptor();
         try (DockerClient client = createClient()) {
+            LOGGER.info("Build image '{}' using '{}'", getFullName(), client.getHost());
             String id;
             try {
                 id = client.build(workspaceDirectory.toPath(), getFullName(), dockerLogger, getBuildOptions());
@@ -504,7 +548,7 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     }
 
     private void appendAppEnv() {
-        if (!base && isNotEmpty(mainClass)) appendEnvironment("APP_MAIN_CLASS", mainClass);
+        if (isNotEmpty(mainClass)) appendEnvironment("APP_MAIN_CLASS", mainClass);
     }
 
     private void appendEntryPoint() {
@@ -536,9 +580,15 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
 
     private void appendAppLibs() throws IOException {
         File libDirectory = validateDirectoryExists(new File(stagingDirectory, "lib"));
-        for (File library : libraries) {
-            File target = new File(libDirectory, library.getName());
-            Files.copy(library.toPath(), target.toPath());
+        for (Resource library : libraries) {
+            String fileName = library.getFileName();
+            String namespace = libraryNamespaces.get(library);
+            if (DOMAIN_NAME.equalsIgnoreCase(namespace) && fileName.startsWith(ARTIFACT_ID_PREFIX)) {
+                fileName = fileName.substring(ARTIFACT_ID_PREFIX.length());
+            }
+            if (namespace != null) fileName = namespace + libraryNamespaceSeparator + fileName;
+            File target = new File(libDirectory, fileName);
+            Resource.file(target).copyFrom(library);
         }
     }
 
@@ -547,6 +597,7 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
         ClassPathResource.directory("boot").walk((root, child) -> {
             String path = removeStartSlash(child.getPath(root));
             if (child.isFile()) {
+                LOGGER.debug("Process library '{}'", path);
                 File target = validateFileExists(new File(stagingDirectory, path));
                 appendStream(getBufferedOutputStream(target), child.getInputStream());
             }

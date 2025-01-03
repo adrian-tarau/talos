@@ -2,6 +2,7 @@ package net.microfalx.maven.docker;
 
 import net.microfalx.lang.FileUtils;
 import net.microfalx.lang.StringUtils;
+import net.microfalx.resource.Resource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,7 +50,7 @@ class ImageBuilderTest {
     @Test
     void build() {
         builder.setMainClass("net.microfalx.maven.Test");
-        //addLibraries();
+        addLibraries();
         Image image = builder.build();
         assertNotNull(image);
         assertEquals("microfalx-base", image.getName());
@@ -63,7 +64,7 @@ class ImageBuilderTest {
         String libraries = System.getProperty("java.class.path");
         Arrays.stream(StringUtils.split(libraries, File.pathSeparator))
                 .map(File::new).filter(file -> !file.getName().contains("idea")).filter(File::isFile)
-                .forEach(file -> builder.addLibrary(file));
+                .forEach(file -> builder.addLibrary(Resource.file(file)));
     }
 
 }
