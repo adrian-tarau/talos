@@ -122,6 +122,7 @@ public class Bootstrap {
         } else {
             this.args = new String[0];
         }
+        getPidFile().delete();
         ClassLoader classLoader = new BootstrapClassLoader(applicationBuilder.getClassPath(), ClassLoader.getSystemClassLoader());
         Thread.currentThread().setContextClassLoader(classLoader);
         try {
@@ -148,7 +149,8 @@ public class Bootstrap {
         }
         try {
             mainMethod.invoke(null, new Object[]{args});
-            log("Application started successfully");
+            log("Application started successfully, PID=" + getPid());
+            writePid();
         } catch (Exception e) {
             log("Failed to start the application, stack trace\n{0}", BootstrapUtils.getStackTrace(e));
             abort();
@@ -165,6 +167,32 @@ public class Bootstrap {
 
     private void abort() {
         if (exitCode > 0) System.exit(exitCode);
+    }
+
+    /**
+     * Returns the file which holds the process PID.
+     *
+     * @return a non-null instance
+     */
+    private File getPidFile() {
+        return new File(applicationBuilder.getTmpDirectory(), ".pid");
+    }
+
+    /**
+     * Writes the PID to a file.
+     */
+    private void writePid() {
+        try {
+            try (Writer writer = new FileWriter(getPidFile())) {
+                writer.write(Long.toString(getPid()));
+            }
+        } catch (IOException e) {
+            log("Failed to write PID file, root cause: " + e.getMessage());
+        }
+    }
+
+    private long getPid() {
+        return ProcessHandle.current().pid();
     }
 
     /**

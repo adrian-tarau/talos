@@ -1,5 +1,6 @@
 package net.microfalx.boot;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
@@ -49,6 +50,38 @@ public class BootstrapUtils {
      */
     public static boolean isNotEmpty(CharSequence value) {
         return !isEmpty(value);
+    }
+
+    /**
+     * Validated the directory, creates the directory if it does not exist and fails if the directory cannot be created.
+     *
+     * @param directory the directory
+     * @return the directory, after validation
+     */
+    public static File validateDirectoryExists(File directory) {
+        requireNonNull(directory);
+        if (!directory.exists()) directory.mkdirs();
+        if (!directory.exists()) {
+            throwException(new IllegalStateException("Directory '" + directory.getAbsolutePath() + "' could not be created"));
+        }
+        return directory;
+    }
+
+    /**
+     * Rethrow a checked exception
+     *
+     * @param exception an exception
+     */
+    @SuppressWarnings("SameReturnValue")
+    public static <T> T throwException(Throwable exception) {
+        doThrowException(exception);
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <E extends Throwable> void doThrowException(Throwable exception) throws E {
+        requireNonNull(exception);
+        throw (E) exception;
     }
 
     /**

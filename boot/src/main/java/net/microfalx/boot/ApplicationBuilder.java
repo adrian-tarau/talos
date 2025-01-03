@@ -1,8 +1,5 @@
 package net.microfalx.boot;
 
-import net.microfalx.lang.ExceptionUtils;
-import net.microfalx.lang.StringUtils;
-
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -10,9 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
-import static net.microfalx.boot.BootstrapUtils.isEmpty;
-import static net.microfalx.boot.BootstrapUtils.requireNonNull;
-import static net.microfalx.lang.FileUtils.validateDirectoryExists;
+import static net.microfalx.boot.BootstrapUtils.*;
 
 /**
  * Builds the application class path based on files discovered in ~/lib directory.
@@ -23,6 +18,7 @@ public class ApplicationBuilder {
     private File home;
     private File libDirectory;
     private File logsDirectory;
+    private File tmpDirectory;
 
     public ApplicationBuilder() {
         initDirectories();
@@ -66,6 +62,15 @@ public class ApplicationBuilder {
     }
 
     /**
+     * Returns the temporary files directory.
+     *
+     * @return a non-null instance
+     */
+    public File getTmpDirectory() {
+        return tmpDirectory;
+    }
+
+    /**
      * Returns the class path of the application.
      *
      * @return a non-null instance
@@ -88,7 +93,7 @@ public class ApplicationBuilder {
 
     private void initDirectories() {
         String home = Bootstrap.getSystemProperty("home");
-        if (StringUtils.isNotEmpty(home)) {
+        if (isNotEmpty(home)) {
             updateHome(new File(home));
         } else {
             home = System.getenv("HOME");
@@ -109,6 +114,10 @@ public class ApplicationBuilder {
         if (!libDirectory.exists()) {
             throw new IllegalStateException("A directory with libraries (" + libDirectory + ") does not exist");
         }
+        tmpDirectory = new File(home, "tmp");
+        if (!tmpDirectory.exists()) {
+            throw new IllegalStateException("A directory for temporary files (" + tmpDirectory + ") does not exist");
+        }
         logsDirectory = new File(home, "logs");
         if (!logsDirectory.exists()) validateDirectoryExists(logsDirectory);
     }
@@ -117,7 +126,7 @@ public class ApplicationBuilder {
         try {
             return file.toURI().toURL();
         } catch (MalformedURLException e) {
-            return ExceptionUtils.throwException(e);
+            throw new BootstrapException(e);
         }
     }
 }

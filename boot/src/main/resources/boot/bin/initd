@@ -63,7 +63,7 @@ function getPid {
 }
 
 function setupBoot {
-    APP_BOOT_JAR=$(find "$APP_LIB" -name "boot-*.jar" | head -n 1)
+    APP_BOOT_JAR=$(find "$APP_LIB" -name "microfalx*boot*.jar" | head -n 1)
     APP_BOOT_CP="${APP_CONFIG}:${APP_BOOT_JAR}"
     APP_BOOT_OPTS+=" -cp $APP_BOOT_CP net.microfalx.boot.Bootstrap ${APP_MAIN_CLASS} $*"
 }
@@ -89,7 +89,7 @@ function setupJvmGc {
 
 function setupJvmFlags {
     JAVA_MODULE_OPENS="${JAVA_MODULE_OPENS:-"--add-opens java.base/jdk.internal.misc=ALL-UNNAMED --add-opens java.base/jdk.internal.loader=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.security=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.util.stream=ALL-UNNAMED --add-opens java.base/javax.net=ALL-UNNAMED --add-opens java.base/javax.net.ssl=ALL-UNNAMED --add-opens java.base/java.util.concurrent=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED --add-opens java.sql/java.sql=ALL-UNNAMED --add-opens java.xml/jdk.xml.internal=ALL-UNNAMED"}"
-    export JAVA_DEFAULT_OPTS="$JAVA_DEFAULT_OPTS -XX:ThreadPriorityPolicy=1 -XX:+UseThreadPriorities $JAVA_MODULE_OPENS"
+    export JAVA_DEFAULT_OPTS="$JAVA_DEFAULT_OPTS $JAVA_MODULE_OPENS"
 }
 
 function setupJvmMemory {
@@ -169,7 +169,7 @@ function profile {
     DUMP_FILE="$APP_TMP/profile-${DATE_MARKER}.txt"
     OPTIONS="$@"
     if [[ $OPTIONS == "" ]] ; then
-        OPTIONS="-d 10 -o flamegraph"
+        OPTIONS="-d 60 --all-user -o flamegraph"
         DUMP_FILE="profile-${DATE_MARKER}.html"
     fi
     OPTIONS+=" -f $DUMP_FILE"
@@ -184,22 +184,26 @@ function callJattach {
     DESC=$3
     getPid
     DATE_MARKER=`date "+%Y%m%d-%H%M%S"`
-    DUMP_FILE="$APP_TMP/${DAX_APP_ID}-${DATE_MARKER}.${EXT}"
-    echo "Dump process '$DAX_APP_NAME' $DESC to '$DUMP_FILE'"
+    DUMP_FILE="$APP_TMP/app-${DATE_MARKER}.${EXT}"
+    echo "Dump application $DESC to '$DUMP_FILE'"
     if [[ $COMMAND = 'dumpheap' ]] ; then
         $APP_HOME/bin/jattach $PID $COMMAND $DUMP_FILE
+        cat $COMMAND $DUMP_FILE
     elif [[ $COMMAND = 'native' ]] ; then
         $APP_HOME/bin/jattach $PID jcmd VM.native_memory > $DUMP_FILE
     elif [[ $COMMAND = 'showheap' ]] ; then
         $APP_HOME/bin/jattach $PID jcmd GC.heap_info > $DUMP_FILE
+        cat $COMMAND $DUMP_FILE
     elif [[ $COMMAND = 'vminternals' ]] ; then
         $APP_HOME/bin/jattach $PID jcmd VM.stringtable > $DUMP_FILE
         $APP_HOME/bin/jattach $PID jcmd VM.symboltable >> $DUMP_FILE
         $APP_HOME/bin/jattach $PID jcmd VM.systemdictionary >> $DUMP_FILE
     elif [[ $COMMAND = 'vminfo' ]] ; then
         $APP_HOME/bin/jattach $PID jcmd VM.info > $DUMP_FILE
+        cat $COMMAND $DUMP_FILE
     else
         $APP_HOME/bin/jattach $PID $COMMAND > $DUMP_FILE
+        cat $COMMAND $DUMP_FILE
     fi
 }
 
