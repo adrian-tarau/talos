@@ -72,6 +72,7 @@
         <meters.version>1.0.0-SNAPSHOT</meters.version>
         <maven.version>3.6.3</maven.version>
         <maven-plugin-annotations.version>3.6.2</maven-plugin-annotations.version>
+        <maven-common-artifact-filters.version>3.4.0</maven-common-artifact-filters.version>
 
         <jacoco.file>jacoco.exec</jacoco.file>
         <jacoco.ut.dest>${project.build.directory}/${jacoco.file}</jacoco.ut.dest>
@@ -91,6 +92,14 @@
             <dependency>
                 <groupId>net.microfalx.bom</groupId>
                 <artifactId>bom-base</artifactId>
+                <version>${bom.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx.bom</groupId>
+                <artifactId>bom-spring</artifactId>
                 <version>${bom.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
@@ -125,6 +134,13 @@
                 <groupId>org.apache.maven</groupId>
                 <artifactId>maven-core</artifactId>
                 <version>${maven.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.maven.shared</groupId>
+                <artifactId>maven-common-artifact-filters</artifactId>
+                <version>${maven-common-artifact-filters.version}</version>
                 <scope>provided</scope>
             </dependency>
 
