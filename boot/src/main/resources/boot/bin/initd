@@ -3,23 +3,24 @@
 # exit with message and status code
 function die {
   if [ $2 -ne 0 ]; then
-    print -u2 "\033[0;31m$1\033[0m"
+    echo -e "\033[0;31m$1\033[0m"
   else
-    print $1
+    echo $1
   fi
   exit $2
 }
 
 # prints a command in bold with some help text
 function printCommand {
-    print -u2 "\033[0;1m$1\033[0m\t\t         $2"
+    echo -e "\033[0;1m$1\033[0m\t\t         $2"
 }
 
 # Calculate the paths relative to the startup script
 BASEDIR=`dirname $0`
 PARENT_BASEDIR=`dirname $BASEDIR`
 
-export APP_HOME=$HOME
+export APP_HOME=${HOME}
+export APP_BIN=${APP_HOME}/bin
 export APP_CONFIG=${APP_HOME}/config
 export APP_LIB=${APP_HOME}/lib
 export APP_LIB_SCRIPT=${APP_LIB}/sh
@@ -27,16 +28,16 @@ export APP_LOGS=${APP_HOME}/logs
 export APP_TMP=${APP_HOME}/tmp
 export APP_VAR=${APP_VAR:-"/var${APP_HOME}"}
 
-export APP_JAVA_MAX_MEMORY=${APP_JAVA_MAX_MEMORY:-280}
-export APP_JAVA_MIN_MEMORY=${APP_JAVA_MIN_MEMORY:-240}
-export APP_JAVA_MAX_MEMORY_INITIAL=$APP_JAVA_MAX_MEMORY
-export APP_JAVA_MAX_METASPACE=${APP_JAVA_MAX_METASPACE:-160}
-export APP_JAVA_GC_THREADS=${APP_JAVA_GC_THREADS:-4}
-export APP_JAVA_GC_LOG_ENABLED=${APP_JAVA_GC_LOG_ENABLED:-0}
-export APP_JAVA_REMOTE_DEBUG_PORT=${APP_JAVA_REMOTE_DEBUG_PORT:-0}
-export APP_JAVA_REMOTE_DEBUG_SUSPEND=${APP_JAVA_REMOTE_DEBUG_SUSPEND:-"n"}
-export APP_JAVA_DEBUG_ENABLED=${APP_JAVA_DEBUG_ENABLED:-0}
-export APP_JAVA_GC_ZGC=${APP_JAVA_GC_ZGC:-0}
+export APP_MAX_MEMORY=${APP_MAX_MEMORY:-512}
+export APP_MIN_MEMORY=${APP_MIN_MEMORY:-250}
+export APP_MAX_MEMORY_INITIAL=$APP_MAX_MEMORY
+export APP_MAX_METASPACE=${APP_MAX_METASPACE:-160}
+export APP_GC_THREADS=${APP_GC_THREADS:-4}
+export APP_GC_LOG_ENABLED=${APP_GC_LOG_ENABLED:-0}
+export APP_REMOTE_DEBUG_PORT=${APP_REMOTE_DEBUG_PORT:-0}
+export APP_REMOTE_DEBUG_SUSPEND=${APP_REMOTE_DEBUG_SUSPEND:-"n"}
+export APP_DEBUG_ENABLED=${APP_DEBUG_ENABLED:-0}
+export APP_GC_ZGC=${APP_GC_ZGC:-0}
 
 # Source in application environment
 APP_ENV="${APP_CONFIG}/environment.sh"
@@ -49,30 +50,38 @@ if [ -f $APP_ENV ]; then
 fi
 
 function log {
+    echo "$1"
     MESSAGE="[Init] $1"
     echo $MESSAGE >> ${APP_LOGS}/boot.log
     echo $MESSAGE > /tmp/termination-log
 }
 
+function getPid {
+  [ ! -f $APP_TMP/.pid ] && die "Process PID file is missing, abort." 1
+  PID=$(cat $APP_TMP/.pid)
+  [[ -z $PID ]] && die "Process PID is missing, abort." 1
+}
+
 function setupBoot {
-    export APP_LOADER_JAR="${APP_CONFIG}:${APP_LIB}/boot.jar"
-    APP_LOADER_OPTS+=" -cp $APP_LOADER_JAR net.microfalx.boot.Bootstrap ${APP_MAIN_CLASS} $@"
+    APP_BOOT_JAR=$(find "$APP_LIB" -name "boot-*.jar" | head -n 1)
+    APP_BOOT_CP="${APP_CONFIG}:${APP_BOOT_JAR}"
+    APP_BOOT_OPTS+=" -cp $APP_BOOT_CP net.microfalx.boot.Bootstrap ${APP_MAIN_CLASS} $*"
 }
 
 function setupJvmGc {
     # Common settings across GC configurations
-    APP_JAVA_GC_COMMON="-XX:ParallelGCThreads=${APP_JAVA_GC_THREADS}"
+    APP_GC_COMMON="-XX:ParallelGCThreads=${APP_GC_THREADS}"
     # Young generation
-    APP_JAVA_GC_YOUNG=""
+    APP_GC_YOUNG=""
     # Old generation
-    APP_JAVA_GC_OLD=""
-    if [[ APP_JAVA_GC_ZGC -eq 1 ]] ; then
-    	APP_JAVA_GC_OLD="-XX:+UseZGC -XX:+ZGenerational"
+    APP_GC_OLD=""
+    if [[ APP_GC_ZGC -eq 1 ]] ; then
+    	APP_GC_OLD="-XX:+UseZGC -XX:+ZGenerational"
     else
-      APP_JAVA_GC_COMMON+=" -XX:+UseG1GC"
+      APP_GC_COMMON+=" -XX:+UseG1GC"
     fi
-    export APP_JVM_GC_OPTS="${APP_JAVA_GC_COMMON} ${APP_JAVA_GC_YOUNG} ${APP_JAVA_GC_OLD}"
-    if [[ $APP_JAVA_GC_LOG_ENABLED -eq 1 ]] ; then
+    export APP_JVM_GC_OPTS="${APP_GC_COMMON} ${APP_GC_YOUNG} ${APP_GC_OLD}"
+    if [[ $APP_GC_LOG_ENABLED -eq 1 ]] ; then
         APP_JVM_GC_OPTS="-XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -XX:+PrintTenuringDistribution"
         APP_JVM_GC_OPTS+=" -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=2 -XX:GCLogFileSize=10M -Xloggc:${APP_LOGS}/boot.gc.log"
     fi
@@ -84,28 +93,28 @@ function setupJvmFlags {
 }
 
 function setupJvmMemory {
-    APP_JAVA_MEMORY_NEW_OLD_RATIO=3
-    APP_JAVA_MEMORY_SURVIVOR_RATIO=8
-    if [[ $APP_JAVA_MAX_MEMORY -le 500 ]] ; then
-        APP_JAVA_MEMORY_NEW_OLD_RATIO=3
-        APP_JAVA_MEMORY_SURVIVOR_RATIO=8
-    elif [[ $APP_JAVA_MAX_MEMORY -le 1000 ]] ; then
-        APP_JAVA_MEMORY_NEW_OLD_RATIO=4
-        APP_JAVA_MEMORY_SURVIVOR_RATIO=10
-    elif [[ $APP_JAVA_MAX_MEMORY -le 2000 ]] ; then
-        APP_JAVA_MEMORY_NEW_OLD_RATIO=5
-        APP_JAVA_MEMORY_SURVIVOR_RATIO=10
-    elif [[ $APP_JAVA_MAX_MEMORY -le 8000 ]] ; then
-        APP_JAVA_MEMORY_NEW_OLD_RATIO=10
-        APP_JAVA_MEMORY_SURVIVOR_RATIO=10
-    elif [[ $APP_JAVA_MAX_MEMORY -le 16000 ]] ; then
-        APP_JAVA_MEMORY_NEW_OLD_RATIO=20
-        APP_JAVA_MEMORY_SURVIVOR_RATIO=10
+    APP_MEMORY_NEW_OLD_RATIO=3
+    APP_MEMORY_SURVIVOR_RATIO=8
+    if [[ $APP_MAX_MEMORY -le 500 ]] ; then
+        APP_MEMORY_NEW_OLD_RATIO=3
+        APP_MEMORY_SURVIVOR_RATIO=8
+    elif [[ $APP_MAX_MEMORY -le 1000 ]] ; then
+        APP_MEMORY_NEW_OLD_RATIO=4
+        APP_MEMORY_SURVIVOR_RATIO=10
+    elif [[ $APP_MAX_MEMORY -le 2000 ]] ; then
+        APP_MEMORY_NEW_OLD_RATIO=5
+        APP_MEMORY_SURVIVOR_RATIO=10
+    elif [[ $APP_MAX_MEMORY -le 8000 ]] ; then
+        APP_MEMORY_NEW_OLD_RATIO=10
+        APP_MEMORY_SURVIVOR_RATIO=10
+    elif [[ $APP_MAX_MEMORY -le 16000 ]] ; then
+        APP_MEMORY_NEW_OLD_RATIO=20
+        APP_MEMORY_SURVIVOR_RATIO=10
     else
-        APP_JAVA_MEMORY_NEW_OLD_RATIO=30
-        APP_JAVA_MEMORY_SURVIVOR_RATIO=15
+        APP_MEMORY_NEW_OLD_RATIO=30
+        APP_MEMORY_SURVIVOR_RATIO=15
     fi
-    APP_JVM_MEMORY_OPTS="-Xmx${APP_JAVA_MAX_MEMORY}m -XX:NewRatio=${APP_JAVA_MEMORY_NEW_OLD_RATIO} -XX:SurvivorRatio=${APP_JAVA_MEMORY_SURVIVOR_RATIO}"
+    APP_JVM_MEMORY_OPTS="-Xmx${APP_MAX_MEMORY}m -XX:NewRatio=${APP_MEMORY_NEW_OLD_RATIO} -XX:SurvivorRatio=${APP_MEMORY_SURVIVOR_RATIO}"
     APP_OOM_OPTS="-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${APP_TMP} -XX:+ExitOnOutOfMemoryError"
     APP_JVM_MEMORY_OPTS+=" ${APP_OOM_OPTS}"
 }
@@ -114,7 +123,7 @@ function setupJvmMisc {
     export APP_JVM_MISC_OPTS=""
     APP_JVM_MISC_OPTS+="-XX:ThreadStackSize=220k"
     APP_JVM_MISC_OPTS+=" -Djava.awt.headless=true -Djava.io.tmpdir=${APP_TMP}"
-    if [[ $APP_JAVA_DEBUG_ENABLED -eq 1 ]] ; then
+    if [[ $APP_DEBUG_ENABLED -eq 1 ]] ; then
         APP_JVM_MISC_OPTS+=" -XX:NativeMemoryTracking=detail -XX:+UnlockDiagnosticVMOptions"
     fi
     APP_JVM_COMPILER_COUNT=2
@@ -151,10 +160,11 @@ function setupDirectories {
 
 # Print process version
 function showVersion {
-    echo "\nProcess version: `cat ${APP_HOME}/.version`\n"
+    echo -e "\nApplication version: `cat ${APP_HOME}/.version`\n"
 }
 
 function profile {
+    getPid
     DATE_MARKER=`date "+%Y%m%d-%H%M%S"`
     DUMP_FILE="$APP_TMP/profile-${DATE_MARKER}.txt"
     OPTIONS="$@"
@@ -163,9 +173,8 @@ function profile {
         DUMP_FILE="profile-${DATE_MARKER}.html"
     fi
     OPTIONS+=" -f $DUMP_FILE"
-    PID=`cat $APP_TMP/.pid`
     echo "Profile application, options \"$OPTIONS\""
-    $APP_BIN/profiler $OPTIONS $PID
+    ${APP_BIN}/profiler $OPTIONS $PID
     echo "Profiler output available at $DUMP_FILE"
 }
 
@@ -173,7 +182,7 @@ function callJattach {
     COMMAND=$1
     EXT=$2
     DESC=$3
-    PID=`cat $APP_TMP/.pid`
+    getPid
     DATE_MARKER=`date "+%Y%m%d-%H%M%S"`
     DUMP_FILE="$APP_TMP/${DAX_APP_ID}-${DATE_MARKER}.${EXT}"
     echo "Dump process '$DAX_APP_NAME' $DESC to '$DUMP_FILE'"
@@ -219,33 +228,37 @@ function dumpVmInternals {
 }
 
 function dumpNative {
-    if [[ $APP_JAVA_DEBUG_ENABLED -ne 1 ]] ; then
-      echo "Displaying native memory requires native memory tracking to be activate. Set APP_JAVA_DEBUG_ENABLED=1 to active native memory tracking"
+    if [[ $APP_DEBUG_ENABLED -ne 1 ]] ; then
+      echo "Displaying native memory requires native memory tracking to be activate. Set APP_DEBUG_ENABLED=1 to active native memory tracking"
     fi
     callJattach "native" "native" "native memory"
 }
 
 function startProcess {
+    log "Prepare application, home '${APP_HOME}'"
+    # validate settings
+    [[ -z $APP_MAIN_CLASS ]] && die "APP_MAIN_CLASS is missing, abort." 1
     # setup the class path boot
-    setupBoot
+    setupBoot "$@"
     # the rest of the settings
     setupJvm
     setupAgents
     # sum all setting
     export APP_JVM_OPTS="${APP_AGENT} ${APP_REMOTE_DEBUG_OPTS} ${APP_CORE_OPTS} ${JAVA_DEFAULT_OPTS} ${APP_CONFIG_OPTS}"
-    JAVA_ARGS="${APP_JVM_OPTS} ${APP_LOADER_OPTS} ${APP_MAIN_CLASS}"
+    JAVA_ARGS="${APP_JVM_OPTS} ${APP_BOOT_OPTS}"
     JAVA_EXEC="$JAVA_HOME/bin/java"
     JAVA_CMD="$JAVA_EXEC $JAVA_ARGS"
-    print $JAVA_CMD > ${AP_LOGS}/boot.cmd.log
+    echo $JAVA_CMD > ${APP_LOGS}/boot.cmd.log
     if [[ $APP_DRY_RUN -eq 1 ]] ; then
-        print "Java Command Line:\t\t\t\t '$JAVA_CMD'"
+        echo "Java Command Line:\t\t\t\t '$JAVA_CMD'"
         EXIT_CODE="0"
     else
+        log "Start JVM"
         exec $JAVA_CMD
         EXIT_CODE=$?
     fi
     if [[ $APP_KEEP_ALIVE -eq 1 ]] ; then
-        print "Keep application alive, exit code $EXIT_CODE"
+        echo "Keep application alive, exit code $EXIT_CODE"
         _interrupted=0
         trap "_interrupted=1" INT
         while [ $_interrupted -ne 1 ]; do sleep 1; done
@@ -254,10 +267,13 @@ function startProcess {
 }
 
 function stopProcess {
-
+  getPid
+  echo "Stop application, PID=$PID"
+  kill -TERM $PID
 }
 
 function statusProcess {
+  curl http://localhost/status
 }
 
 function healthProcess {
@@ -267,15 +283,10 @@ function healthProcess {
   fi
 }
 
-function log {
-    MESSAGE="[Init] $1"
-    echo $MESSAGE > ${APP_LOGS}/shutdown.log
-    echo $MESSAGE > /tmp/termination-log
-}
 
 function showUsage {
-  print "Usage $0 version|health|stack|heap|memory|histogram|vm-native|vm-info|vm-struct|profile|debug\n"
-  print "Commands:"
+  echo "Usage $0 version|health|stack|heap|memory|histogram|vm-native|vm-info|vm-struct|profile|debug\n"
+  echo "Commands:"
   printCommand "version" "Displays the application version"
   printCommand "health [detailed]" "Displays the status of the process and core health metrics. If 'detailed' is provided, the complete health report is displayed"
   printCommand "profile" "Triggers JVM profiler for the running process"
@@ -283,7 +294,7 @@ function showUsage {
   printCommand "heap" "Displays heap information for the running process"
   printCommand "memory" "Dumps heap information (hprof) for the running process"
   printCommand "histogram" "Extracts histogram information (allocated memory per object type) for the running process"
-  printCommand "vm-native" "Extracts native memory allocation for the running process. Native memory allocation needs to be enabled with 'export APP_JAVA_DEBUG_ENABLED=1'"
+  printCommand "vm-native" "Extracts native memory allocation for the running process. Native memory allocation needs to be enabled with 'export APP_DEBUG_ENABLED=1'"
   printCommand "vm-info" "Extracts a complete set of JVM information for the running process"
   printCommand "vm-struct" "Extracts a collection of internal JVM structures (interned strings, system tables, system dictionary, etc) for the running process"
 }
@@ -291,6 +302,15 @@ function showUsage {
 setupDirectories
 
 case "$1" in
+    'start')
+        startProcess "${@:2}"
+        ;;
+    'stop')
+        stopProcess
+        ;;
+    'status')
+        statusProcess
+        ;;
     'health')
         healthProcess
         ;;

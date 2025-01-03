@@ -1,7 +1,6 @@
 package net.microfalx.boot;
 
 import net.microfalx.lang.ExceptionUtils;
-import net.microfalx.lang.FileUtils;
 import net.microfalx.lang.StringUtils;
 
 import java.io.File;
@@ -13,6 +12,7 @@ import java.util.Collection;
 
 import static net.microfalx.boot.BootstrapUtils.isEmpty;
 import static net.microfalx.boot.BootstrapUtils.requireNonNull;
+import static net.microfalx.lang.FileUtils.validateDirectoryExists;
 
 /**
  * Builds the application class path based on files discovered in ~/lib directory.
@@ -110,9 +110,7 @@ public class ApplicationBuilder {
             throw new IllegalStateException("A directory with libraries (" + libDirectory + ") does not exist");
         }
         logsDirectory = new File(home, "logs");
-        if (!logsDirectory.exists()) {
-            FileUtils.validateDirectoryExists(logsDirectory);
-        }
+        if (!logsDirectory.exists()) validateDirectoryExists(logsDirectory);
     }
 
     private static URL toUrl(final File file) {

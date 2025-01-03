@@ -1,9 +1,6 @@
 package net.microfalx.maven.docker;
 
-import net.microfalx.lang.ExceptionUtils;
-import net.microfalx.lang.NamedIdentityAware;
-import net.microfalx.lang.ObjectUtils;
-import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.*;
 import net.microfalx.resource.ClassPathResource;
 import org.apache.commons.io.FileUtils;
 import org.mandas.docker.client.DockerClient;
@@ -51,10 +48,11 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     private boolean base;
     private String packages;
     private String maintainer;
-    private final Map<String, String> environment = new HashMap<>();
+    private final Map<String, String> environment = new LinkedHashMap<>();
     private String mainClass;
     private final List<String> arguments = new ArrayList<>();
     private final List<File> libraries = new ArrayList<>();
+    private String version = "1.0.0";
 
     private final StringBuilder builder = new StringBuilder();
     private Path appPath = Paths.get("/opt/microfalx");
@@ -183,12 +181,15 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     /**
      * Adds a new library.
      *
-     * @param path the path to the library
+     * @param file the path to the library
      * @return self
      */
-    public ImageBuilder addLibrary(File path) {
-        requireNonNull(path);
-        this.libraries.add(path);
+    public ImageBuilder addLibrary(File file) {
+        requireNonNull(file);
+        if (file.isDirectory()) {
+            throw new IllegalArgumentException("Only files can be registered as libraries: " + file);
+        }
+        this.libraries.add(file);
         return this;
     }
 
@@ -229,6 +230,27 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     public ImageBuilder setImage(String image) {
         requireNotEmpty(image);
         this.image = image;
+        return this;
+    }
+
+    /**
+     * Returns the version (SemVer2) of the software.
+     *
+     * @return a non-null instance
+     */
+    public String getVersion() {
+        return version;
+    }
+
+    /**
+     * Changes the version (SemVer2) of the software.
+     *
+     * @param version
+     * @return
+     */
+    public ImageBuilder setVersion(String version) {
+        requireNotEmpty(version);
+        this.version = version;
         return this;
     }
 
@@ -403,12 +425,12 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
                     // ignore
                 }
             }
-            String imageWithDigest = getFullName("@" + id);
+            String imageWithDigest = getName() + "@" + id;
             try {
-                return convert(client.inspectImage(imageWithDigest));
+                return convert(client.inspectImage(id));
             } catch (Exception e) {
                 throw new ImageException("Failed to extract image '" + imageWithDigest + "' using " + client.getHost()
-                        + e);
+                        , e);
             }
         }
     }
@@ -447,8 +469,10 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     }
 
     private void appendEnvironment() {
-        if (environment.isEmpty()) return;
-        environment.put("BUILD_TIME", LocalDateTime.now().toString());
+        environment.put("APP_BUILD_TIME", LocalDateTime.now().withNano(0).withSecond(0).toString());
+        environment.put("APP_MAX_MEMORY", "512");
+        environment.put("APP_DEBUG_ENABLED", "false");
+        environment.put("APP_GC_THREADS", "2");
         builder.append("ENV");
         for (Map.Entry<String, String> entry : new TreeMap<>(environment).entrySet()) {
             builder.append(" ").append(entry.getKey()).append("=\"").append(entry.getValue()).append("\"");
@@ -498,13 +522,19 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     }
 
     private void appendFiles() throws IOException {
-        appendCore();
-        appendLibs();
+        appendAppCoreFiles();
+        appendAppMetadata();
+        appendAppLibs();
         applyPermissions();
         builder.append("COPY --chown=").append(getOwner()).append(" ").append(STAGING_PATH).append("/ ").append(toUnix(appPath)).append("/\n");
     }
 
-    private void appendLibs() throws IOException {
+    private void appendAppMetadata() throws IOException {
+        version = StringUtils.replaceAll(version, "-SNAPSHOT", EMPTY_STRING);
+        write(".version", version);
+    }
+
+    private void appendAppLibs() throws IOException {
         File libDirectory = validateDirectoryExists(new File(stagingDirectory, "lib"));
         for (File library : libraries) {
             File target = new File(libDirectory, library.getName());
@@ -512,7 +542,7 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
         }
     }
 
-    private void appendCore() throws IOException {
+    private void appendAppCoreFiles() throws IOException {
         if (!base) return;
         ClassPathResource.directory("boot").walk((root, child) -> {
             String path = removeStartSlash(child.getPath(root));
@@ -522,6 +552,11 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
             }
             return true;
         });
+    }
+
+    private void write(String fileName, String content) throws IOException {
+        File file = new File(stagingDirectory, fileName);
+        IOUtils.appendStream(IOUtils.getBufferedWriter(file), new StringReader(content));
     }
 
     private void applyPermissions() {
@@ -579,8 +614,10 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
         Image.Builder imageBuilder = new Image.Builder(info.id());
         imageBuilder.architecture(info.architecture()).os(info.os())
                 .size(info.size()).virtualSize(info.virtualSize())
-                .createdAt(toLocalDateTime(info.created()))
-                .author(info.author()).name(info.author()).description(info.comment());
+                .createdAt(toLocalDateTime(info.created())).digest(info.id())
+                .author(info.author()).name(getName()).description(info.comment());
+        info.config().labels().forEach(imageBuilder::label);
+        imageBuilder.tag(this.tag);
         return imageBuilder.build();
     }
 
