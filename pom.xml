@@ -68,6 +68,7 @@
     <properties>
         <bom.version>1.0.3</bom.version>
         <lang.version>1.0.0-SNAPSHOT</lang.version>
+        <resource.version>1.0.0-SNAPSHOT</resource.version>
         <meters.version>1.0.0-SNAPSHOT</meters.version>
         <maven.version>3.6.3</maven.version>
         <maven-plugin-annotations.version>3.6.2</maven-plugin-annotations.version>
@@ -99,6 +100,12 @@
                 <groupId>net.microfalx.lang</groupId>
                 <artifactId>lang</artifactId>
                 <version>${lang.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx.resource</groupId>
+                <artifactId>resource-core</artifactId>
+                <version>${resource.version}</version>
             </dependency>
 
             <dependency>

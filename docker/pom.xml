@@ -50,6 +50,18 @@
         </dependency>
 
         <dependency>
+            <groupId>net.microfalx.lang</groupId>
+            <artifactId>lang</artifactId>
+            <version>${lang.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.resource</groupId>
+            <artifactId>resource-core</artifactId>
+            <version>${resource.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.mandas</groupId>
             <artifactId>docker-client</artifactId>
             <version>9.0.0</version>
