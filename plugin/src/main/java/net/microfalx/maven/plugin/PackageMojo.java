@@ -159,7 +159,7 @@ public class PackageMojo extends AbstractMojo {
     }
 
     private boolean shouldIncludeArtifact(Artifact artifact) {
-        if (Artifact.SCOPE_RUNTIME.equals(artifact.getScope())) return false;
+        if (!shouldIncludeArtifactByScore(artifact)) return false;
         if (includes.isEmpty() && excludes.isEmpty()) return true;
         if (!includes.isEmpty()) {
             PatternIncludesArtifactFilter filter = new PatternIncludesArtifactFilter(new ArrayList<>(includes));
@@ -170,6 +170,10 @@ public class PackageMojo extends AbstractMojo {
             if (!filter.include(artifact)) return false;
         }
         return !"pom".equalsIgnoreCase(artifact.getType());
+    }
+
+    private boolean shouldIncludeArtifactByScore(Artifact artifact) {
+        return Artifact.SCOPE_COMPILE.equals(artifact.getScope()) || Artifact.SCOPE_RUNTIME.equals(artifact.getScope());
     }
 
     private String getNamespace(Artifact artifact) {
