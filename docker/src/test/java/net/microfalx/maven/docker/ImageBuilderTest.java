@@ -60,8 +60,7 @@ class ImageBuilderTest {
     void buildAndTag(String repository) {
         builder.setMainClass("net.microfalx.maven.Test");
         if (repository != null) {
-            builder.setRepository(repository)
-                    .setRegistry(Registry.create().withUser("adriantarau", "dckr_pat_DfK3Z9i-BgHjYzRMzuB9ikMLoY0"));
+            builder.setRepository(repository);
         }
         //addLibraries();
         Image image = builder.build();
