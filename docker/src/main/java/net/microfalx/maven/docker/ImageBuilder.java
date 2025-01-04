@@ -11,6 +11,7 @@ import org.mandas.docker.client.exceptions.DockerCertificateException;
 import org.mandas.docker.client.exceptions.DockerException;
 import org.mandas.docker.client.messages.ImageInfo;
 import org.mandas.docker.client.messages.ProgressMessage;
+import org.mandas.docker.client.messages.RegistryAuth;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,10 +52,11 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     private static final int RUN_AS_GROUP = 3000;
 
     private Path directory;
-    private String tag;
+    private final String tag;
     private String image = "eclipse-temurin:21-jre-jammy";
     private boolean pull = true;
     private boolean base;
+    private boolean debug;
     private String packages;
     private String maintainer;
     private final Map<String, String> environment = new LinkedHashMap<>();
@@ -63,7 +65,9 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     private final List<Resource> libraries = new ArrayList<>();
     private final Map<Resource, String> libraryNamespaces = new HashMap<>();
     private String libraryNamespaceSeparator = "@";
-    private String version = "1.0.0";
+    private Version version = Version.parse("0.0.1");
+    private String repository;
+    private Registry registry = Registry.create();
 
     private final StringBuilder builder = new StringBuilder();
     private Path appPath = Paths.get("/opt/microfalx");
@@ -80,6 +84,11 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
 
     public ImageBuilder(String name) {
         this(name, DEFAULT_TAG);
+    }
+
+    public ImageBuilder(String name, Version version) {
+        this(name, version.toTag());
+        this.version = version;
     }
 
     public ImageBuilder(String name, String tag) {
@@ -232,7 +241,7 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
             throw new IllegalArgumentException("Only files can be registered as libraries: " + resource);
         }
         libraries.add(resource);
-        if (StringUtils.isNotEmpty(namespace)) libraryNamespaces.put(resource, namespace);
+        if (isNotEmpty(namespace)) libraryNamespaces.put(resource, namespace);
         return this;
     }
 
@@ -252,6 +261,26 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
      */
     public ImageBuilder setBase(boolean base) {
         this.base = base;
+        return this;
+    }
+
+    /**
+     * Returns whether debug is turned on.
+     *
+     * @return {@code true} if debug is on, false otherwise
+     */
+    public boolean isDebug() {
+        return debug;
+    }
+
+    /**
+     * Changes whether debug is turned on.
+     *
+     * @param debug {@code true} if debug is on, false otherwise
+     * @return self
+     */
+    public ImageBuilder setDebug(boolean debug) {
+        this.debug = debug;
         return this;
     }
 
@@ -277,23 +306,42 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     }
 
     /**
-     * Returns the version (SemVer2) of the software.
+     * Returns the registry where to push images.
      *
      * @return a non-null instance
      */
-    public String getVersion() {
-        return version;
+    public Registry getRegistry() {
+        return registry;
     }
 
     /**
-     * Changes the version (SemVer2) of the software.
+     * Changes the registry where to push images.
      *
-     * @param version
-     * @return
+     * @param registry the new registry
+     * @return self
      */
-    public ImageBuilder setVersion(String version) {
-        requireNotEmpty(version);
-        this.version = version;
+    public ImageBuilder setRegistry(Registry registry) {
+        requireNonNull(registry);
+        this.registry = registry;
+        return this;
+    }
+
+    /**
+     * Returns the repository where to tag and deploy the image.
+     *
+     * @return the repository, null if not available
+     */
+    public String getRepository() {
+        return repository;
+    }
+
+    /**
+     * Changes the repository where to tag and deploy the image.
+     *
+     * @param repository the repository
+     */
+    public ImageBuilder setRepository(String repository) {
+        this.repository = repository;
         return this;
     }
 
@@ -455,12 +503,16 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     public Image build() {
         writeDescriptor();
         try (DockerClient client = createClient()) {
-            LOGGER.info("Build image '{}' using '{}'", getFullName(), client.getHost());
+            LOGGER.info("Build image '{}' using '{}'", getImageFullName(), client.getHost());
             String id;
             try {
-                id = client.build(workspaceDirectory.toPath(), getFullName(), dockerLogger, getBuildOptions());
+                id = client.build(workspaceDirectory.toPath(), getImageFullName(), dockerLogger, getBuildOptions());
+                if (debug) {
+                    LOGGER.info("Image '{}' built successfuly using '{}', log:\n{}", getImageFullName(), client.getHost(),
+                            getLog());
+                }
             } catch (Exception e) {
-                throw new ImageException("Failed to build image '" + getFullName() + "' using " + client.getHost()
+                throw new ImageException("Failed to build image '" + getImageFullName() + "' using " + client.getHost()
                         + ", output:\n" + dockerLogger.getOutput(), e);
             } finally {
                 try {
@@ -469,14 +521,62 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
                     // ignore
                 }
             }
+            Image image;
             String imageWithDigest = getName() + "@" + id;
             try {
-                return convert(client.inspectImage(id));
+                image = convert(client.inspectImage(id));
             } catch (Exception e) {
                 throw new ImageException("Failed to extract image '" + imageWithDigest + "' using " + client.getHost()
                         , e);
             }
+            tag(client, imageWithDigest);
+            push(client);
+            return image;
         }
+    }
+
+    private void tag(DockerClient client, String imageWithDigest) {
+        if (StringUtils.isEmpty(repository)) return;
+        try {
+            LOGGER.info("Tag image '{}' as '{}'", getImageFullName(), getRepositoryImageName());
+            client.tag(getImageFullName(), getRepositoryImageName(), true);
+        } catch (Exception e) {
+            throw new ImageException("Failed to tag image '" + imageWithDigest + "' to '" + getRepositoryImageName()
+                    + "' using " + client.getHost(), e);
+        }
+    }
+
+    public void push(DockerClient client) {
+        boolean success = true;
+        Throwable throwable = null;
+        RegistryAuth registry = getRegistryAuth();
+        try {
+            LOGGER.info("Push image '{}' to '{}'", getRepositoryImageName(), registry.serverAddress());
+            client.push(getRepositoryImageName(), dockerLogger, registry);
+            success = !dockerLogger.hasErrors();
+            if (debug && success) {
+                LOGGER.info("Image '{}' pushed successfuly to '{}', log:\n{}", getRepositoryImageName(),
+                        registry.serverAddress(), getLog());
+            }
+        } catch (Exception e) {
+            throwable = e;
+
+        }
+        if (!success || throwable != null) {
+            throw new ImageException("Failed to push image '" + getRepositoryImageName() + "' to " + registry.serverAddress()
+                    + ", output:\n" + dockerLogger.getOutput(), throwable);
+        }
+    }
+
+    private RegistryAuth getRegistryAuth() {
+        RegistryAuth.Builder builder = RegistryAuth.builder()
+                .serverAddress(registry.getHostname());
+        if (isNotEmpty(registry.getToken())) {
+            builder.identityToken(registry.getToken());
+        } else {
+            builder.username(registry.getUserName()).password(registry.getPassword());
+        }
+        return builder.build();
     }
 
     private void writeDescriptor() {
@@ -574,8 +674,7 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     }
 
     private void appendAppMetadata() throws IOException {
-        version = StringUtils.replaceAll(version, "-SNAPSHOT", EMPTY_STRING);
-        write(".version", version);
+        write(".version", version.toString());
     }
 
     private void appendAppLibs() throws IOException {
@@ -672,48 +771,66 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
         return imageBuilder.build();
     }
 
-    private String getFullName() {
-        return getFullName(null);
+    private String getRepositoryImageName() {
+        return removeEndSlash(repository) + "/" + getImageFullName();
     }
 
-    private String getFullName(String tag) {
+    private String getImageFullName() {
+        return getImageFullName(null);
+    }
+
+    private String getImageFullName(String tag) {
         if (tag == null) tag = this.tag;
         return getName() + ":" + tag;
+    }
+
+    private String getLog() {
+        String output = dockerLogger.getOutput();
+        dockerLogger.clear();
+        return TextUtils.insertSpaces(output, 5, true, true, true);
     }
 
     private static class ProgressHandlerLogger implements ProgressHandler {
 
         private final StringBuilder logger = new StringBuilder();
         private String lastMessage;
+        private String lastError;
 
         public String getOutput() {
             return logger.toString();
         }
 
+        private void clear() {
+            logger.setLength(0);
+        }
+
+        private boolean hasErrors() {
+            return StringUtils.isNotEmpty(lastError);
+        }
+
         @Override
         public void progress(ProgressMessage message) throws DockerException {
-            if (StringUtils.isNotEmpty(message.error())) {
+            if (isNotEmpty(message.error())) {
                 if (!ObjectUtils.equals(lastMessage, message.error())) {
                     log(message.error(), "Error");
+                    lastError = message.error();
                     lastMessage = message.error();
                 }
-            } else if (StringUtils.isNotEmpty(message.stream())) {
+            } else if (isNotEmpty(message.stream())) {
                 if (!ObjectUtils.equals(lastMessage, message.stream())) {
-                    log(message.error(), null);
+                    log(message.stream(), null);
                     lastMessage = message.stream();
                 }
-            } else if (StringUtils.isNotEmpty(message.status())) {
+            } else if (isNotEmpty(message.status())) {
                 if (!ObjectUtils.equals(lastMessage, message.status())) {
-                    log(message.error(), null);
+                    log(message.status(), null);
                     lastMessage = message.status();
                 }
             }
         }
 
         private void log(String message, String level) {
-            if (level != null) {
-                logger.append(level).append(": ");
-            }
+            if (level != null) logger.append(level).append(": ");
             logger.append(message).append('\n');
         }
     }

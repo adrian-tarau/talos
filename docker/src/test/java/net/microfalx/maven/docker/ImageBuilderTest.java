@@ -49,8 +49,21 @@ class ImageBuilderTest {
 
     @Test
     void build() {
+        buildAndTag(null);
+    }
+
+    @Test
+    void buildAndTag() {
+        buildAndTag("adriantarau");
+    }
+
+    void buildAndTag(String repository) {
         builder.setMainClass("net.microfalx.maven.Test");
-        addLibraries();
+        if (repository != null) {
+            builder.setRepository(repository)
+                    .setRegistry(Registry.create().withUser("adriantarau", "dckr_pat_DfK3Z9i-BgHjYzRMzuB9ikMLoY0"));
+        }
+        //addLibraries();
         Image image = builder.build();
         assertNotNull(image);
         assertEquals("microfalx-base", image.getName());

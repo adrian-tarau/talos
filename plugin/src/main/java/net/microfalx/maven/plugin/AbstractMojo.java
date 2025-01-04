@@ -1,15 +1,23 @@
 package net.microfalx.maven.plugin;
 
+import net.microfalx.lang.Version;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.Plugin;
+import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.repository.RepositorySystem;
+import org.apache.maven.settings.Server;
+import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
+import org.sonatype.plexus.components.sec.dispatcher.SecDispatcherException;
 
 import java.io.File;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
+
+import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 
 /**
  * Base class for all Mojos.
@@ -22,20 +30,23 @@ public abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo 
     @Parameter(defaultValue = "${session}", readonly = true)
     protected MavenSession session;
 
+    @Parameter(defaultValue = "${mojoExecution}", required = true, readonly = true)
+    private MojoExecution mojoExecution;
+
     @Parameter(defaultValue = "${project.build.directory}", readonly = true)
     private String buildDirectory;
 
     @Parameter(defaultValue = "${project.version}", readonly = true)
     private String projectVersion;
 
-    @Parameter(defaultValue = "false", readonly = true, property = "dry_run")
+    @Parameter(defaultValue = "false", readonly = true, property = "microfalx.dry_run")
     private boolean dryRun;
 
-    @Parameter(defaultValue = "false", readonly = true, property = "debug")
+    @Parameter(defaultValue = "false", readonly = true, property = "microfalx.debug")
     private boolean debug;
 
     @Component
-    protected RepositorySystem repository;
+    private SecDispatcher securityDispatcher;
 
     /**
      * Returns whether the execution of the Mojo should only simulate the execution.
@@ -63,12 +74,28 @@ public abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo 
      *
      * @return a non-null instance
      */
-    protected final String getVersion() {
+    protected final String getVersionAsString() {
         if (projectVersion != null) {
             return projectVersion;
         } else {
             return project.getVersion();
         }
+    }
+
+    /**
+     * Returns the version of the project (module) running this task which includes the build
+     * number.
+     *
+     * @return a non-null instance
+     * @see #getVersion()
+     */
+    protected final Version getVersion() {
+        // Extract build number from CI-provided property
+        // If CI did not build this, default to 0 to indicate a local build
+        String buildNumber = System.getProperty("build.number", Integer.toString(5 + ThreadLocalRandom.current().nextInt(10)));
+        Version version = Version.parse(getVersionAsString());
+        version = version.withBuild(Integer.parseInt(buildNumber));
+        return version;
     }
 
     /**
@@ -90,12 +117,44 @@ public abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo 
     }
 
     /**
+     * Returns the server with a given identifier.
+     *
+     * @param ids the server identifiers.
+     * @return the server, null if it does not exist
+     */
+    protected final Server getServer(String... ids) {
+        requireNotEmpty(ids);
+        Server server = null;
+        for (String id : ids) {
+            server = session.getSettings().getServer(id.toLowerCase());
+            if (server != null) break;
+        }
+        if (securityDispatcher != null && server != null) {
+            try {
+                server.setPassword(securityDispatcher.decrypt(server.getPassword()));
+            } catch (SecDispatcherException e) {
+                throw new SecurityException("Cannot decrypt password for server " + server.getId(), e);
+            }
+        }
+        return server;
+    }
+
+    /**
+     * Returns the plugin owning this Mojo.
+     *
+     * @return a non-null instance
+     */
+    protected final Plugin getPlugin() {
+        return mojoExecution.getPlugin();
+    }
+
+    /**
      * Returns a list with all modules, sorted in the execution order.
      *
      * @return a non-null instance
      */
     protected final List<MavenProject> getProjects() {
-        return session.getProjectDependencyGraph().getSortedProjects();       
+        return session.getProjectDependencyGraph().getSortedProjects();
     }
 
     /**
@@ -117,5 +176,5 @@ public abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo 
     protected final Set<Artifact> getArtifacts() {
         return project.getArtifacts();
     }
-    
+
 }

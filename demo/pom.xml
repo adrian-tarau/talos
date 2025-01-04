@@ -71,7 +71,8 @@
                         </goals>
                         <configuration>
                             <boot>true</boot>
-                            <image>microfalx-demo</image>
+                            <image>spring-boot-demo</image>
+                            <repository>adriantarau</repository>
                             <mainClass>net.microfalx.boot.demo.DemoApplication</mainClass>
                         </configuration>
                     </execution>

@@ -2,16 +2,19 @@ package net.microfalx.maven.plugin;
 
 import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.StringUtils;
-import net.microfalx.lang.Version;
 import net.microfalx.maven.docker.Image;
 import net.microfalx.maven.docker.ImageBuilder;
+import net.microfalx.maven.docker.Registry;
 import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.Resource;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.resolver.*;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.*;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.repository.RepositorySystem;
+import org.apache.maven.settings.Server;
 import org.apache.maven.shared.artifact.filter.PatternExcludesArtifactFilter;
 import org.apache.maven.shared.artifact.filter.PatternIncludesArtifactFilter;
 
@@ -19,7 +22,12 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
-@Mojo(name = "package", defaultPhase = LifecyclePhase.INSTALL, requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME, threadSafe = true)
+import static net.microfalx.lang.StringUtils.isNotEmpty;
+import static org.apache.maven.plugins.annotations.LifecyclePhase.INSTALL;
+import static org.apache.maven.plugins.annotations.ResolutionScope.COMPILE_PLUS_RUNTIME;
+
+@Mojo(name = "package", defaultPhase = INSTALL, requiresDependencyResolution = COMPILE_PLUS_RUNTIME,
+        threadSafe = true)
 public class PackageMojo extends AbstractMojo {
 
     @Parameter(defaultValue = "true")
@@ -28,14 +36,17 @@ public class PackageMojo extends AbstractMojo {
     @Parameter
     private String baseImage;
 
+    @Parameter(defaultValue = "${project.artifactId}", required = true)
+    private String image;
+
     @Parameter(required = true)
     private String mainClass;
 
     @Parameter
-    private String libraryNamespaceSeparator = "@";
+    private String repository;
 
-    @Parameter(defaultValue = "${project.artifactId}", required = true)
-    private String image;
+    @Parameter
+    private String libraryNamespaceSeparator = "@";
 
     @Parameter(defaultValue = "true")
     private boolean includeModule;
@@ -59,10 +70,10 @@ public class PackageMojo extends AbstractMojo {
     private String registryUsername;
 
     @Parameter(readonly = true, property = "registry.password")
-    private String containerRegistryPassword;
+    private String registryPassword;
 
     @Component
-    private RepositorySystem repoSystem;
+    private RepositorySystem repositorySystem;
 
     @Override
     public void execute() throws MojoFailureException {
@@ -71,8 +82,12 @@ public class PackageMojo extends AbstractMojo {
     }
 
     private void logConfiguration() {
+        String extraDesc = StringUtils.EMPTY_STRING;
+        if (isNotEmpty(repository)) {
+            extraDesc = ", repository '" + repository + "'";
+        }
         getLog().info("Package module '" + project.getGroupId() + ":" + project.getArtifactId() + ":" + getVersion()
-                + "' to image '" + image + "', boot '" + boot + "', main class '" + mainClass + "'");
+                + "' to image '" + image + "', boot '" + boot + "', main class '" + mainClass + "'" + extraDesc);
         if (getLog().isDebugEnabled()) {
             getLog().debug(" - include dependencies: " + includes);
             getLog().debug(" - exclude dependencies: " + excludes);
@@ -80,9 +95,18 @@ public class PackageMojo extends AbstractMojo {
     }
 
     private void buildImage() throws MojoFailureException {
-        ImageBuilder builder = new ImageBuilder(image, Version.parse(getVersion()).toTag())
-                .setMainClass(mainClass).setVersion(getVersion()).setBase(boot)
+        ImageBuilder builder = new ImageBuilder(image, getVersion())
+                .setMainClass(mainClass).setBase(boot).setDebug(isDebug())
                 .setLibraryNamespaceSeparator(libraryNamespaceSeparator);
+        if (isNotEmpty(repository)) {
+            Registry registry = Registry.fromRepository(repository);
+            Server server = getServer(registry.getId(), registry.getHostname());
+            if (server != null) {
+                getLog().info("User server secrets for '" + registry.getHostname() + "', username: '" + server.getUsername() + "'");
+                registry = registry.withUser(server.getUsername(), server.getPassword());
+            }
+            builder.setRepository(repository).setRegistry(registry);
+        }
         try {
             addLibraries(builder);
         } catch (ArtifactResolutionException e) {
@@ -145,7 +169,7 @@ public class PackageMojo extends AbstractMojo {
         request.setArtifact(artifact);
         request.setRemoteRepositories(project.getRemoteArtifactRepositories());
         request.setLocalRepository(session.getLocalRepository());
-        ArtifactResolutionResult result = this.repoSystem.resolve(request);
+        ArtifactResolutionResult result = this.repositorySystem.resolve(request);
         ResolutionErrorHandler resolutionErrorHandler = new DefaultResolutionErrorHandler();
         resolutionErrorHandler.throwErrors(request, result);
     }
