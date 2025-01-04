@@ -63,7 +63,7 @@ function getPid {
 }
 
 function setupBoot {
-    APP_BOOT_JAR=$(find "$APP_LIB" -name "microfalx*boot*.jar" | head -n 1)
+    APP_BOOT_JAR=$(find "$APP_LIB" -name "microfalx*boot*loader*.jar" | head -n 1)
     APP_BOOT_CP="${APP_CONFIG}:${APP_BOOT_JAR}"
     APP_BOOT_OPTS+=" -cp $APP_BOOT_CP net.microfalx.boot.Bootstrap ${APP_MAIN_CLASS} $*"
 }

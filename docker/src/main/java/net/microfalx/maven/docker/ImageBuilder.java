@@ -41,8 +41,8 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
 
     public static final String DOMAIN_NAME = "microfalx";
     public static final String GROUP_ID = "net.microfalx.maven";
-    public static final String ARTIFACT_ID_PREFIX = "maven-";
     public static final String BOOT_ARTIFACT_ID = "maven-boot";
+    public static final String BOOT_ARTIFACT_PREFIX = "bootstrap-loader";
 
     private static final String RUN_CMD = "RUN set -eux && ";
     private static final String STAGING_PATH = "staging";
@@ -583,8 +583,8 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
         for (Resource library : libraries) {
             String fileName = library.getFileName();
             String namespace = libraryNamespaces.get(library);
-            if (DOMAIN_NAME.equalsIgnoreCase(namespace) && fileName.startsWith(ARTIFACT_ID_PREFIX)) {
-                fileName = fileName.substring(ARTIFACT_ID_PREFIX.length());
+            if (DOMAIN_NAME.equalsIgnoreCase(namespace) && fileName.startsWith(BOOT_ARTIFACT_ID)) {
+                fileName = replaceFirst(fileName, BOOT_ARTIFACT_ID, BOOT_ARTIFACT_PREFIX);
             }
             if (namespace != null) fileName = namespace + libraryNamespaceSeparator + fileName;
             File target = new File(libDirectory, fileName);
