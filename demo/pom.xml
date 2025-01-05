@@ -61,8 +61,6 @@
                 <groupId>net.microfalx.maven</groupId>
                 <artifactId>maven-plugin</artifactId>
                 <version>${project.version}</version>
-                <configuration>
-                </configuration>
                 <executions>
                     <execution>
                         <id>container</id>

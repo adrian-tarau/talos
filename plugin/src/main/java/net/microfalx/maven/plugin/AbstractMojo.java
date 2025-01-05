@@ -4,7 +4,7 @@ import net.microfalx.lang.Version;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Plugin;
-import org.apache.maven.plugin.MojoExecution;
+import org.apache.maven.plugin.descriptor.PluginDescriptor;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -30,8 +30,8 @@ public abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo 
     @Parameter(defaultValue = "${session}", readonly = true)
     protected MavenSession session;
 
-    @Parameter(defaultValue = "${mojoExecution}", required = true, readonly = true)
-    private MojoExecution mojoExecution;
+    @Parameter(defaultValue = "${plugin}", readonly = true, required = true)
+    private PluginDescriptor pluginDescriptor;
 
     @Parameter(defaultValue = "${project.build.directory}", readonly = true)
     private String buildDirectory;
@@ -140,12 +140,21 @@ public abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo 
     }
 
     /**
+     * Returns the plugin descriptor owning this Mojo.
+     *
+     * @return a non-null instance
+     */
+    protected final PluginDescriptor getPluginDescriptor() {
+        return pluginDescriptor;
+    }
+
+    /**
      * Returns the plugin owning this Mojo.
      *
      * @return a non-null instance
      */
     protected final Plugin getPlugin() {
-        return mojoExecution.getPlugin();
+        return pluginDescriptor.getPlugin();
     }
 
     /**
