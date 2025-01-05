@@ -4,7 +4,6 @@ import net.microfalx.jvm.model.Os;
 import net.microfalx.jvm.model.Server;
 import net.microfalx.jvm.model.VirtualMachine;
 import net.microfalx.lang.ClassUtils;
-import net.microfalx.lang.FormatterUtils;
 import net.microfalx.lang.JvmUtils;
 import net.microfalx.lang.Nameable;
 import org.apache.maven.execution.MavenSession;
@@ -20,8 +19,11 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
+import static java.time.Duration.ofNanos;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.FormatterUtils.formatBytes;
 import static net.microfalx.maven.extension.MavenUtils.formatDuration;
 import static org.apache.maven.shared.utils.logging.MessageUtils.buffer;
 
@@ -73,7 +75,9 @@ public class ProfilerMetrics {
     public void print() {
         LOGGER.info("");
         infoLine('-');
-        LOGGER.info(buffer().strong("Build Report (" + getDurationReport() + ")").toString());
+        LOGGER.info(buffer().strong("Build Report for "
+                + session.getTopLevelProject().getName() + " " + session.getTopLevelProject().getVersion()
+                + " (" + getDurationReport() + ")").toString());
         LOGGER.info("");
         printTaskSummary();
         LOGGER.info("");
@@ -82,7 +86,7 @@ public class ProfilerMetrics {
     }
 
     private void printInfrastructure() {
-        infoMain("Infrastructure");
+        infoMain("Infrastructure:");
         LOGGER.info("");
         VirtualMachine virtualMachine = VirtualMachine.get(true);
         Os os = virtualMachine.getOs();
@@ -90,15 +94,17 @@ public class ProfilerMetrics {
         Server server = virtualMachine.getServer();
         LOGGER.info(printNameValue("Hostname", server.getHostName()));
         LOGGER.info(printNameValue("CPU Cores", Integer.toString(server.getCores())));
+        LOGGER.info(printNameValue("Memory", formatBytes(server.getMemoryActuallyUsed()) + " of "
+                + formatBytes(server.getMemoryTotal())));
         LOGGER.info(printNameValue("User Name", JvmUtils.getUserName()));
         LOGGER.info(printNameValue("Java VM", virtualMachine.getName()));
-        LOGGER.info(printNameValue("Java Max. Heap", FormatterUtils.formatBytes(virtualMachine.getHeapTotalMemory())));
+        LOGGER.info(printNameValue("Java Heap", formatBytes(virtualMachine.getHeapUsedMemory()) + " of "
+                + formatBytes(virtualMachine.getHeapTotalMemory())));
     }
 
     public void printTaskSummary() {
         if (!LOGGER.isInfoEnabled()) return;
-        infoMain("Tasks Summary for " + session.getTopLevelProject().getName() + " "
-                + session.getTopLevelProject().getVersion() + ":");
+        infoMain("Tasks Summary:");
         LOGGER.info("");
         for (MojoMetrics metric : getMojoMetrics()) {
             if (metric.getDuration().toMillis() == 0) continue;
@@ -162,6 +168,7 @@ public class ProfilerMetrics {
         private Set<String> goals = new HashSet<>();
         private final AtomicInteger executionCount = new AtomicInteger(0);
         private final AtomicInteger failureCount = new AtomicInteger(0);
+        private final AtomicLong durationNano = new AtomicLong(0);
         private volatile Throwable throwable;
 
         public MojoMetrics(Mojo mojo) {
@@ -191,6 +198,7 @@ public class ProfilerMetrics {
             endTime = System.nanoTime();
             this.throwable = throwable;
             if (throwable != null) failureCount.incrementAndGet();
+            durationNano.addAndGet(endTime - startTime);
             executionCount.incrementAndGet();
         }
 
@@ -203,7 +211,7 @@ public class ProfilerMetrics {
         }
 
         Duration getDuration() {
-            if (this.duration == null) this.duration = MavenUtils.getDuration(startTime, endTime);
+            if (this.duration == null) this.duration = ofNanos(durationNano.get());
             return this.duration;
         }
     }

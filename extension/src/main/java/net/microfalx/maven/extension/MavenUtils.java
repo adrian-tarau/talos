@@ -26,7 +26,8 @@ public class MavenUtils {
 
     private static final int DURATION_LENGTH = 9;
     static final int LONG_NAME_LENGTH = 65;
-    static final int SHORT_NAME_LENGTH = 50;
+    static final int MEDIUM_NAME_LENGTH = 50;
+    static final int SHORT_NAME_LENGTH = 40;
 
     /**
      * Returns the duration between two relative points in time.
