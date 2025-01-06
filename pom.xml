@@ -75,6 +75,7 @@
         <maven.version>3.8.8</maven.version>
         <maven-plugin-annotations.version>3.15.1</maven-plugin-annotations.version>
         <maven-common-artifact-filters.version>3.4.0</maven-common-artifact-filters.version>
+        <maven-surefire.version>3.5.2</maven-surefire.version>
 
         <jacoco.file>jacoco.exec</jacoco.file>
         <jacoco.ut.dest>${project.build.directory}/${jacoco.file}</jacoco.ut.dest>
@@ -164,6 +165,12 @@
                 <artifactId>maven-plugin-annotations</artifactId>
                 <version>${maven-plugin-annotations.version}</version>
                 <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.maven.surefire</groupId>
+                <artifactId>surefire-report-parser</artifactId>
+                <version>${maven-surefire.version}</version>
             </dependency>
 
         </dependencies>

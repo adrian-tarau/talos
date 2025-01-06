@@ -69,6 +69,55 @@ public class MavenUtils {
     }
 
     /**
+     * Returns a formatted integer, left padded.
+     *
+     * @param value  the value to format
+     * @param length the minimum length
+     * @return a padded number
+     */
+    public static String formatInteger(int value, int length) {
+        return formatInteger(value, length, true);
+    }
+
+    /**
+     * Returns a formatted integer, left padded.
+     *
+     * @param value  the value to format
+     * @param length the minimum length
+     * @return a padded number
+     */
+    public static String formatInteger(int value, int length, boolean digits) {
+        return leftPad(Integer.toString(value), length, digits ? '0' : ' ');
+    }
+
+    /**
+     * Returns a left padded (with spaces) text.
+     *
+     * @param text   the text to pad
+     * @param length the minimum length
+     * @return a non null padded string
+     */
+    public static String leftPad(String text, int length) {
+        return leftPad(text, length, ' ');
+    }
+
+    /**
+     * Returns a left padded (with spaces) text.
+     *
+     * @param text   the text to pad
+     * @param length the minimum length
+     * @param fill   the character to be used to fill the empty space
+     * @return a non null padded string
+     */
+    public static String leftPad(String text, int length, char fill) {
+        text = defaultIfNull(text, EMPTY_STRING);
+        if (text.length() < length) {
+            text = StringUtils.getStringOfChar(fill, length - text.length()) + text;
+        }
+        return text;
+    }
+
+    /**
      * Formats duration Maven style.
      *
      * @param duration the duration

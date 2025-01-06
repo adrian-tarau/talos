@@ -6,9 +6,12 @@ import net.microfalx.jvm.model.VirtualMachine;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.JvmUtils;
 import net.microfalx.lang.Nameable;
+import net.microfalx.maven.junit.SurefireTests;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.MojoExecution;
+import org.apache.maven.plugins.surefire.report.ReportTestSuite;
+import org.apache.maven.project.MavenProject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,11 +23,13 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 
 import static java.time.Duration.ofNanos;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.FormatterUtils.formatBytes;
 import static net.microfalx.maven.extension.MavenUtils.formatDuration;
+import static net.microfalx.maven.extension.MavenUtils.formatInteger;
 import static org.apache.maven.shared.utils.logging.MessageUtils.buffer;
 
 /**
@@ -45,6 +50,9 @@ public class ProfilerMetrics {
 
     @Inject
     protected MavenSession session;
+
+    @Inject
+    protected SurefireTests tests;
 
     void sessionStart() {
         sessionStartTime = System.nanoTime();
@@ -81,6 +89,8 @@ public class ProfilerMetrics {
         LOGGER.info("");
         printTaskSummary();
         LOGGER.info("");
+        printTests();
+        LOGGER.info("");
         printInfrastructure();
         infoLine('-');
     }
@@ -100,6 +110,27 @@ public class ProfilerMetrics {
         LOGGER.info(printNameValue("Java VM", virtualMachine.getName()));
         LOGGER.info(printNameValue("Java Heap", formatBytes(virtualMachine.getHeapUsedMemory()) + " of "
                 + formatBytes(virtualMachine.getHeapTotalMemory())));
+    }
+
+    private void printTests() {
+        tests.load(session);
+        String totals = getTestsReport(tests.getTotalCount(), tests.getFailedCount(),
+                tests.getErrorCount(), tests.getSkippedCount());
+        infoMain("Tests " + totals + ":");
+        LOGGER.info("");
+        for (MavenProject project : tests.getProjects()) {
+            Collection<ReportTestSuite> testSuites = tests.getTestSuites(project);
+            StringBuilder buffer = new StringBuilder(128);
+            buffer.append(project.getName());
+            buffer.append(' ');
+            MavenUtils.appendDots(buffer);
+            buffer.append(getTestsReport(getSum(testSuites, ReportTestSuite::getNumberOfTests),
+                    getSum(testSuites, ReportTestSuite::getNumberOfFailures),
+                    getSum(testSuites, ReportTestSuite::getNumberOfErrors),
+                    getSum(testSuites, ReportTestSuite::getNumberOfSkipped)));
+            LOGGER.info(buffer.toString());
+        }
+        LOGGER.info("");
     }
 
     public void printTaskSummary() {
@@ -156,6 +187,32 @@ public class ProfilerMetrics {
     private String getDurationReport() {
         return "Configuration: " + formatDuration(getConfigurationDuration().toMillis())
                 + ", Execution: " + formatDuration((getSessionDuration().toMillis()));
+    }
+
+    private boolean hasFailures(MavenProject project, Collection<ReportTestSuite> testSuites) {
+        int totalFailures = getSum(testSuites, ReportTestSuite::getNumberOfFailures) +
+                getSum(testSuites, ReportTestSuite::getNumberOfErrors);
+        return totalFailures > 0;
+    }
+
+    private String getTestsReport(int totalCount, int failedCount, int errorCount, int skippedCount) {
+        int totalErrors = failedCount + errorCount;
+        StringBuilder builder = new StringBuilder();
+        builder.append('[');
+        builder.append(buffer().strong(formatInteger(totalCount, 4))).append("/");
+        builder.append(totalErrors > 0 ? buffer().failure(formatInteger(totalErrors, 3))
+                : buffer().success(formatInteger(totalErrors, 3))).append("/");
+        builder.append(formatInteger(skippedCount, 2));
+        builder.append(']');
+        return builder.toString();
+    }
+
+    private int getSum(Collection<ReportTestSuite> testSuites, Function<ReportTestSuite, Integer> function) {
+        int total = 0;
+        for (ReportTestSuite testSuite : testSuites) {
+            total += function.apply(testSuite);
+        }
+        return total;
     }
 
     private static class MojoMetrics implements Nameable {
