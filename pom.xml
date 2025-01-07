@@ -67,6 +67,7 @@
     <inceptionYear>2024</inceptionYear>
 
     <properties>
+        <java.version>11</java.version>
         <bom.version>1.0.5</bom.version>
         <lang.version>0.8.0-SNAPSHOT</lang.version>
         <resource.version>0.8.0-SNAPSHOT</resource.version>
