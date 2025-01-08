@@ -173,7 +173,7 @@ public abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo 
      */
     protected final boolean isLastProjectInReactor() {
         List<MavenProject> sortedProjects = getProjects();
-        MavenProject lastProject = sortedProjects.isEmpty() ? session.getCurrentProject() : sortedProjects.getLast();
+        MavenProject lastProject = sortedProjects.isEmpty() ? session.getCurrentProject() : sortedProjects.get(sortedProjects.size() - 1);
         return session.getCurrentProject().equals(lastProject);
     }
 

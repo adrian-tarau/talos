@@ -39,7 +39,7 @@ public class BootstrapUtils {
      * @return {@code true} if empty, @{code false} otherwise
      */
     public static boolean isEmpty(CharSequence value) {
-        return value == null || value.isEmpty();
+        return value == null || value.length() == 0;
     }
 
     /**

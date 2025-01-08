@@ -6,6 +6,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 import static net.microfalx.boot.BootstrapUtils.*;
 
@@ -77,7 +78,7 @@ public class ApplicationBuilder {
      */
     public URL[] getClassPath() {
         discoverFiles();
-        return files.stream().map(ApplicationBuilder::toUrl).toList().toArray(new URL[0]);
+        return files.stream().map(ApplicationBuilder::toUrl).collect(Collectors.toList()).toArray(new URL[0]);
     }
 
     private void discoverFiles() {
