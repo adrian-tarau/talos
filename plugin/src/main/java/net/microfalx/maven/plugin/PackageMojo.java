@@ -48,6 +48,9 @@ public class PackageMojo extends AbstractMojo {
     @Parameter
     private String libraryNamespaceSeparator = "@";
 
+    @Parameter(defaultValue = "false", readonly = true, property = "microfalx.container.enabled")
+    private boolean containerEnabled;
+
     @Parameter(defaultValue = "true")
     private boolean includeModule;
 
@@ -86,8 +89,10 @@ public class PackageMojo extends AbstractMojo {
         if (isNotEmpty(repository)) {
             extraDesc = ", repository '" + repository + "'";
         }
+        String imageDesc = StringUtils.EMPTY_STRING;
+        if (containerEnabled) imageDesc = "image '" + image + "'";
         getLog().info("Package module '" + project.getGroupId() + ":" + project.getArtifactId() + ":" + getVersion()
-                + "' to image '" + image + "', boot '" + boot + "', main class '" + mainClass + "'" + extraDesc);
+                      + "' to " + imageDesc + ", boot '" + boot + "', main class '" + mainClass + "'" + extraDesc);
         if (getLog().isDebugEnabled()) {
             getLog().debug(" - include dependencies: " + includes);
             getLog().debug(" - exclude dependencies: " + excludes);
@@ -95,6 +100,10 @@ public class PackageMojo extends AbstractMojo {
     }
 
     private void buildImage() throws MojoFailureException {
+        if (!containerEnabled) {
+            getLog().info("Container support is disabled");
+            return;
+        }
         ImageBuilder builder = new ImageBuilder(image, getVersion())
                 .setMainClass(mainClass).setBase(boot).setDebug(isDebug())
                 .setLibraryNamespaceSeparator(libraryNamespaceSeparator);

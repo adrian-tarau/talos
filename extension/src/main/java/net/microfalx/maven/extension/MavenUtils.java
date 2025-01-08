@@ -1,15 +1,12 @@
 package net.microfalx.maven.extension;
 
-import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.TimeUtils;
-import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugin.descriptor.MojoDescriptor;
-import org.apache.maven.project.MavenProject;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 
@@ -29,7 +26,7 @@ import static net.microfalx.lang.TimeUtils.NANOSECONDS_IN_MILLISECONDS;
 public class MavenUtils {
 
     private static final Map<String, String> mojoNames = new ConcurrentHashMap<>();
-    private static final String PROPERTY_PREFIX = "microfalx.";
+
     static final String ZERO_DURATION = "~0s";
 
     private static final int DURATION_LENGTH = 9;
@@ -163,82 +160,6 @@ public class MavenUtils {
             text = StringUtils.getStringOfChar(fill, length - text.length()) + text;
         }
         return text;
-    }
-
-    /**
-     * Returns a property value as a Duration.
-     *
-     * @param session      the session
-     * @param name         the property name
-     * @param defaultValue the default value
-     * @return the value
-     * @see TimeUtils#parseDuration(String)
-     */
-    public static Duration getProperty(MavenSession session, String name, Duration defaultValue) {
-        String value = getProperty(session, name, (String) null);
-        try {
-            if (StringUtils.isNotEmpty(value)) return TimeUtils.parseDuration(value);
-        } catch (NumberFormatException e) {
-            // ignore and fall back to default value
-        }
-        return defaultValue;
-    }
-
-    /**
-     * Returns a property value as a boolean.
-     *
-     * @param session      the session
-     * @param name         the property name
-     * @param defaultValue the default value
-     * @return the value
-     */
-    public static boolean getProperty(MavenSession session, String name, boolean defaultValue) {
-        String value = getProperty(session, name, (String) null);
-        try {
-            if (StringUtils.isNotEmpty(value)) return Boolean.parseBoolean(value);
-        } catch (NumberFormatException e) {
-            // ignore and fall back to default value
-        }
-        return defaultValue;
-    }
-
-    /**
-     * Returns a property value as an integer.
-     *
-     * @param session      the session
-     * @param name         the property name
-     * @param defaultValue the default value
-     * @return the value
-     */
-    public static int getProperty(MavenSession session, String name, int defaultValue) {
-        String value = getProperty(session, name, (String) null);
-        try {
-            if (StringUtils.isNotEmpty(value)) return Integer.parseInt(value);
-        } catch (NumberFormatException e) {
-            // ignore and fall back to default value
-        }
-        return defaultValue;
-    }
-
-    /**
-     * Returns a property value.
-     *
-     * @param session      the session
-     * @param name         the property name
-     * @param defaultValue the default value
-     * @return the value
-     */
-    public static String getProperty(MavenSession session, String name, String defaultValue) {
-        requireNonNull(session);
-        requireNonNull(name);
-        name = PROPERTY_PREFIX + name;
-        String value = session.getSystemProperties().getProperty(name);
-        if (isNotEmpty(value)) return value;
-        MavenProject project = session.getCurrentProject();
-        if (project == null) project = session.getTopLevelProject();
-        if (project != null) value = ObjectUtils.toString(project.getProperties().get(name));
-        if (isNotEmpty(value)) return value;
-        return defaultValue;
     }
 
     /**
