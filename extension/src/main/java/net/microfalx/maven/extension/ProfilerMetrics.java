@@ -3,11 +3,12 @@ package net.microfalx.maven.extension;
 import net.microfalx.jvm.model.Os;
 import net.microfalx.jvm.model.Server;
 import net.microfalx.jvm.model.VirtualMachine;
-import net.microfalx.lang.ClassUtils;
-import net.microfalx.lang.JvmUtils;
-import net.microfalx.lang.Nameable;
+import net.microfalx.lang.*;
 import net.microfalx.maven.junit.SurefireTests;
+import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.Dependency;
+import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugins.surefire.report.ReportTestSuite;
@@ -21,15 +22,14 @@ import javax.inject.Singleton;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
-import static java.time.Duration.ofNanos;
+import static java.util.stream.Collectors.joining;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.FormatterUtils.formatBytes;
-import static net.microfalx.maven.extension.MavenUtils.formatDuration;
-import static net.microfalx.maven.extension.MavenUtils.formatInteger;
+import static net.microfalx.lang.StringUtils.COMMA_WITH_SPACE;
+import static net.microfalx.lang.StringUtils.isNotEmpty;
+import static net.microfalx.maven.extension.MavenUtils.*;
 import static org.apache.maven.shared.utils.logging.MessageUtils.buffer;
 
 /**
@@ -41,9 +41,11 @@ public class ProfilerMetrics {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProfilerMetrics.class);
 
-    private static final int LINE_LENGTH = 72;
+    private static final int LINE_LENGTH = 110;
 
     private final Map<Class<?>, MojoMetrics> mojoMetrics = new ConcurrentHashMap<>();
+    private final Map<String, DependencyMetrics> dependencyMetrics = new ConcurrentHashMap<>();
+    private final Map<String, PluginMetrics> pluginMetrics = new ConcurrentHashMap<>();
     private final long startTime = System.nanoTime();
     private long sessionStartTime;
     private long sessionEndTime;
@@ -52,9 +54,17 @@ public class ProfilerMetrics {
     protected MavenSession session;
 
     @Inject
+    protected RepositoryMetrics repositoryMetrics;
+
+    @Inject
     protected SurefireTests tests;
 
+    private MavenConfiguration configuration;
+
     void sessionStart() {
+        configuration = new MavenConfiguration(session);
+        LOGGER.info("Initialize performance collectors, verbose: {}, minimum duration: {}",
+                configuration.isVerbose(), FormatterUtils.formatDuration(configuration.getMinimumDuration()));
         sessionStartTime = System.nanoTime();
     }
 
@@ -62,9 +72,19 @@ public class ProfilerMetrics {
         sessionEndTime = System.nanoTime();
     }
 
+    void projectStart(MavenProject project) {
+        configuration = new MavenConfiguration(session);
+        registerDependencies(project);
+    }
+
+    void projectStop(MavenProject project, Throwable throwable) {
+
+    }
+
     void mojoStarted(Mojo mojo, MojoExecution execution) {
         requireNonNull(mojo);
         getMetrics(mojo).start(execution);
+        getMetrics(execution.getPlugin()).registerGoal(execution.getGoal());
     }
 
     void mojoStop(Mojo mojo, Throwable throwable) {
@@ -81,41 +101,113 @@ public class ProfilerMetrics {
     }
 
     public void print() {
+        if (!LOGGER.isInfoEnabled()) return;
         LOGGER.info("");
         infoLine('-');
         LOGGER.info(buffer().strong("Build Report for "
-                + session.getTopLevelProject().getName() + " " + session.getTopLevelProject().getVersion()
-                + " (" + getDurationReport() + ")").toString());
-        LOGGER.info("");
+                                    + session.getTopLevelProject().getName() + " "
+                                    + session.getTopLevelProject().getVersion()).toString());
+        printSummary();
         printTaskSummary();
-        LOGGER.info("");
-        printTests();
-        LOGGER.info("");
-        printInfrastructure();
+        printDependencySummary();
+        printPluginSummary();
+        printRepositorySummary();
+        printTestsSummary();
+        printInfrastructureSummary();
         infoLine('-');
     }
 
-    private void printInfrastructure() {
+    private void printSummary() {
+        LOGGER.info("");
+        logNameValue("Request", getRequestInfo(), true, SHORT_NAME_LENGTH);
+        logNameValue("Repositories", getRepositoriesInfo(), true, SHORT_NAME_LENGTH);
+        if (!session.getRequest().getData().isEmpty()) logNameValue("Data", getData(), true, SHORT_NAME_LENGTH);
+        LOGGER.info("");
+        logNameValue("Session", formatDuration(getSessionDuration()), true, SHORT_NAME_LENGTH);
+        logNameValue("Configuration", formatDuration(getConfigurationDuration()), true, SHORT_NAME_LENGTH);
+        logNameValue("Repository", getRepositoryReport(), true, SHORT_NAME_LENGTH);
+    }
+
+    private void printDependencySummary() {
+        Map<String, Collection<DependencyMetrics>> dependencyMetricsByGroup = getDependencyMetricsByGroup();
+        LOGGER.info("");
+        infoMain("Dependencies (" + dependencyMetrics.size() + " direct dependencies from " + dependencyMetricsByGroup.size()
+                 + " groups and across " + session.getProjects().size() + " modules):");
+        LOGGER.info("");
+        for (Map.Entry<String, Collection<DependencyMetrics>> entry : dependencyMetricsByGroup.entrySet()) {
+            Collection<DependencyMetrics> metrics = entry.getValue();
+            String name = entry.getKey() + " (" + String.format("%1$d", metrics.size()) + ")";
+            String value = "[Modules:" + String.format("%1$2d", getProjects(metrics))
+                           + ", Size: " + String.format("%1$8s", formatBytes(getSize(metrics))) + "]";
+            logNameValue(name, value);
+        }
+    }
+
+    private void printPluginSummary() {
+        LOGGER.info("");
+        infoMain("Plugins (" + pluginMetrics.size() + " and across " + session.getProjects().size() + " modules):");
+        LOGGER.info("");
+        for (Map.Entry<String, PluginMetrics> entry : pluginMetrics.entrySet()) {
+            PluginMetrics metrics = entry.getValue();
+            String value = "[Modules:" + String.format("%1$2d", metrics.getProjects().size())
+                           + ", Goals: '" + String.join(", ", metrics.getGoals()) + "']";
+            logNameValue(metrics.getName(), value, true, LONG_NAME_LENGTH);
+        }
+    }
+
+    private void printRepositorySummary() {
+        if (!configuration.isVerbose() && repositoryMetrics.getArtifactResolutionDuration().compareTo(configuration.getMinimumDuration()) < 0) {
+            return;
+        }
+        Duration minimumDuration = configuration.getMinimumDuration().dividedBy(10);
+        String details = StringUtils.EMPTY_STRING;
+        if (!configuration.isVerbose()) details += "limited";
+        if (isNotEmpty(details)) details = " (" + details + ")";
+        LOGGER.info("");
+        infoMain("Repository" + details + ":");
+        LOGGER.info("");
+        Map<String, Collection<ArtifactMetrics>> artifactMetricsByGroup = repositoryMetrics.getArtifactMetricsByGroup();
+        for (Map.Entry<String, Collection<ArtifactMetrics>> entry : artifactMetricsByGroup.entrySet()) {
+            Collection<ArtifactMetrics> metrics = entry.getValue();
+            Duration metadataResolveDuration = TimeUtils.sum(metrics.stream().map(ArtifactMetrics::getMetadataResolveDuration));
+            Duration metadataDownloadDuration = TimeUtils.sum(metrics.stream().map(ArtifactMetrics::getMetadataDownloadDuration));
+            Duration artifactResolveDuration = TimeUtils.sum(metrics.stream().map(ArtifactMetrics::getArtifactResolveDuration));
+            Duration artifactInstallDuration = TimeUtils.sum(metrics.stream().map(ArtifactMetrics::getArtifactInstallDuration));
+            Duration artifactDeployDuration = TimeUtils.sum(metrics.stream().map(ArtifactMetrics::getArtifactDeployDuration));
+            Duration totalDuration = TimeUtils.sum(artifactResolveDuration, metadataResolveDuration, metadataDownloadDuration, artifactDeployDuration);
+            if (!configuration.isVerbose() && totalDuration.compareTo(minimumDuration) < 0) continue;
+            String name = entry.getKey() + " (" + String.format("%1$2d", metrics.size()) + ")";
+            String value = "[Metadata: " + formatDurations(metadataResolveDuration, metadataDownloadDuration) + ", " +
+                           "Artifact: " + formatDurations(artifactResolveDuration, artifactInstallDuration, artifactDeployDuration) + "]";
+
+            logNameValue(name, value);
+        }
+    }
+
+    private void printInfrastructureSummary() {
+        LOGGER.info("");
         infoMain("Infrastructure:");
         LOGGER.info("");
         VirtualMachine virtualMachine = VirtualMachine.get(true);
         Os os = virtualMachine.getOs();
-        LOGGER.info(printNameValue("Operating system", os.getName() + " " + os.getVersion()));
+        logNameValue("Operating system", os.getName() + " " + os.getVersion());
         Server server = virtualMachine.getServer();
-        LOGGER.info(printNameValue("Hostname", server.getHostName()));
-        LOGGER.info(printNameValue("CPU Cores", Integer.toString(server.getCores())));
-        LOGGER.info(printNameValue("Memory", formatBytes(server.getMemoryActuallyUsed()) + " of "
-                + formatBytes(server.getMemoryTotal())));
-        LOGGER.info(printNameValue("User Name", JvmUtils.getUserName()));
-        LOGGER.info(printNameValue("Java VM", virtualMachine.getName()));
-        LOGGER.info(printNameValue("Java Heap", formatBytes(virtualMachine.getHeapUsedMemory()) + " of "
-                + formatBytes(virtualMachine.getHeapTotalMemory())));
+        logNameValue("Hostname", server.getHostName());
+        logNameValue("CPU Cores", Integer.toString(server.getCores()));
+        logNameValue("Memory", formatBytes(server.getMemoryActuallyUsed()) + " of "
+                               + formatBytes(server.getMemoryTotal()));
+        logNameValue("User Name", JvmUtils.getUserName());
+        logNameValue("Java VM", virtualMachine.getName());
+        logNameValue("Java Heap", formatBytes(virtualMachine.getHeapUsedMemory()) + " of "
+                                  + formatBytes(virtualMachine.getHeapTotalMemory()));
     }
 
-    private void printTests() {
+    private void printTestsSummary() {
         tests.load(session);
+        if (tests.getTotalCount() == 0) return;
         String totals = getTestsReport(tests.getTotalCount(), tests.getFailedCount(),
                 tests.getErrorCount(), tests.getSkippedCount());
+        LOGGER.info("");
         infoMain("Tests " + totals + ":");
         LOGGER.info("");
         for (MavenProject project : tests.getProjects()) {
@@ -134,8 +226,8 @@ public class ProfilerMetrics {
     }
 
     public void printTaskSummary() {
-        if (!LOGGER.isInfoEnabled()) return;
-        infoMain("Tasks Summary:");
+        LOGGER.info("");
+        infoMain("Tasks:");
         LOGGER.info("");
         for (MojoMetrics metric : getMojoMetrics()) {
             if (metric.getDuration().toMillis() == 0) continue;
@@ -175,24 +267,33 @@ public class ProfilerMetrics {
         LOGGER.info(buffer().strong(msg).toString());
     }
 
+    private void logNameValue(String name, String value) {
+        LOGGER.info(printNameValue(name, value));
+    }
+
+    private void logNameValue(String name, String value, boolean highlight) {
+        LOGGER.info(printNameValue(name, value, highlight));
+    }
+
+    private void logNameValue(String name, String value, boolean highlight, int length) {
+        LOGGER.info(printNameValue(name, value, highlight, length));
+    }
+
     private String printNameValue(String name, String value) {
+        return printNameValue(name, value, true);
+    }
+
+    private String printNameValue(String name, String value, boolean highlight) {
+        return printNameValue(name, value, highlight, LONG_NAME_LENGTH);
+    }
+
+    private String printNameValue(String name, String value, boolean highlight, int length) {
         StringBuilder buffer = new StringBuilder(128);
         buffer.append(name);
         buffer.append(' ');
-        MavenUtils.appendDots(buffer, MavenUtils.SHORT_NAME_LENGTH);
-        buffer.append(buffer().strong(value));
+        MavenUtils.appendDots(buffer, length);
+        buffer.append(highlight ? buffer().strong(value) : value);
         return buffer.toString();
-    }
-
-    private String getDurationReport() {
-        return "Configuration: " + formatDuration(getConfigurationDuration().toMillis())
-                + ", Execution: " + formatDuration((getSessionDuration().toMillis()));
-    }
-
-    private boolean hasFailures(MavenProject project, Collection<ReportTestSuite> testSuites) {
-        int totalFailures = getSum(testSuites, ReportTestSuite::getNumberOfFailures) +
-                getSum(testSuites, ReportTestSuite::getNumberOfErrors);
-        return totalFailures > 0;
     }
 
     private String getTestsReport(int totalCount, int failedCount, int errorCount, int skippedCount) {
@@ -207,6 +308,68 @@ public class ProfilerMetrics {
         return builder.toString();
     }
 
+    private String getRepositoryReport() {
+        StringBuilder builder = new StringBuilder();
+        builder.append(buffer().strong(formatDuration(repositoryMetrics.getArtifactResolutionDuration())));
+        builder.append(" (Metadata: ").append(formatDurations(repositoryMetrics.getMetadataResolvedDuration(), repositoryMetrics.getMetadataDownloadDuration()))
+                .append(", Artifact: ").append(formatDurations(repositoryMetrics.getArtifactResolveDuration(), repositoryMetrics.getArtifactInstallDuration(),
+                        repositoryMetrics.getArtifactDeployDuration()))
+                .append(buffer().strong(")"));
+        return builder.toString();
+    }
+
+    private String getRequestInfo() {
+        StringBuilder builder = new StringBuilder();
+        String profiles = getProfiles();
+        if (isNotEmpty(profiles)) StringUtils.append(builder, "Profiles: " + profiles, COMMA_WITH_SPACE);
+        String goals = getGoals();
+        if (isNotEmpty(goals)) StringUtils.append(builder, "Goals: " + goals, COMMA_WITH_SPACE);
+        if (session.getRequest().getDegreeOfConcurrency() > 0) {
+            StringUtils.append(builder, "DOP: " + session.getRequest().getDegreeOfConcurrency(), COMMA_WITH_SPACE);
+        }
+        if (session.getRequest().isOffline()) StringUtils.append(builder, "Offline");
+        return builder.toString();
+    }
+
+    private String getGoals() {
+        return String.join(" ", session.getRequest().getGoals());
+    }
+
+    private String getProfiles() {
+        return String.join(" ", session.getRequest().getActiveProfiles());
+    }
+
+    private String getRepositoriesInfo() {
+        return "Local: " + session.getLocalRepository().getBasedir() + ", Remote: " +
+               session.getRequest().getRemoteRepositories().stream().map(ArtifactRepository::getUrl)
+                       .collect(joining(", "));
+    }
+
+    private String getData() {
+        Map<String, Object> data = session.getRequest().getData();
+        return data.entrySet().stream().map(e -> e.getKey() + "=" + TextUtils.abbreviateMiddle(ObjectUtils.toString(e.getValue()), 10))
+                .collect(joining(", "));
+    }
+
+    private String formatDurations(Duration duration1, Duration duration2) {
+        if (duration1.isZero() && duration2.isZero()) {
+            return String.format("%8s", ZERO_DURATION);
+        } else {
+            return buffer().strong(formatDuration(duration1, false, false))
+                   + "/" + buffer().strong(formatDuration(duration2, false, false));
+        }
+    }
+
+    private String formatDurations(Duration duration1, Duration duration2, Duration duration3) {
+        if (duration1.isZero() && duration2.isZero() && duration3.isZero()) {
+            return String.format("%8s", ZERO_DURATION);
+        } else {
+            return buffer().strong(formatDuration(duration1, false, false))
+                   + "/" + buffer().strong(formatDuration(duration2, false, false))
+                   + "/" + buffer().strong(formatDuration(duration3, false, false));
+        }
+    }
+
     private int getSum(Collection<ReportTestSuite> testSuites, Function<ReportTestSuite, Integer> function) {
         int total = 0;
         for (ReportTestSuite testSuite : testSuites) {
@@ -215,61 +378,45 @@ public class ProfilerMetrics {
         return total;
     }
 
-    private static class MojoMetrics implements Nameable {
-
-        private final String name;
-        private final Class<?> clazz;
-        private long startTime = System.nanoTime();
-        private volatile long endTime;
-        private volatile Duration duration;
-        private Set<String> goals = new HashSet<>();
-        private final AtomicInteger executionCount = new AtomicInteger(0);
-        private final AtomicInteger failureCount = new AtomicInteger(0);
-        private final AtomicLong durationNano = new AtomicLong(0);
-        private volatile Throwable throwable;
-
-        public MojoMetrics(Mojo mojo) {
-            this.clazz = mojo.getClass();
-            this.name = MavenUtils.getName(mojo);
+    private void registerDependencies(MavenProject project) {
+        for (Dependency dependency : project.getDependencies()) {
+            getMetrics(dependency).register(project, dependency);
         }
-
-        @Override
-        public String getName() {
-            return name;
+        for (Plugin plugin : project.getBuildPlugins()) {
+            getMetrics(plugin).register(project, plugin);
         }
+    }
 
-        public String getGoal() {
-            return String.join(", ", goals);
-        }
+    private DependencyMetrics getMetrics(Dependency dependency) {
+        return dependencyMetrics.computeIfAbsent(MavenUtils.getId(dependency), k -> new DependencyMetrics(dependency));
+    }
 
-        public String getClassName() {
-            return ClassUtils.getName(clazz);
-        }
+    private PluginMetrics getMetrics(Plugin plugin) {
+        return pluginMetrics.computeIfAbsent(MavenUtils.getId(plugin), k -> new PluginMetrics(plugin));
+    }
 
-        void start(MojoExecution execution) {
-            startTime = System.nanoTime();
-            goals.add(MavenUtils.getGoal(execution));
+    private long getSize(Collection<DependencyMetrics> metrics) {
+        long size = 0;
+        for (DependencyMetrics metric : metrics) {
+            ArtifactMetrics artifactMetrics = repositoryMetrics.get(metric.getId());
+            size += artifactMetrics.getSize();
         }
+        return size;
+    }
 
-        void stop(Throwable throwable) {
-            endTime = System.nanoTime();
-            this.throwable = throwable;
-            if (throwable != null) failureCount.incrementAndGet();
-            durationNano.addAndGet(endTime - startTime);
-            executionCount.incrementAndGet();
+    private int getProjects(Collection<DependencyMetrics> metrics) {
+        Set<MavenProject> projects = new HashSet<>();
+        for (DependencyMetrics metric : metrics) {
+            projects.addAll(metric.getProjects());
         }
+        return projects.size();
+    }
 
-        int getExecutionCount() {
-            return executionCount.get();
+    private Map<String, Collection<DependencyMetrics>> getDependencyMetricsByGroup() {
+        Map<String, Collection<DependencyMetrics>> map = new TreeMap<>();
+        for (DependencyMetrics dependencyMetrics : dependencyMetrics.values()) {
+            map.computeIfAbsent(dependencyMetrics.getGroupId(), s -> new ArrayList<>()).add(dependencyMetrics);
         }
-
-        int getFailureCount() {
-            return failureCount.get();
-        }
-
-        Duration getDuration() {
-            if (this.duration == null) this.duration = ofNanos(durationNano.get());
-            return this.duration;
-        }
+        return map;
     }
 }

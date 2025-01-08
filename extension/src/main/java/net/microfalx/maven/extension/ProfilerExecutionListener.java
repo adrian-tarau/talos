@@ -1,6 +1,7 @@
 package net.microfalx.maven.extension;
 
 import org.apache.maven.execution.AbstractExecutionListener;
+import org.apache.maven.execution.ExecutionEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,5 +18,26 @@ public class ProfilerExecutionListener extends AbstractExecutionListener {
         this.profilerMetrics = profilerMetrics;
     }
 
+    @Override
+    public void projectStarted(ExecutionEvent event) {
+        super.projectStarted(event);
+        profilerMetrics.projectStart(event.getProject());
+    }
 
+    @Override
+    public void projectSucceeded(ExecutionEvent event) {
+        super.projectSucceeded(event);
+        profilerMetrics.projectStop(event.getProject(), null);
+    }
+
+    @Override
+    public void projectFailed(ExecutionEvent event) {
+        super.projectFailed(event);
+        profilerMetrics.projectStop(event.getProject(), event.getException());
+    }
+
+    @Override
+    public void projectSkipped(ExecutionEvent event) {
+        profilerMetrics.projectStop(event.getProject(), null);
+    }
 }

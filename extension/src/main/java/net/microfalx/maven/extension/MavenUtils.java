@@ -1,11 +1,17 @@
 package net.microfalx.maven.extension;
 
+import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.TimeUtils;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugin.descriptor.MojoDescriptor;
+import org.apache.maven.project.MavenProject;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.metadata.Metadata;
 
 import java.time.Duration;
 import java.util.Map;
@@ -23,11 +29,53 @@ import static net.microfalx.lang.TimeUtils.NANOSECONDS_IN_MILLISECONDS;
 public class MavenUtils {
 
     private static final Map<String, String> mojoNames = new ConcurrentHashMap<>();
+    private static final String PROPERTY_PREFIX = "microfalx.";
+    static final String ZERO_DURATION = "~0s";
 
     private static final int DURATION_LENGTH = 9;
-    static final int LONG_NAME_LENGTH = 65;
+    static final int LONG_NAME_LENGTH = 60;
     static final int MEDIUM_NAME_LENGTH = 50;
     static final int SHORT_NAME_LENGTH = 40;
+
+    /**
+     * Returns the identifier of an artifact.
+     *
+     * @param artifact the artifact
+     * @return a non-null instance
+     */
+    public static String getId(Artifact artifact) {
+        return StringUtils.toIdentifier(artifact.getGroupId() + ":" + artifact.getArtifactId());
+    }
+
+    /**
+     * Returns the identifier of an dependency.
+     *
+     * @param dependency the dependency
+     * @return a non-null instance
+     */
+    public static String getId(Dependency dependency) {
+        return StringUtils.toIdentifier(dependency.getGroupId() + ":" + dependency.getArtifactId());
+    }
+
+    /**
+     * Returns the identifier of a plugin.
+     *
+     * @param plugin the plugin
+     * @return a non-null instance
+     */
+    public static String getId(Plugin plugin) {
+        return StringUtils.toIdentifier(plugin.getGroupId() + ":" + plugin.getArtifactId());
+    }
+
+    /**
+     * Returns the identifier of an artifact.
+     *
+     * @param metadata the artifact
+     * @return a non-null instance
+     */
+    public static String getId(Metadata metadata) {
+        return StringUtils.toIdentifier(metadata.getGroupId() + ":" + metadata.getArtifactId());
+    }
 
     /**
      * Returns the duration between two relative points in time.
@@ -118,19 +166,117 @@ public class MavenUtils {
     }
 
     /**
+     * Returns a property value as a Duration.
+     *
+     * @param session      the session
+     * @param name         the property name
+     * @param defaultValue the default value
+     * @return the value
+     * @see TimeUtils#parseDuration(String)
+     */
+    public static Duration getProperty(MavenSession session, String name, Duration defaultValue) {
+        String value = getProperty(session, name, (String) null);
+        try {
+            if (StringUtils.isNotEmpty(value)) return TimeUtils.parseDuration(value);
+        } catch (NumberFormatException e) {
+            // ignore and fall back to default value
+        }
+        return defaultValue;
+    }
+
+    /**
+     * Returns a property value as a boolean.
+     *
+     * @param session      the session
+     * @param name         the property name
+     * @param defaultValue the default value
+     * @return the value
+     */
+    public static boolean getProperty(MavenSession session, String name, boolean defaultValue) {
+        String value = getProperty(session, name, (String) null);
+        try {
+            if (StringUtils.isNotEmpty(value)) return Boolean.parseBoolean(value);
+        } catch (NumberFormatException e) {
+            // ignore and fall back to default value
+        }
+        return defaultValue;
+    }
+
+    /**
+     * Returns a property value as an integer.
+     *
+     * @param session      the session
+     * @param name         the property name
+     * @param defaultValue the default value
+     * @return the value
+     */
+    public static int getProperty(MavenSession session, String name, int defaultValue) {
+        String value = getProperty(session, name, (String) null);
+        try {
+            if (StringUtils.isNotEmpty(value)) return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            // ignore and fall back to default value
+        }
+        return defaultValue;
+    }
+
+    /**
+     * Returns a property value.
+     *
+     * @param session      the session
+     * @param name         the property name
+     * @param defaultValue the default value
+     * @return the value
+     */
+    public static String getProperty(MavenSession session, String name, String defaultValue) {
+        requireNonNull(session);
+        requireNonNull(name);
+        name = PROPERTY_PREFIX + name;
+        String value = session.getSystemProperties().getProperty(name);
+        if (isNotEmpty(value)) return value;
+        MavenProject project = session.getCurrentProject();
+        if (project == null) project = session.getTopLevelProject();
+        if (project != null) value = ObjectUtils.toString(project.getProperties().get(name));
+        if (isNotEmpty(value)) return value;
+        return defaultValue;
+    }
+
+    /**
      * Formats duration Maven style.
      *
      * @param duration the duration
      * @return the duration as string
      */
     public static String formatDuration(Duration duration) {
+        return formatDuration(duration, true, true);
+    }
+
+    /**
+     * Formats duration Maven style.
+     *
+     * @param duration the duration
+     * @return the duration as string
+     */
+    public static String formatDuration(Duration duration, boolean brackets) {
+        return formatDuration(duration, brackets, true);
+    }
+
+    /**
+     * Formats duration Maven style.
+     *
+     * @param duration the duration
+     * @return the duration as string
+     */
+    public static String formatDuration(Duration duration, boolean brackets, boolean padding) {
         StringBuilder builder = new StringBuilder();
-        builder.append(" [");
-        String durationAsString = formatDuration(duration.toMillis());
-        int padSize = DURATION_LENGTH - durationAsString.length();
-        if (padSize > 0) builder.append(getStringOfChar(' ', padSize));
+        if (brackets) builder.append("[");
+        String durationAsString = duration.toMillis() == 0 ? ZERO_DURATION : formatDuration(duration.toMillis());
+        if (padding) {
+            int padSize = DURATION_LENGTH - durationAsString.length();
+            if (padSize > 0) builder.append(getStringOfChar(' ', padSize));
+        }
         builder.append(durationAsString);
-        builder.append(']');
+        if (brackets) builder.append(']');
         return builder.toString();
     }
 
@@ -145,22 +291,18 @@ public class MavenUtils {
         long s = (duration / MILLISECONDS_IN_SECOND) % 60;
         long m = (duration / TimeUtils.ONE_MINUTE) % 60;
         long h = (duration / TimeUtils.ONE_HOUR) % 24;
-        long d = duration / TimeUtils.ONE_DAY;
         String format;
-        if (d > 0) {
-            // Length 11+ chars
-            format = "%d d %02d:%02d h";
-        } else if (h > 0) {
+        if (h > 0) {
             // Length 7 chars
-            format = "%2$02d:%3$02d h";
+            format = "%1$02d:%2$02dh";
         } else if (m > 0) {
             // Length 9 chars
-            format = "%3$02d:%4$02d min";
+            format = "%2$02d:%3$02dm";
         } else {
             // Length 7-8 chars
-            format = "%4$d.%5$03d s";
+            format = "%3$d.%4$02ds";
         }
-        return String.format(format, d, h, m, s, ms);
+        return String.format(format, h, m, s, ms);
     }
 
 
