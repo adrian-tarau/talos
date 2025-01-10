@@ -6,6 +6,7 @@ import net.microfalx.jvm.model.Os;
 import net.microfalx.jvm.model.Server;
 import net.microfalx.jvm.model.VirtualMachine;
 import net.microfalx.lang.*;
+import net.microfalx.maven.core.MavenLogger;
 import net.microfalx.maven.junit.SurefireTests;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.execution.MavenSession;
@@ -15,8 +16,6 @@ import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugins.surefire.report.ReportTestSuite;
 import org.apache.maven.project.MavenProject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -42,7 +41,7 @@ import static org.apache.maven.shared.utils.logging.MessageUtils.buffer;
 @Singleton
 public class ProfilerMetrics {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ProfilerMetrics.class);
+    private static final MavenLogger LOGGER = MavenLogger.create(ProfilerMetrics.class);
 
     private static final int LINE_LENGTH = 110;
 
@@ -66,8 +65,8 @@ public class ProfilerMetrics {
 
     void sessionStart() {
         configuration = new MavenConfiguration(session);
-        LOGGER.info("Initialize performance collectors, verbose: {}, minimum duration: {}",
-                configuration.isVerbose(), FormatterUtils.formatDuration(configuration.getMinimumDuration()));
+        LOGGER.debug("Initialize performance collectors, minimum duration: {}",
+                FormatterUtils.formatDuration(configuration.getMinimumDuration()));
         sessionStartTime = System.nanoTime();
     }
 
@@ -104,7 +103,7 @@ public class ProfilerMetrics {
     }
 
     public void print() {
-        if (!LOGGER.isInfoEnabled()) return;
+        if (!configuration.isConsoleEnabled()) return;
         LOGGER.info("");
         infoLine('-');
         LOGGER.info(buffer().strong("Build Report for "
@@ -116,8 +115,11 @@ public class ProfilerMetrics {
         printPluginSummary();
         printRepositorySummary();
         printTestsSummary();
-        printInfrastructureSummary();
+        printEnvironmentSummary();
         infoLine('-');
+        if (isQuiet() || configuration.isQuiet()) {
+            System.out.println(LOGGER.getReport());
+        }
     }
 
     private void printSummary() {
@@ -128,10 +130,14 @@ public class ProfilerMetrics {
         LOGGER.info("");
         logNameValue("Session", formatDuration(getSessionDuration()), true, SHORT_NAME_LENGTH);
         logNameValue("Configuration", formatDuration(getConfigurationDuration()), true, SHORT_NAME_LENGTH);
+        logNameValue("Compile", formatDuration(getGoalsDuration(COMPILE_GOALS)), true, SHORT_NAME_LENGTH);
+        logNameValue("Tests", formatDuration(getGoalsDuration(TESTS_GOALS)), true, SHORT_NAME_LENGTH);
+        logNameValue("Package", formatDuration(getGoalsDuration(PACKAGE_GOALS)), true, SHORT_NAME_LENGTH);
         logNameValue("Repository", getRepositoryReport(), true, SHORT_NAME_LENGTH);
     }
 
     private void printDependencySummary() {
+        if (!configuration.isVerbose()) return;
         Map<String, Collection<DependencyMetrics>> dependencyMetricsByGroup = getDependencyMetricsByGroup();
         LOGGER.info("");
         infoMain("Dependencies (" + dependencyMetrics.size() + " direct dependencies from " + dependencyMetricsByGroup.size()
@@ -147,6 +153,7 @@ public class ProfilerMetrics {
     }
 
     private void printPluginSummary() {
+        if (!configuration.isVerbose()) return;
         LOGGER.info("");
         infoMain("Plugins (" + pluginMetrics.size() + " and across " + session.getProjects().size() + " modules):");
         LOGGER.info("");
@@ -159,7 +166,8 @@ public class ProfilerMetrics {
     }
 
     private void printRepositorySummary() {
-        if (!configuration.isVerbose() && repositoryMetrics.getArtifactResolutionDuration().compareTo(configuration.getMinimumDuration()) < 0) {
+        if (!configuration.isVerbose()) return;
+        if (repositoryMetrics.getArtifactResolutionDuration().compareTo(configuration.getMinimumDuration()) < 0) {
             return;
         }
         Duration minimumDuration = configuration.getMinimumDuration().dividedBy(10);
@@ -187,9 +195,9 @@ public class ProfilerMetrics {
         }
     }
 
-    private void printInfrastructureSummary() {
+    private void printEnvironmentSummary() {
         LOGGER.info("");
-        infoMain("Infrastructure:");
+        infoMain("Environment:");
         LOGGER.info("");
         VirtualMachineMetrics virtualMachineMetrics = VirtualMachineMetrics.get();
         ServerMetrics serverMetrics = ServerMetrics.get();
@@ -356,6 +364,20 @@ public class ProfilerMetrics {
                 .collect(joining(", "));
     }
 
+    private boolean isQuiet() {
+        return session.getRequest().getLoggingLevel() > 1;
+    }
+
+    private Duration getGoalsDuration(String... goals) {
+        Duration duration = Duration.ZERO;
+        for (MojoMetrics metric : getMojoMetrics()) {
+            if (StringUtils.containsInArray(metric.getGoal(), goals)) {
+                duration = duration.plus(metric.getDuration());
+            }
+        }
+        return duration;
+    }
+
     private String formatDurations(Duration duration1, Duration duration2) {
         if (duration1.isZero() && duration2.isZero()) {
             return String.format("%8s", ZERO_DURATION);
@@ -424,4 +446,8 @@ public class ProfilerMetrics {
         }
         return map;
     }
+
+    private static final String[] COMPILE_GOALS = {"compiler:compile", "compiler:testCompile", "resources:resources", "resources:testResources"};
+    private static final String[] TESTS_GOALS = {"surefire:test", "failsafe:verify", "jacoco:report"};
+    private static final String[] PACKAGE_GOALS = {"jar:jar", "install:install", "install:deploy"};
 }

@@ -13,6 +13,7 @@ import static net.microfalx.maven.core.MavenUtils.getProperty;
 public class MavenConfiguration extends net.microfalx.maven.core.MavenConfiguration {
 
     private Duration minimumDuration;
+    private Boolean consoleEnabled;
 
     public MavenConfiguration(MavenSession session) {
         super(session);
@@ -28,5 +29,17 @@ public class MavenConfiguration extends net.microfalx.maven.core.MavenConfigurat
             minimumDuration = getProperty(getSession(), "minimumDuration", ofMillis(100));
         }
         return minimumDuration;
+    }
+
+    /**
+     * Returns whether the console is enabled and should display reports and summaries.
+     *
+     * @return {@code true} if enabled, {@code false} otherwise
+     */
+    public Boolean isConsoleEnabled() {
+        if (consoleEnabled == null) {
+            consoleEnabled = getProperty(getSession(), "console.enabled", true);
+        }
+        return consoleEnabled;
     }
 }
