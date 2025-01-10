@@ -1,5 +1,7 @@
 package net.microfalx.maven.extension;
 
+import net.microfalx.jvm.ServerMetrics;
+import net.microfalx.jvm.VirtualMachineMetrics;
 import org.apache.maven.AbstractMavenLifecycleParticipant;
 import org.apache.maven.MavenExecutionException;
 import org.apache.maven.execution.MavenExecutionRequest;
@@ -26,6 +28,8 @@ public class InitLifecycleParticipant extends AbstractMavenLifecycleParticipant 
     public void afterProjectsRead(MavenSession session) throws MavenExecutionException {
         super.afterProjectsRead(session);
         registerListener(session);
+        VirtualMachineMetrics.get().start();
+        ServerMetrics.get().start();
     }
 
     @Override

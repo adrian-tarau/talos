@@ -1,5 +1,7 @@
 package net.microfalx.maven.extension;
 
+import net.microfalx.jvm.ServerMetrics;
+import net.microfalx.jvm.VirtualMachineMetrics;
 import net.microfalx.jvm.model.Os;
 import net.microfalx.jvm.model.Server;
 import net.microfalx.jvm.model.VirtualMachine;
@@ -26,9 +28,10 @@ import java.util.function.Function;
 
 import static java.util.stream.Collectors.joining;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.FormatterUtils.formatBytes;
+import static net.microfalx.lang.FormatterUtils.*;
 import static net.microfalx.lang.StringUtils.COMMA_WITH_SPACE;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
+import static net.microfalx.maven.extension.MavenUtils.formatDuration;
 import static net.microfalx.maven.extension.MavenUtils.*;
 import static org.apache.maven.shared.utils.logging.MessageUtils.buffer;
 
@@ -188,18 +191,21 @@ public class ProfilerMetrics {
         LOGGER.info("");
         infoMain("Infrastructure:");
         LOGGER.info("");
-        VirtualMachine virtualMachine = VirtualMachine.get(true);
-        Os os = virtualMachine.getOs();
+        VirtualMachineMetrics virtualMachineMetrics = VirtualMachineMetrics.get();
+        ServerMetrics serverMetrics = ServerMetrics.get();
+        VirtualMachine virtualMachine = virtualMachineMetrics.getLast();
+        Server server = serverMetrics.getLast();
+        Os os = server.getOs();
         logNameValue("Operating system", os.getName() + " " + os.getVersion());
-        Server server = virtualMachine.getServer();
-        logNameValue("Hostname", server.getHostName());
-        logNameValue("CPU Cores", Integer.toString(server.getCores()));
-        logNameValue("Memory", formatBytes(server.getMemoryActuallyUsed()) + " of "
-                               + formatBytes(server.getMemoryTotal()));
         logNameValue("User Name", JvmUtils.getUserName());
-        logNameValue("Java VM", virtualMachine.getName());
-        logNameValue("Java Heap", formatBytes(virtualMachine.getHeapUsedMemory()) + " of "
-                                  + formatBytes(virtualMachine.getHeapTotalMemory()));
+        logNameValue("Server Hostname", server.getHostName());
+        logNameValue("Server CPU", formatPercent(serverMetrics.getAverageCpu()) + " (load: " +
+                                   formatNumber(serverMetrics.getAverageLoad()) + ", cores " + server.getCores() + ")");
+        logNameValue("Server Memory", formatBytes(server.getMemoryActuallyUsed()) + " of "
+                                      + formatBytes(server.getMemoryTotal()));
+        logNameValue("Java", virtualMachine.getName());
+        logNameValue("Java CPU", formatPercent(virtualMachineMetrics.getAverageCpu()));
+        logNameValue("Java Memory", formatMemory(virtualMachineMetrics.getMemoryAverage(), virtualMachineMetrics.getMemoryMaximum()));
     }
 
     private void printTestsSummary() {

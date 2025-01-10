@@ -1,5 +1,6 @@
 package net.microfalx.maven.extension;
 
+import net.microfalx.lang.NumberUtils;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.TimeUtils;
 import org.apache.maven.model.Dependency;
@@ -16,6 +17,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.FormatterUtils.formatBytes;
+import static net.microfalx.lang.FormatterUtils.formatPercent;
 import static net.microfalx.lang.StringUtils.*;
 import static net.microfalx.lang.TimeUtils.MILLISECONDS_IN_SECOND;
 import static net.microfalx.lang.TimeUtils.NANOSECONDS_IN_MILLISECONDS;
@@ -226,6 +229,17 @@ public class MavenUtils {
         return String.format(format, h, m, s, ms);
     }
 
+    /**
+     * Formats memory usage as a string.
+     *
+     * @param used    the used memory
+     * @param maximum the maximum memory
+     * @return a non-null instance
+     */
+    public static String formatMemory(long used, long maximum) {
+        return formatBytes(used) + " of " + formatBytes(maximum)
+               + " (" + formatPercent(NumberUtils.percent(used, maximum)) + ")";
+    }
 
     /**
      * Registers a name for a Mojo.
