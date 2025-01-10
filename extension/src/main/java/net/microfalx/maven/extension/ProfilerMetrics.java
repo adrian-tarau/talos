@@ -196,16 +196,15 @@ public class ProfilerMetrics {
         VirtualMachine virtualMachine = virtualMachineMetrics.getLast();
         Server server = serverMetrics.getLast();
         Os os = server.getOs();
-        logNameValue("Operating system", os.getName() + " " + os.getVersion());
-        logNameValue("User Name", JvmUtils.getUserName());
-        logNameValue("Server Hostname", server.getHostName());
-        logNameValue("Server CPU", formatPercent(serverMetrics.getAverageCpu()) + " (load: " +
-                                   formatNumber(serverMetrics.getAverageLoad()) + ", cores " + server.getCores() + ")");
-        logNameValue("Server Memory", formatBytes(server.getMemoryActuallyUsed()) + " of "
-                                      + formatBytes(server.getMemoryTotal()));
+        logNameValue("Operating System", os.getName() + " " + os.getVersion());
         logNameValue("Java", virtualMachine.getName());
-        logNameValue("Java CPU", formatPercent(virtualMachineMetrics.getAverageCpu()));
-        logNameValue("Java Memory", formatMemory(virtualMachineMetrics.getMemoryAverage(), virtualMachineMetrics.getMemoryMaximum()));
+        logNameValue("User Name", JvmUtils.getUserName() + "@" + server.getHostName());
+        logNameValue("Server", "CPU: " + formatPercent(serverMetrics.getAverageCpu()) + " (load: " +
+                               formatNumber(serverMetrics.getAverageLoad()) + ", cores " + server.getCores() + ")"
+                               + ", Memory: " + formatBytes(server.getMemoryActuallyUsed()) + " of "
+                               + formatBytes(server.getMemoryTotal()));
+        logNameValue("Process", "CPU: " + formatPercent(virtualMachineMetrics.getAverageCpu())
+                                + ", Memory: " + formatMemory(virtualMachineMetrics.getMemoryAverage(), virtualMachineMetrics.getMemoryMaximum()));
     }
 
     private void printTestsSummary() {
