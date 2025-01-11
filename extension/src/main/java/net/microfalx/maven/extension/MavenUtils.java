@@ -111,7 +111,6 @@ public class MavenUtils {
             while (builder.length() < maxLength) {
                 builder.append('.');
             }
-            builder.append(' ');
         }
         return builder;
     }

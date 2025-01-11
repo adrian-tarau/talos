@@ -6,16 +6,22 @@ import org.apache.maven.execution.ExecutionEvent;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 
+import java.io.PrintStream;
+
+import static net.microfalx.lang.StringUtils.EMPTY_STRING;
 import static org.apache.maven.shared.utils.logging.MessageUtils.buffer;
 
 public class ProgressListener extends AbstractExecutionListener {
 
     private final MavenSession session;
     private final MavenConfiguration configuration;
+    private final PrintStream output;
 
-    public ProgressListener(MavenSession session) {
+    public ProgressListener(MavenSession session, PrintStream output) {
         ArgumentUtils.requireNonNull(session);
+        ArgumentUtils.requireNonNull(output);
         this.session = session;
+        this.output = output;
         this.configuration = new MavenConfiguration(session);
     }
 
@@ -28,17 +34,42 @@ public class ProgressListener extends AbstractExecutionListener {
         buffer.append(buffer().strong(project.getName()));
         buffer.append(' ');
         MavenUtils.appendDots(buffer);
-        log(buffer.toString());
+        print(buffer.toString());
+    }
+
+    @Override
+    public void projectSucceeded(ExecutionEvent event) {
+        projectEnded(event);
+    }
+
+    @Override
+    public void projectFailed(ExecutionEvent event) {
+        projectEnded(event);
+    }
+
+    public void projectEnded(ExecutionEvent event) {
+        println();
     }
 
     void start() {
         if (!configuration.isProgress()) return;
-        log(buffer().strong("Build Progress for "
-                            + session.getTopLevelProject().getName() + " "
-                            + session.getTopLevelProject().getVersion()).toString());
+        println(buffer().strong("Building "
+                                + session.getTopLevelProject().getName() + " "
+                                + session.getTopLevelProject().getVersion()).toString());
+        println(EMPTY_STRING);
     }
 
-    private void log(String message) {
-        System.out.println(message);
+    private void println(String message) {
+        output.println(message);
     }
+
+    private void println() {
+        println(EMPTY_STRING);
+    }
+
+    private void print(String message) {
+        output.print(message);
+    }
+
+
 }

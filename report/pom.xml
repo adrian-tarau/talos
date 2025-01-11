@@ -24,16 +24,16 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.microfalx.maven</groupId>
-    <artifactId>maven-core</artifactId>
+    <artifactId>maven-report</artifactId>
     <version>0.8.1-SNAPSHOT</version>
 
     <parent>
         <groupId>net.microfalx.maven</groupId>
-        <artifactId>maven</artifactId>
-        <version>0.8.1-SNAPSHOT</version>
+		<artifactId>maven</artifactId>
+		<version>0.8.1-SNAPSHOT</version>
     </parent>
 
-    <name>Maven :: Core</name>
+    <name>Maven :: Report</name>
 
     <dependencies>
 
@@ -43,18 +43,8 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-slf4j-provider</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>net.microfalx</groupId>
             <artifactId>lang</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>net.microfalx.resource</groupId>
-            <artifactId>resource-core</artifactId>
         </dependency>
 
         <dependency>
@@ -62,35 +52,6 @@
             <artifactId>metrics</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jooq</groupId>
-            <artifactId>joor</artifactId>
-        </dependency>
-
     </dependencies>
-
-    <build>
-        <plugins>
-
-            <plugin>
-                <groupId>org.eclipse.sisu</groupId>
-                <artifactId>sisu-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>generate-index</id>
-                        <goals>
-                            <goal>main-index</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-        </plugins>
-    </build>
 
 </project>

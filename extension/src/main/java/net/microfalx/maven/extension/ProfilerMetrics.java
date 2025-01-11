@@ -56,7 +56,13 @@ public class ProfilerMetrics {
     protected MavenSession session;
 
     @Inject
+    protected MavenLogger logger;
+
+    @Inject
     protected RepositoryMetrics repositoryMetrics;
+
+    @Inject
+    protected TransferMetrics transferMetrics;
 
     @Inject
     protected SurefireTests tests;
@@ -105,7 +111,7 @@ public class ProfilerMetrics {
     public void print() {
         if (!configuration.isConsoleEnabled()) return;
         LOGGER.info("");
-        infoLine('-');
+        if (shouldShowLineSeparator()) infoLine('-');
         LOGGER.info(buffer().strong("Build Report for "
                                     + session.getTopLevelProject().getName() + " "
                                     + session.getTopLevelProject().getVersion()).toString());
@@ -116,9 +122,9 @@ public class ProfilerMetrics {
         printRepositorySummary();
         printTestsSummary();
         printEnvironmentSummary();
-        infoLine('-');
+        if (shouldShowLineSeparator()) infoLine('-');
         if (isQuiet() || configuration.isQuiet()) {
-            System.out.println(LOGGER.getReport());
+            logger.getSystemOutputPrintStream().println(LOGGER.getReport());
         }
     }
 
@@ -133,7 +139,8 @@ public class ProfilerMetrics {
         logNameValue("Compile", formatDuration(getGoalsDuration(COMPILE_GOALS)), true, SHORT_NAME_LENGTH);
         logNameValue("Tests", formatDuration(getGoalsDuration(TESTS_GOALS)), true, SHORT_NAME_LENGTH);
         logNameValue("Package", formatDuration(getGoalsDuration(PACKAGE_GOALS)), true, SHORT_NAME_LENGTH);
-        logNameValue("Repository", getRepositoryReport(), true, SHORT_NAME_LENGTH);
+        logNameValue("Local Repository", getRepositoryReport(repositoryMetrics), true, SHORT_NAME_LENGTH);
+        logNameValue("Remote Repository", getRepositoryReport(transferMetrics), true, SHORT_NAME_LENGTH);
     }
 
     private void printDependencySummary() {
@@ -167,7 +174,13 @@ public class ProfilerMetrics {
 
     private void printRepositorySummary() {
         if (!configuration.isVerbose()) return;
-        if (repositoryMetrics.getArtifactResolutionDuration().compareTo(configuration.getMinimumDuration()) < 0) {
+        printRepositorySummary("Local Repository", repositoryMetrics);
+        printRepositorySummary("Remote Repository", transferMetrics);
+    }
+
+
+    private void printRepositorySummary(String title, AbstractRepositoryMetrics repositoryMetrics) {
+        if (repositoryMetrics.getResolutionDuration().compareTo(configuration.getMinimumDuration()) < 0) {
             return;
         }
         Duration minimumDuration = configuration.getMinimumDuration().dividedBy(10);
@@ -175,10 +188,10 @@ public class ProfilerMetrics {
         if (!configuration.isVerbose()) details += "limited";
         if (isNotEmpty(details)) details = " (" + details + ")";
         LOGGER.info("");
-        infoMain("Repository" + details + ":");
+        infoMain(title + " " + details + ":");
         LOGGER.info("");
-        Map<String, Collection<ArtifactMetrics>> artifactMetricsByGroup = repositoryMetrics.getArtifactMetricsByGroup();
-        for (Map.Entry<String, Collection<ArtifactMetrics>> entry : artifactMetricsByGroup.entrySet()) {
+        boolean remote = repositoryMetrics instanceof TransferMetrics;
+        for (Map.Entry<String, Collection<ArtifactMetrics>> entry : repositoryMetrics.getMetricsByGroup().entrySet()) {
             Collection<ArtifactMetrics> metrics = entry.getValue();
             Duration metadataResolveDuration = TimeUtils.sum(metrics.stream().map(ArtifactMetrics::getMetadataResolveDuration));
             Duration metadataDownloadDuration = TimeUtils.sum(metrics.stream().map(ArtifactMetrics::getMetadataDownloadDuration));
@@ -188,9 +201,14 @@ public class ProfilerMetrics {
             Duration totalDuration = TimeUtils.sum(artifactResolveDuration, metadataResolveDuration, metadataDownloadDuration, artifactDeployDuration);
             if (!configuration.isVerbose() && totalDuration.compareTo(minimumDuration) < 0) continue;
             String name = entry.getKey() + " (" + String.format("%1$2d", metrics.size()) + ")";
-            String value = "[Metadata: " + formatDurations(metadataResolveDuration, metadataDownloadDuration) + ", " +
-                           "Artifact: " + formatDurations(artifactResolveDuration, artifactInstallDuration, artifactDeployDuration) + "]";
-
+            String value;
+            if (remote) {
+                value = "[Metadata: " + formatDuration(metadataResolveDuration) + ", " +
+                        "Artifact: " + formatDuration(artifactResolveDuration) + "]";
+            } else {
+                value = "[Metadata: " + formatDurations(metadataResolveDuration, metadataDownloadDuration) + ", " +
+                        "Artifact: " + formatDurations(artifactResolveDuration, artifactInstallDuration, artifactDeployDuration) + "]";
+            }
             logNameValue(name, value);
         }
     }
@@ -226,9 +244,8 @@ public class ProfilerMetrics {
         for (MavenProject project : tests.getProjects()) {
             Collection<ReportTestSuite> testSuites = tests.getTestSuites(project);
             StringBuilder buffer = new StringBuilder(128);
-            buffer.append(project.getName());
-            buffer.append(' ');
-            MavenUtils.appendDots(buffer);
+            buffer.append(project.getName()).append(' ');
+            MavenUtils.appendDots(buffer).append(' ');
             buffer.append(getTestsReport(getSum(testSuites, ReportTestSuite::getNumberOfTests),
                     getSum(testSuites, ReportTestSuite::getNumberOfFailures),
                     getSum(testSuites, ReportTestSuite::getNumberOfErrors),
@@ -245,12 +262,10 @@ public class ProfilerMetrics {
         for (MojoMetrics metric : getMojoMetrics()) {
             if (metric.getDuration().toMillis() == 0) continue;
             StringBuilder buffer = new StringBuilder(128);
-            buffer.append(metric.getName()).append(" (").append(metric.getGoal()).append(")");
-            buffer.append(' ');
-            MavenUtils.appendDots(buffer);
+            buffer.append(metric.getName()).append(" (").append(metric.getGoal()).append(") ");
+            MavenUtils.appendDots(buffer).append(' ');
             buffer.append(buffer().strong(formatDuration(metric.getDuration())));
-            buffer.append(' ');
-            buffer.append("(");
+            buffer.append(" (");
             if (metric.getFailureCount() > 0) {
                 buffer.append(buffer().warning("FAILED, " + metric.getFailureCount() + " failures"));
             } else {
@@ -302,9 +317,8 @@ public class ProfilerMetrics {
 
     private String printNameValue(String name, String value, boolean highlight, int length) {
         StringBuilder buffer = new StringBuilder(128);
-        buffer.append(name);
-        buffer.append(' ');
-        MavenUtils.appendDots(buffer, length);
+        buffer.append(name).append(' ');
+        MavenUtils.appendDots(buffer, length).append(' ');
         buffer.append(highlight ? buffer().strong(value) : value);
         return buffer.toString();
     }
@@ -321,13 +335,20 @@ public class ProfilerMetrics {
         return builder.toString();
     }
 
-    private String getRepositoryReport() {
+    private String getRepositoryReport(AbstractRepositoryMetrics repositoryMetrics) {
         StringBuilder builder = new StringBuilder();
-        builder.append(buffer().strong(formatDuration(repositoryMetrics.getArtifactResolutionDuration())));
-        builder.append(" (Metadata: ").append(formatDurations(repositoryMetrics.getMetadataResolvedDuration(), repositoryMetrics.getMetadataDownloadDuration()))
-                .append(", Artifact: ").append(formatDurations(repositoryMetrics.getArtifactResolveDuration(), repositoryMetrics.getArtifactInstallDuration(),
-                        repositoryMetrics.getArtifactDeployDuration()))
-                .append(buffer().strong(")"));
+        builder.append(buffer().strong(formatDuration(repositoryMetrics.getResolutionDuration())));
+        boolean remote = repositoryMetrics instanceof TransferMetrics;
+        if (remote) {
+            builder.append(" (Metadata: ").append(formatDuration(repositoryMetrics.getMetadataResolvedDuration(), false, false))
+                    .append(", Artifact: ").append(formatDuration(repositoryMetrics.getArtifactResolveDuration(), false, false))
+                    .append(buffer().strong(")"));
+        } else {
+            builder.append(" (Metadata: ").append(formatDurations(repositoryMetrics.getMetadataResolvedDuration(), repositoryMetrics.getMetadataDownloadDuration()))
+                    .append(", Artifact: ").append(formatDurations(repositoryMetrics.getArtifactResolveDuration(), repositoryMetrics.getArtifactInstallDuration(),
+                            repositoryMetrics.getArtifactDeployDuration()))
+                    .append(buffer().strong(")"));
+        }
         return builder.toString();
     }
 
@@ -445,6 +466,10 @@ public class ProfilerMetrics {
             map.computeIfAbsent(dependencyMetrics.getGroupId(), s -> new ArrayList<>()).add(dependencyMetrics);
         }
         return map;
+    }
+
+    private boolean shouldShowLineSeparator() {
+        return !configuration.isQuietAndWithProgress();
     }
 
     private static final String[] COMPILE_GOALS = {"compiler:compile", "compiler:testCompile", "resources:resources", "resources:testResources"};

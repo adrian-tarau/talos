@@ -1,8 +1,14 @@
 package net.microfalx.maven.core;
 
+import net.microfalx.resource.Resource;
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.project.MavenProject;
+
+import java.io.File;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.FileUtils.validateDirectoryExists;
+import static net.microfalx.lang.FileUtils.validateFileExists;
 import static net.microfalx.maven.core.MavenUtils.getProperty;
 
 /**
@@ -15,10 +21,12 @@ public class MavenConfiguration {
     private static final int VERBOSE_MORE = 2;
     private static final int VERBOSE_ALL = 3;
 
+    private static final String STORAGE_DIRECTORY = ".microfalx";
+
     private Boolean verbose;
     private Boolean quiet;
     private Boolean progress;
-    private Integer verboseLevel;
+    private Integer verbosityLevel;
 
     private final MavenSession session;
 
@@ -43,7 +51,7 @@ public class MavenConfiguration {
      */
     public final boolean isQuiet() {
         if (quiet == null) quiet = getProperty(session, "quiet", false);
-        return isProgress() || quiet;
+        return quiet;
     }
 
     /**
@@ -63,13 +71,107 @@ public class MavenConfiguration {
      */
     public final boolean isProgress() {
         if (progress == null) initProgress();
-        return progress;
+        return progress && isQuiet();
+    }
+
+    /**
+     * Returns whether the build is quiet and progress was requested.
+     *
+     * @return {@code true} if quiet with progress, {@code false} otherwise
+     */
+    public boolean isQuietAndWithProgress() {
+        return isQuiet() && isProgress();
+    }
+
+    /**
+     * Returns a director used to store files for any maven plugins.
+     *
+     * @return a non-null instance
+     */
+    public Resource getStorageDirectory() {
+        File baseDirectory = new File(session.getRequest().getBaseDirectory());
+        return Resource.directory(validateDirectoryExists(new File(baseDirectory, STORAGE_DIRECTORY)));
+    }
+
+    /**
+     * Returns a director inside the target directory.
+     *
+     * @param name     the name of the directory
+     * @param topLevel {@code true} to select the top level target directory, {@code false} for the target directory
+     *                 of the current project
+     * @return a non-null instance
+     */
+    public Resource getTargetDirectory(String name, boolean topLevel) {
+        return Resource.directory(validateDirectoryExists(getTargetReference(name, topLevel)));
+    }
+
+    /**
+     * Returns a file inside the target directory.
+     *
+     * @param name     the name of the file
+     * @param topLevel {@code true} to select the top level target directory, {@code false} for the target directory
+     *                 of the current project
+     * @return a non-null instance
+     */
+    public Resource getTargetFile(String name, boolean topLevel) {
+        return Resource.file(validateFileExists(getTargetReference(name, topLevel)));
+    }
+
+    /**
+     * Returns a director inside the target directory.
+     *
+     * @param project the project
+     * @param name    the name of the directory
+     * @return a non-null instance
+     */
+    public Resource getTargetDirectory(MavenProject project, String name) {
+        return Resource.directory(validateDirectoryExists(getTargetReference(project, name)));
+    }
+
+    /**
+     * Returns a file inside the target directory.
+     *
+     * @param project the project
+     * @param name    the name of the file
+     * @return a non-null instance
+     */
+    public Resource getTargetFile(MavenProject project, String name) {
+        return Resource.file(validateFileExists(getTargetReference(project, name)));
+    }
+
+    private File getTargetReference(String name, boolean topLevel) {
+        File reference;
+        if (topLevel) {
+            MavenProject project = session.getTopLevelProject();
+            if (project != null) {
+                reference = getTargetReference(project, name);
+            } else {
+                return new File(getTargetFromRequest(), name);
+            }
+        } else {
+            MavenProject project = session.getCurrentProject();
+            if (project != null) {
+                reference = getTargetReference(project, name);
+            } else {
+                throw new IllegalArgumentException("A target reference (" + name + ") cannot retrieved since project information is not available");
+            }
+        }
+        return reference;
+    }
+
+    private File getTargetReference(MavenProject project, String fileName) {
+        return new File(project.getBuild().getDirectory(), fileName);
+    }
+
+    private File getTargetFromRequest() {
+        File baseDirectory = new File(session.getRequest().getBaseDirectory());
+        return new File(baseDirectory, "target");
     }
 
     private void initVerbose() {
         verbose = getProperty(session, "verbose", false);
-        verboseLevel = getProperty(session, "verboseLevel", VERBOSE_NONE);
-        if (verbose) verboseLevel = VERBOSE_ALL;
+        verbosityLevel = getProperty(session, "verboseLevel", VERBOSE_NONE);
+        if (verbose) verbosityLevel = VERBOSE_ALL;
     }
 
     private void initProgress() {

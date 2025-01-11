@@ -54,6 +54,8 @@
         <module>boot</module>
         <module>docker</module>
         <module>junit</module>
+        <module>model</module>
+        <module>report</module>
         <module>plugin</module>
         <module>extension</module>
         <module>demo</module>
@@ -68,7 +70,7 @@
 
     <properties>
         <java.version>11</java.version>
-        <bom.version>1.0.5</bom.version>
+        <bom.version>1.0.7</bom.version>
         <lang.version>0.8.1-SNAPSHOT</lang.version>
         <resource.version>0.8.1-SNAPSHOT</resource.version>
         <meters.version>0.8.1-SNAPSHOT</meters.version>
