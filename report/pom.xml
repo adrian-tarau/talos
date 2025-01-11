@@ -29,8 +29,8 @@
 
     <parent>
         <groupId>net.microfalx.maven</groupId>
-		<artifactId>maven</artifactId>
-		<version>0.8.1-SNAPSHOT</version>
+        <artifactId>maven</artifactId>
+        <version>0.8.1-SNAPSHOT</version>
     </parent>
 
     <name>Maven :: Report</name>
@@ -43,13 +43,14 @@
         </dependency>
 
         <dependency>
-            <groupId>net.microfalx</groupId>
-            <artifactId>lang</artifactId>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-plugin-api</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>net.microfalx</groupId>
-            <artifactId>metrics</artifactId>
+            <groupId>net.microfalx.maven</groupId>
+            <artifactId>maven-model</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
     </dependencies>

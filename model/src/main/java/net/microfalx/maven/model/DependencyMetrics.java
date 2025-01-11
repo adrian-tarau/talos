@@ -1,9 +1,9 @@
-package net.microfalx.maven.extension;
+package net.microfalx.maven.model;
 
 import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.Nameable;
-import net.microfalx.lang.StringUtils;
-import org.apache.maven.model.Plugin;
+import net.microfalx.maven.core.MavenUtils;
+import org.apache.maven.model.Dependency;
 import org.apache.maven.project.MavenProject;
 
 import java.util.HashSet;
@@ -15,21 +15,20 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 /**
  * Holds metrics about a project dependency.
  */
-public class PluginMetrics implements Identifiable<String>, Nameable {
+public class DependencyMetrics implements Identifiable<String>, Nameable {
 
     private final String id;
     private final String groupId;
     private final String artifactId;
 
     private final Set<String> versions = new HashSet<>();
-    private final Set<String> goals = new HashSet<>();
     private final Set<MavenProject> projects = new HashSet<>();
 
-    PluginMetrics(Plugin plugin) {
-        requireNonNull(plugin);
-        this.groupId = plugin.getGroupId();
-        this.artifactId = plugin.getArtifactId();
-        this.id = MavenUtils.getId(plugin);
+    public DependencyMetrics(Dependency dependency) {
+        requireNonNull(dependency);
+        this.groupId = dependency.getGroupId();
+        this.artifactId = dependency.getArtifactId();
+        this.id = MavenUtils.getId(dependency);
     }
 
     @Override
@@ -54,22 +53,14 @@ public class PluginMetrics implements Identifiable<String>, Nameable {
         return unmodifiableSet(versions);
     }
 
-    public Set<String> getGoals() {
-        return unmodifiableSet(goals);
-    }
-
     public Set<MavenProject> getProjects() {
         return unmodifiableSet(projects);
     }
 
-    void registerGoal(String goal) {
-        if (StringUtils.isNotEmpty(goal)) this.goals.add(goal);
-    }
-
-    void register(MavenProject project, Plugin plugin) {
+    public void register(MavenProject project, Dependency dependency) {
         requireNonNull(project);
-        requireNonNull(plugin);
-        this.versions.add(plugin.getVersion());
+        requireNonNull(dependency);
+        this.versions.add(dependency.getVersion());
         this.projects.add(project);
     }
 }

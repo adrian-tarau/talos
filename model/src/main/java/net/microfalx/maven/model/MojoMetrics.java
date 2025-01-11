@@ -1,7 +1,8 @@
-package net.microfalx.maven.extension;
+package net.microfalx.maven.model;
 
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.Nameable;
+import net.microfalx.maven.core.MavenUtils;
 import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.MojoExecution;
 
@@ -16,7 +17,7 @@ import static java.time.Duration.ofNanos;
 /**
  * Holds metrics about Mojo execution.
  */
-public class MojoMetrics implements Nameable {
+public final class MojoMetrics implements Nameable {
 
     private final String name;
     private final Class<?> clazz;
@@ -28,9 +29,9 @@ public class MojoMetrics implements Nameable {
     private volatile Throwable throwable;
 
     private static final ThreadLocal<Long> startTime = ThreadLocal.withInitial(System::nanoTime);
-    private static final  ThreadLocal<Long> endTime = new ThreadLocal<>();
+    private static final ThreadLocal<Long> endTime = new ThreadLocal<>();
 
-    MojoMetrics(Mojo mojo) {
+    public MojoMetrics(Mojo mojo) {
         this.clazz = mojo.getClass();
         this.name = MavenUtils.getName(mojo);
     }
@@ -48,12 +49,12 @@ public class MojoMetrics implements Nameable {
         return ClassUtils.getName(clazz);
     }
 
-    void start(MojoExecution execution) {
+    public void start(MojoExecution execution) {
         startTime.set(System.nanoTime());
         goals.add(MavenUtils.getGoal(execution));
     }
 
-    void stop(Throwable throwable) {
+    public void stop(Throwable throwable) {
         endTime.set(System.nanoTime());
         this.throwable = throwable;
         if (throwable != null) failureCount.incrementAndGet();
@@ -61,15 +62,15 @@ public class MojoMetrics implements Nameable {
         executionCount.incrementAndGet();
     }
 
-    int getExecutionCount() {
+    public int getExecutionCount() {
         return executionCount.get();
     }
 
-    int getFailureCount() {
+    public int getFailureCount() {
         return failureCount.get();
     }
 
-    Duration getDuration() {
+    public Duration getDuration() {
         if (this.duration == null) this.duration = ofNanos(durationNano.get());
         return this.duration;
     }
