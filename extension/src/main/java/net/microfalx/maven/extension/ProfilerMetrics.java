@@ -8,6 +8,10 @@ import net.microfalx.jvm.model.VirtualMachine;
 import net.microfalx.lang.*;
 import net.microfalx.maven.core.MavenLogger;
 import net.microfalx.maven.junit.SurefireTests;
+import net.microfalx.maven.model.ArtifactMetrics;
+import net.microfalx.maven.model.DependencyMetrics;
+import net.microfalx.maven.model.MojoMetrics;
+import net.microfalx.maven.model.PluginMetrics;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
@@ -30,8 +34,10 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.FormatterUtils.*;
 import static net.microfalx.lang.StringUtils.COMMA_WITH_SPACE;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
-import static net.microfalx.maven.extension.MavenUtils.formatDuration;
-import static net.microfalx.maven.extension.MavenUtils.*;
+import static net.microfalx.maven.core.MavenUtils.formatDuration;
+import static net.microfalx.maven.core.MavenUtils.*;
+import static net.microfalx.maven.extension.MavenUtils.LONG_NAME_LENGTH;
+import static net.microfalx.maven.extension.MavenUtils.SHORT_NAME_LENGTH;
 import static org.apache.maven.shared.utils.logging.MessageUtils.buffer;
 
 /**
@@ -436,11 +442,11 @@ public class ProfilerMetrics {
     }
 
     private DependencyMetrics getMetrics(Dependency dependency) {
-        return dependencyMetrics.computeIfAbsent(MavenUtils.getId(dependency), k -> new DependencyMetrics(dependency));
+        return dependencyMetrics.computeIfAbsent(net.microfalx.maven.core.MavenUtils.getId(dependency), k -> new DependencyMetrics(dependency));
     }
 
     private PluginMetrics getMetrics(Plugin plugin) {
-        return pluginMetrics.computeIfAbsent(MavenUtils.getId(plugin), k -> new PluginMetrics(plugin));
+        return pluginMetrics.computeIfAbsent(net.microfalx.maven.core.MavenUtils.getId(plugin), k -> new PluginMetrics(plugin));
     }
 
     private long getSize(Collection<DependencyMetrics> metrics) {

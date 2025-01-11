@@ -2,6 +2,7 @@ package net.microfalx.maven.extension;
 
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.maven.core.MavenLogger;
+import net.microfalx.maven.core.MavenUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.execution.MojoExecutionEvent;
 import org.apache.maven.execution.MojoExecutionListener;

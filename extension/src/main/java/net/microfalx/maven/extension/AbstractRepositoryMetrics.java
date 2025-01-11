@@ -1,6 +1,8 @@
 package net.microfalx.maven.extension;
 
 import net.microfalx.lang.TimeUtils;
+import net.microfalx.maven.core.MavenUtils;
+import net.microfalx.maven.model.ArtifactMetrics;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.metadata.Metadata;

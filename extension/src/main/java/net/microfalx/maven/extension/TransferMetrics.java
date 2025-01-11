@@ -3,6 +3,7 @@ package net.microfalx.maven.extension;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.maven.core.MavenConfiguration;
 import net.microfalx.maven.core.MavenLogger;
+import net.microfalx.maven.model.ArtifactMetrics;
 import org.apache.maven.execution.MavenSession;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.artifact.Artifact;
