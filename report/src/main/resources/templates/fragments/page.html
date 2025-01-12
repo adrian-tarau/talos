@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:fragment="header">
+    <title th:text="${session.name}"></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style></style>
+</head>
+
+<div th:fragment="section(title)" class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2" th:text="${title}"></h1>
+</div>
+
+<div th:fragment="code" th:remove="tag">
+    <script></script>
+</div>
+
+<body>
+</body>
+</html>

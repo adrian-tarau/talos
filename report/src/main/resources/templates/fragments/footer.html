@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<footer class="text-center" th:fragment="footer-full">
+    <button type="button" class="btn btn-secondary btn-floating btn-lg" id="btn-back-to-top"><i class="fas fa-arrow-up"></i></button>
+    <span>Copyright © 2024 <a th:href="${session.url}" target='_blank' th:text="${session.owner}"></a>. All rights reserved.</span>
+</footer>
+
+</body>
+</html>
