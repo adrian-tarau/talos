@@ -103,7 +103,6 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
         } catch (IOException e) {
             LOGGER.error("Failed to attach log", e);
         }
-        LOGGER.info("Store metrics: " + sessionMetrics);
         Resource resource = configuration.getStorageDirectory().resolve("build.metrics", Resource.Type.FILE);
         try {
             try (OutputStream outputStream = resource.getOutputStream()) {

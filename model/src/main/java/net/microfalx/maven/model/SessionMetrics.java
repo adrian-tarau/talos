@@ -35,7 +35,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     private String throwableClass;
     private String throwable;
 
-    private Collection<ProjectMetrics> projects = new ArrayList<>();
+    private Collection<ProjectMetrics> modules = new ArrayList<>();
     private Collection<ArtifactMetrics> artifacts = new ArrayList<>();
     private Collection<DependencyMetrics> dependencies = new ArrayList<>();
     private Collection<PluginMetrics> plugins = new ArrayList<>();
@@ -89,18 +89,18 @@ public class SessionMetrics extends NamedIdentityAware<String> {
         return this;
     }
 
-    public Collection<ProjectMetrics> getProjects() {
-        return projects;
+    public Collection<ProjectMetrics> getModules() {
+        return modules;
     }
 
-    public void setProjects(Collection<ProjectMetrics> projects) {
-        requireNonNull(projects);
-        this.projects = new ArrayList<>(projects);
+    public void setModules(Collection<ProjectMetrics> modules) {
+        requireNonNull(modules);
+        this.modules = new ArrayList<>(modules);
     }
 
-    public void addProject(ProjectMetrics project) {
-        requireNonNull(project);
-        this.projects.add(project);
+    public void addModule(ProjectMetrics module) {
+        requireNonNull(module);
+        this.modules.add(module);
     }
 
     public Collection<ArtifactMetrics> getArtifacts() {
@@ -108,7 +108,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     }
 
     public void setArtifacts(Collection<ArtifactMetrics> artifacts) {
-        requireNonNull(projects);
+        requireNonNull(modules);
         this.artifacts = new ArrayList<>(artifacts);
     }
 
@@ -117,7 +117,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     }
 
     public void setDependencies(Collection<DependencyMetrics> dependencies) {
-        requireNonNull(projects);
+        requireNonNull(modules);
         this.dependencies = new ArrayList<>(dependencies);
     }
 
@@ -126,7 +126,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     }
 
     public void setPlugins(Collection<PluginMetrics> plugins) {
-        requireNonNull(projects);
+        requireNonNull(modules);
         this.plugins = new ArrayList<>(plugins);
     }
 
@@ -135,7 +135,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     }
 
     public void setLog(String log) {
-        requireNonNull(projects);
+        requireNonNull(modules);
         this.log = log;
     }
 
@@ -154,7 +154,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
                 .add("endTime=" + endTime)
                 .add("throwableClass='" + throwableClass + "'")
                 .add("throwable='" + throwable + "'")
-                .add("projects=" + projects.size())
+                .add("projects=" + modules.size())
                 .add("artifacts=" + artifacts.size())
                 .add("dependencies=" + dependencies.size())
                 .add("plugins=" + plugins.size())

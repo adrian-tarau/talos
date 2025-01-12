@@ -91,7 +91,7 @@ public class ProfilerMetrics {
     }
 
     void projectStart(MavenProject project) {
-        sessionMetrics.addProject(getMetrics(project).setStartTime(ZonedDateTime.now()));
+        sessionMetrics.addModule(getMetrics(project).setStartTime(ZonedDateTime.now()));
         configuration = new MavenConfiguration(session);
         registerDependencies(project);
     }

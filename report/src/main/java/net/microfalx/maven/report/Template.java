@@ -105,7 +105,8 @@ public class Template implements Nameable {
         Context context = new Context();
         if (session != null) {
             context.setVariable("session", session);
-            context.setVariable("projects", session.getProjects());
+            context.setVariable("project", session.getProject());
+            context.setVariable("modules", session.getModules());
             context.setVariable("artifacts", session.getArtifacts());
             context.setVariable("dependencies", session.getDependencies());
             context.setVariable("plugins", session.getPlugins());
