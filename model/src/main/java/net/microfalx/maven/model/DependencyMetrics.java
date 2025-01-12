@@ -1,8 +1,5 @@
 package net.microfalx.maven.model;
 
-import net.microfalx.lang.Identifiable;
-import net.microfalx.lang.Nameable;
-import net.microfalx.maven.core.MavenUtils;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.project.MavenProject;
 
@@ -15,45 +12,24 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 /**
  * Holds metrics about a project dependency.
  */
-public class DependencyMetrics implements Identifiable<String>, Nameable {
-
-    private final String id;
-    private final String groupId;
-    private final String artifactId;
+public final class DependencyMetrics extends net.microfalx.maven.model.Dependency {
 
     private final Set<String> versions = new HashSet<>();
-    private final Set<MavenProject> projects = new HashSet<>();
+    private final Set<Project> projects = new HashSet<>();
+
+    protected DependencyMetrics() {
+    }
 
     public DependencyMetrics(Dependency dependency) {
-        requireNonNull(dependency);
-        this.groupId = dependency.getGroupId();
-        this.artifactId = dependency.getArtifactId();
-        this.id = MavenUtils.getId(dependency);
-    }
-
-    @Override
-    public String getId() {
-        return id;
-    }
-
-    @Override
-    public String getName() {
-        return groupId + ":" + artifactId;
-    }
-
-    public String getGroupId() {
-        return groupId;
-    }
-
-    public String getArtifactId() {
-        return artifactId;
+        super(dependency.getGroupId(), dependency.getArtifactId(), dependency.getVersion());
+        versions.add(dependency.getVersion());
     }
 
     public Set<String> getVersions() {
         return unmodifiableSet(versions);
     }
 
-    public Set<MavenProject> getProjects() {
+    public Set<Project> getProjects() {
         return unmodifiableSet(projects);
     }
 
@@ -61,6 +37,6 @@ public class DependencyMetrics implements Identifiable<String>, Nameable {
         requireNonNull(project);
         requireNonNull(dependency);
         this.versions.add(dependency.getVersion());
-        this.projects.add(project);
+        this.projects.add(new Project(project));
     }
 }

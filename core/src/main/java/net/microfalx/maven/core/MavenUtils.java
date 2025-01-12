@@ -49,6 +49,16 @@ public class MavenUtils {
     }
 
     /**
+     * Returns the identifier of an artifact.
+     *
+     * @param artifact the artifact
+     * @return a non-null instance
+     */
+    public static String getId(org.apache.maven.artifact.Artifact artifact) {
+        return StringUtils.toIdentifier(artifact.getGroupId() + ":" + artifact.getArtifactId());
+    }
+
+    /**
      * Returns the identifier of an dependency.
      *
      * @param dependency the dependency
@@ -66,6 +76,16 @@ public class MavenUtils {
      */
     public static String getId(Plugin plugin) {
         return StringUtils.toIdentifier(plugin.getGroupId() + ":" + plugin.getArtifactId());
+    }
+
+    /**
+     * Returns the identifier of a project.
+     *
+     * @param project the project
+     * @return a non-null instance
+     */
+    public static String getId(MavenProject project) {
+        return StringUtils.toIdentifier(project.getGroupId() + ":" + project.getArtifactId());
     }
 
     /**

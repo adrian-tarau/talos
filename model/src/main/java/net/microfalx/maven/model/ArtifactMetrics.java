@@ -1,8 +1,5 @@
 package net.microfalx.maven.model;
 
-import net.microfalx.lang.Identifiable;
-import net.microfalx.lang.Nameable;
-import net.microfalx.maven.core.MavenUtils;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 
@@ -14,16 +11,11 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static java.lang.System.nanoTime;
 import static java.time.Duration.ofNanos;
-import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 /**
  * Holds metrics about Mojo execution.
  */
-public final class ArtifactMetrics implements Identifiable<String>, Nameable {
-
-    private final String id;
-    private final String groupId;
-    private final String artifactId;
+public final class ArtifactMetrics extends Dependency {
 
     private final Set<String> versions = new HashSet<>();
 
@@ -56,36 +48,16 @@ public final class ArtifactMetrics implements Identifiable<String>, Nameable {
     private static final ThreadLocal<Long> artifactDeployStartTime = ThreadLocal.withInitial(System::nanoTime);
     private static final ThreadLocal<Long> artifactDeployEndTime = new ThreadLocal<>();
 
+    protected ArtifactMetrics() {
+    }
+
     public ArtifactMetrics(Artifact artifact) {
-        requireNonNull(artifact);
-        this.groupId = artifact.getGroupId();
-        this.artifactId = artifact.getArtifactId();
-        this.id = MavenUtils.getId(artifact);
+        super(artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion());
+        versions.add(artifact.getVersion());
     }
 
     public ArtifactMetrics(Metadata metadata) {
-        requireNonNull(metadata);
-        this.groupId = metadata.getGroupId();
-        this.artifactId = metadata.getArtifactId();
-        this.id = MavenUtils.getId(metadata);
-    }
-
-    @Override
-    public String getId() {
-        return id;
-    }
-
-    @Override
-    public String getName() {
-        return groupId + ":" + artifactId;
-    }
-
-    public String getGroupId() {
-        return groupId;
-    }
-
-    public String getArtifactId() {
-        return artifactId;
+        super(metadata.getGroupId(), metadata.getArtifactId(), metadata.getVersion());
     }
 
     public long getSize() {

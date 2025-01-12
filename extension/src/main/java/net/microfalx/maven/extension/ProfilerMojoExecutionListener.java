@@ -37,6 +37,9 @@ public class ProfilerMojoExecutionListener implements MojoExecutionListener {
 
     private volatile MavenProject lastProject;
     private volatile String lastGoal;
+    private volatile String lastAction;
+
+    private final Object lock = new Object();
 
     private static final Map<String, String> goalsToPrint = new HashMap<>();
 
@@ -59,13 +62,16 @@ public class ProfilerMojoExecutionListener implements MojoExecutionListener {
     private void printMojo(MojoExecutionEvent event) {
         if (!configuration.isQuietAndWithProgress()) return;
         String goal = MavenUtils.getGoal(event.getExecution());
-        if (!ObjectUtils.equals(lastGoal, goal)) {
-            String action = goalsToPrint.get(goal);
-            if (action != null) print(action);
+        synchronized (lock) {
+            if (!ObjectUtils.equals(lastGoal, goal)) {
+                String action = goalsToPrint.get(goal);
+                if (action != null && !ObjectUtils.equals(lastAction, action)) print(action);
+                lastAction = action;
+            }
+            print(".");
+            lastProject = event.getProject();
+            lastGoal = goal;
         }
-        print(".");
-        lastGoal = goal;
-        lastProject = event.getProject();
     }
 
     @PostConstruct
@@ -81,7 +87,9 @@ public class ProfilerMojoExecutionListener implements MojoExecutionListener {
     static {
         goalsToPrint.put("clean", "clean");
         goalsToPrint.put("compiler:compile", "compile");
-        goalsToPrint.put("compiler:testCompile", "test");
+        goalsToPrint.put("compiler:testCompile", "compile");
+        goalsToPrint.put("surefire:test", "ut");
+        goalsToPrint.put("failsafe:integration-test", "it");
         goalsToPrint.put("failsafe:verify", "verify");
         goalsToPrint.put("javadoc:jar", "doc");
         goalsToPrint.put("jar:jar", "package");

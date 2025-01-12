@@ -29,8 +29,8 @@
 
     <parent>
         <groupId>net.microfalx.maven</groupId>
-		<artifactId>maven</artifactId>
-		<version>0.8.1-SNAPSHOT</version>
+        <artifactId>maven</artifactId>
+        <version>0.8.1-SNAPSHOT</version>
     </parent>
 
     <name>Maven :: Model</name>
@@ -51,6 +51,11 @@
             <groupId>net.microfalx.maven</groupId>
             <artifactId>maven-core</artifactId>
             <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.esotericsoftware</groupId>
+            <artifactId>kryo</artifactId>
         </dependency>
 
     </dependencies>

@@ -1,9 +1,6 @@
 package net.microfalx.maven.model;
 
-import net.microfalx.lang.Identifiable;
-import net.microfalx.lang.Nameable;
 import net.microfalx.lang.StringUtils;
-import net.microfalx.maven.core.MavenUtils;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
 
@@ -16,39 +13,18 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 /**
  * Holds metrics about a project dependency.
  */
-public final class PluginMetrics implements Identifiable<String>, Nameable {
-
-    private final String id;
-    private final String groupId;
-    private final String artifactId;
+public final class PluginMetrics extends Dependency {
 
     private final Set<String> versions = new HashSet<>();
     private final Set<String> goals = new HashSet<>();
-    private final Set<MavenProject> projects = new HashSet<>();
+    private final Set<Project> projects = new HashSet<>();
+
+    protected PluginMetrics() {
+    }
 
     public PluginMetrics(Plugin plugin) {
-        requireNonNull(plugin);
-        this.groupId = plugin.getGroupId();
-        this.artifactId = plugin.getArtifactId();
-        this.id = MavenUtils.getId(plugin);
-    }
-
-    @Override
-    public String getId() {
-        return id;
-    }
-
-    @Override
-    public String getName() {
-        return groupId + ":" + artifactId;
-    }
-
-    public String getGroupId() {
-        return groupId;
-    }
-
-    public String getArtifactId() {
-        return artifactId;
+        super(plugin.getGroupId(), plugin.getArtifactId(), plugin.getVersion());
+        this.versions.add(plugin.getVersion());
     }
 
     public Set<String> getVersions() {
@@ -59,7 +35,7 @@ public final class PluginMetrics implements Identifiable<String>, Nameable {
         return unmodifiableSet(goals);
     }
 
-    public Set<MavenProject> getProjects() {
+    public Set<Project> getProjects() {
         return unmodifiableSet(projects);
     }
 
@@ -71,6 +47,6 @@ public final class PluginMetrics implements Identifiable<String>, Nameable {
         requireNonNull(project);
         requireNonNull(plugin);
         this.versions.add(plugin.getVersion());
-        this.projects.add(project);
+        this.projects.add(new Project(project));
     }
 }

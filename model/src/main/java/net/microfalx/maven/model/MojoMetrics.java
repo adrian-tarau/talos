@@ -1,6 +1,7 @@
 package net.microfalx.maven.model;
 
 import net.microfalx.lang.ClassUtils;
+import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.Nameable;
 import net.microfalx.maven.core.MavenUtils;
 import org.apache.maven.plugin.Mojo;
@@ -19,17 +20,21 @@ import static java.time.Duration.ofNanos;
  */
 public final class MojoMetrics implements Nameable {
 
-    private final String name;
-    private final Class<?> clazz;
+    private String name;
+    private Class<?> clazz;
     private volatile Duration duration;
     private final Set<String> goals = new HashSet<>();
     private final AtomicInteger executionCount = new AtomicInteger(0);
     private final AtomicInteger failureCount = new AtomicInteger(0);
     private final AtomicLong durationNano = new AtomicLong(0);
-    private volatile Throwable throwable;
+    private volatile String throwableClass;
+    private volatile String throwable;
 
     private static final ThreadLocal<Long> startTime = ThreadLocal.withInitial(System::nanoTime);
     private static final ThreadLocal<Long> endTime = new ThreadLocal<>();
+
+    protected MojoMetrics() {
+    }
 
     public MojoMetrics(Mojo mojo) {
         this.clazz = mojo.getClass();
@@ -56,7 +61,10 @@ public final class MojoMetrics implements Nameable {
 
     public void stop(Throwable throwable) {
         endTime.set(System.nanoTime());
-        this.throwable = throwable;
+        if (throwable != null) {
+            this.throwable = ExceptionUtils.getStackTrace(throwable);
+            this.throwableClass = ClassUtils.getName(throwable);
+        }
         if (throwable != null) failureCount.incrementAndGet();
         durationNano.addAndGet(endTime.get() - startTime.get());
         executionCount.incrementAndGet();

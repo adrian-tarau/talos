@@ -3,6 +3,8 @@ package net.microfalx.maven.extension;
 import net.microfalx.jvm.ServerMetrics;
 import net.microfalx.jvm.VirtualMachineMetrics;
 import net.microfalx.maven.core.MavenLogger;
+import net.microfalx.maven.model.SessionMetrics;
+import net.microfalx.resource.Resource;
 import org.apache.maven.AbstractMavenLifecycleParticipant;
 import org.apache.maven.MavenExecutionException;
 import org.apache.maven.execution.MavenExecutionRequest;
@@ -16,6 +18,9 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.time.ZonedDateTime;
 
 @Named("microfalx")
 @Singleton
@@ -26,6 +31,8 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
 
     private MavenConfiguration configuration;
     private ProgressListener progressListener;
+    private SessionMetrics sessionMetrics;
+    private ZonedDateTime startTime;
 
     @Inject
     private ProfilerMetrics profilerMetrics;
@@ -42,19 +49,23 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
     @Override
     public void afterProjectsRead(MavenSession session) throws MavenExecutionException {
         super.afterProjectsRead(session);
+        sessionMetrics = new SessionMetrics(session.getTopLevelProject()).setStartTime(startTime);
+        profilerMetrics.sessionMetrics = sessionMetrics;
         progressListener.start();
     }
 
     @Override
     public void afterSessionStart(MavenSession session) throws MavenExecutionException {
         initialize(session);
+        startTime = ZonedDateTime.now();
         profilerMetrics.sessionStart();
     }
 
     @Override
     public void afterSessionEnd(MavenSession session) throws MavenExecutionException {
-        profilerMetrics.sessionsEnd();
+        profilerMetrics.sessionsEnd(sessionMetrics);
         profilerMetrics.print();
+        storeMetrics();
     }
 
     private void initialize(MavenSession session) {
@@ -83,8 +94,24 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
         // displays build progress
         progressListener = new ProgressListener(session, mavenLogger.getSystemOutputPrintStream());
         lifecycleListener.addChainListener(progressListener);
+    }
 
-
+    private void storeMetrics() {
+        sessionMetrics.setEndTime(ZonedDateTime.now());
+        try {
+            sessionMetrics.setLog(mavenLogger.getSystemOutput().loadAsString());
+        } catch (IOException e) {
+            LOGGER.error("Failed to attach log", e);
+        }
+        LOGGER.info("Store metrics: " + sessionMetrics);
+        Resource resource = configuration.getStorageDirectory().resolve("build.metrics", Resource.Type.FILE);
+        try {
+            try (OutputStream outputStream = resource.getOutputStream()) {
+                sessionMetrics.store(outputStream);
+            }
+        } catch (IOException e) {
+            LOGGER.error("Failed to store metrics on disk", e);
+        }
     }
 
 

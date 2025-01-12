@@ -8,10 +8,7 @@ import net.microfalx.jvm.model.VirtualMachine;
 import net.microfalx.lang.*;
 import net.microfalx.maven.core.MavenLogger;
 import net.microfalx.maven.junit.SurefireTests;
-import net.microfalx.maven.model.ArtifactMetrics;
-import net.microfalx.maven.model.DependencyMetrics;
-import net.microfalx.maven.model.MojoMetrics;
-import net.microfalx.maven.model.PluginMetrics;
+import net.microfalx.maven.model.*;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
@@ -25,6 +22,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -54,6 +52,7 @@ public class ProfilerMetrics {
     private final Map<Class<?>, MojoMetrics> mojoMetrics = new ConcurrentHashMap<>();
     private final Map<String, DependencyMetrics> dependencyMetrics = new ConcurrentHashMap<>();
     private final Map<String, PluginMetrics> pluginMetrics = new ConcurrentHashMap<>();
+    private final Map<String, ProjectMetrics> projectMetrics = new ConcurrentHashMap<>();
     private final long startTime = System.nanoTime();
     private long sessionStartTime;
     private long sessionEndTime;
@@ -74,6 +73,7 @@ public class ProfilerMetrics {
     protected SurefireTests tests;
 
     private MavenConfiguration configuration;
+    SessionMetrics sessionMetrics;
 
     void sessionStart() {
         configuration = new MavenConfiguration(session);
@@ -82,17 +82,22 @@ public class ProfilerMetrics {
         sessionStartTime = System.nanoTime();
     }
 
-    void sessionsEnd() {
+    void sessionsEnd(SessionMetrics sessionMetrics) {
         sessionEndTime = System.nanoTime();
+        sessionMetrics.setEndTime(ZonedDateTime.now());
+        sessionMetrics.setArtifacts(repositoryMetrics.getMetrics());
+        sessionMetrics.setDependencies(dependencyMetrics.values());
+        sessionMetrics.setPlugins(pluginMetrics.values());
     }
 
     void projectStart(MavenProject project) {
+        sessionMetrics.addProject(getMetrics(project).setStartTime(ZonedDateTime.now()));
         configuration = new MavenConfiguration(session);
         registerDependencies(project);
     }
 
     void projectStop(MavenProject project, Throwable throwable) {
-
+        getMetrics(project).setStartTime(ZonedDateTime.now());
     }
 
     void mojoStarted(Mojo mojo, MojoExecution execution) {
@@ -458,6 +463,10 @@ public class ProfilerMetrics {
         return pluginMetrics.computeIfAbsent(net.microfalx.maven.core.MavenUtils.getId(plugin), k -> new PluginMetrics(plugin));
     }
 
+    private ProjectMetrics getMetrics(MavenProject project) {
+        return projectMetrics.computeIfAbsent(net.microfalx.maven.core.MavenUtils.getId(project), k -> new ProjectMetrics(project));
+    }
+
     private long getSize(Collection<DependencyMetrics> metrics) {
         long size = 0;
         for (DependencyMetrics metric : metrics) {
@@ -468,7 +477,7 @@ public class ProfilerMetrics {
     }
 
     private int getProjects(Collection<DependencyMetrics> metrics) {
-        Set<MavenProject> projects = new HashSet<>();
+        Set<Project> projects = new HashSet<>();
         for (DependencyMetrics metric : metrics) {
             projects.addAll(metric.getProjects());
         }
