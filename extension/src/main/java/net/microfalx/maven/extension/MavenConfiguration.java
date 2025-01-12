@@ -14,6 +14,8 @@ public class MavenConfiguration extends net.microfalx.maven.core.MavenConfigurat
 
     private Duration minimumDuration;
     private Boolean consoleEnabled;
+    private Boolean extensionEnabled;
+    private Boolean performanceEnabled;
 
     public MavenConfiguration(MavenSession session) {
         super(session);
@@ -41,5 +43,29 @@ public class MavenConfiguration extends net.microfalx.maven.core.MavenConfigurat
             consoleEnabled = getProperty(getSession(), "console.enabled", true);
         }
         return consoleEnabled;
+    }
+
+    /**
+     * Returns whether the performance tracking is enabled.
+     *
+     * @return {@code true} if enabled, {@code false} otherwise
+     */
+    public Boolean isPerformanceEnabled() {
+        if (performanceEnabled == null) {
+            performanceEnabled = getProperty(getSession(), "performance.enabled", true);
+        }
+        return isExtensionEnabled() && performanceEnabled;
+    }
+
+    /**
+     * Returns whether the extension is enabled.
+     *
+     * @return {@code true} if enabled, {@code false} otherwise
+     */
+    public Boolean isExtensionEnabled() {
+        if (extensionEnabled == null) {
+            extensionEnabled = getProperty(getSession(), "extension.enabled", true);
+        }
+        return extensionEnabled;
     }
 }

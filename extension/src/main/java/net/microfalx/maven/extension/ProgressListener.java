@@ -29,12 +29,15 @@ public class ProgressListener extends AbstractExecutionListener {
     public void projectStarted(ExecutionEvent event) {
         super.projectStarted(event);
         if (!configuration.isProgress()) return;
-        MavenProject project = event.getProject();
-        StringBuilder buffer = new StringBuilder(128);
-        buffer.append(buffer().strong(project.getName()));
-        buffer.append(' ');
-        MavenUtils.appendDots(buffer);
-        print(buffer.toString());
+        synchronized (output) {
+            println();
+            MavenProject project = event.getProject();
+            StringBuilder buffer = new StringBuilder(128);
+            buffer.append(buffer().strong(project.getName()));
+            buffer.append(' ');
+            MavenUtils.appendDots(buffer);
+            print(buffer.toString());
+        }
     }
 
     @Override
@@ -48,15 +51,15 @@ public class ProgressListener extends AbstractExecutionListener {
     }
 
     public void projectEnded(ExecutionEvent event) {
-        println();
+        print(buffer().success("Done").toString());
     }
 
     void start() {
         if (!configuration.isProgress()) return;
+        println();
         println(buffer().strong("Building "
                                 + session.getTopLevelProject().getName() + " "
                                 + session.getTopLevelProject().getVersion()).toString());
-        println(EMPTY_STRING);
     }
 
     private void println(String message) {

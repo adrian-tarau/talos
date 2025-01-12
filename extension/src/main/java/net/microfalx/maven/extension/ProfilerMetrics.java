@@ -31,10 +31,10 @@ import java.util.function.Function;
 
 import static java.util.stream.Collectors.joining;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.FormatterUtils.*;
+import static net.microfalx.lang.FormatterUtils.formatNumber;
+import static net.microfalx.lang.FormatterUtils.formatPercent;
 import static net.microfalx.lang.StringUtils.COMMA_WITH_SPACE;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
-import static net.microfalx.maven.core.MavenUtils.formatDuration;
 import static net.microfalx.maven.core.MavenUtils.*;
 import static net.microfalx.maven.extension.MavenUtils.LONG_NAME_LENGTH;
 import static net.microfalx.maven.extension.MavenUtils.SHORT_NAME_LENGTH;
@@ -233,8 +233,7 @@ public class ProfilerMetrics {
         logNameValue("User Name", JvmUtils.getUserName() + "@" + server.getHostName());
         logNameValue("Server", "CPU: " + formatPercent(serverMetrics.getAverageCpu()) + " (load: " +
                                formatNumber(serverMetrics.getAverageLoad()) + ", cores " + server.getCores() + ")"
-                               + ", Memory: " + formatBytes(server.getMemoryActuallyUsed()) + " of "
-                               + formatBytes(server.getMemoryTotal()));
+                               + ", Memory: " + formatMemory(server.getMemoryActuallyUsed(), server.getMemoryTotal()));
         logNameValue("Process", "CPU: " + formatPercent(virtualMachineMetrics.getAverageCpu())
                                 + ", Memory: " + formatMemory(virtualMachineMetrics.getMemoryAverage(), virtualMachineMetrics.getMemoryMaximum()));
     }
@@ -346,9 +345,11 @@ public class ProfilerMetrics {
         builder.append(buffer().strong(formatDuration(repositoryMetrics.getResolutionDuration())));
         boolean remote = repositoryMetrics instanceof TransferMetrics;
         if (remote) {
-            builder.append(" (Metadata: ").append(formatDuration(repositoryMetrics.getMetadataResolvedDuration(), false, false))
-                    .append(", Artifact: ").append(formatDuration(repositoryMetrics.getArtifactResolveDuration(), false, false))
+            builder.append(" (Metadata: ").append(formatDuration(repositoryMetrics.getMetadataResolvedDuration()))
+                    .append(", Artifact: ").append(formatDuration(repositoryMetrics.getArtifactResolveDuration()))
                     .append(buffer().strong(")"));
+            builder.append(" (Download: ").append(formatBytes(repositoryMetrics.getDownloadVolume()))
+                    .append(" / Upload: ").append(formatBytes(repositoryMetrics.getUploadVolume())).append(")");
         } else {
             builder.append(" (Metadata: ").append(formatDurations(repositoryMetrics.getMetadataResolvedDuration(), repositoryMetrics.getMetadataDownloadDuration()))
                     .append(", Artifact: ").append(formatDurations(repositoryMetrics.getArtifactResolveDuration(), repositoryMetrics.getArtifactInstallDuration(),
@@ -365,7 +366,7 @@ public class ProfilerMetrics {
         String goals = getGoals();
         if (isNotEmpty(goals)) StringUtils.append(builder, "Goals: " + goals, COMMA_WITH_SPACE);
         if (session.getRequest().getDegreeOfConcurrency() > 0) {
-            StringUtils.append(builder, "DOP: " + session.getRequest().getDegreeOfConcurrency(), COMMA_WITH_SPACE);
+            StringUtils.append(builder, "DOP: " + configuration.getDop(), COMMA_WITH_SPACE);
         }
         if (session.getRequest().isOffline()) StringUtils.append(builder, "Offline");
         return builder.toString();
@@ -409,18 +410,26 @@ public class ProfilerMetrics {
         if (duration1.isZero() && duration2.isZero()) {
             return String.format("%8s", ZERO_DURATION);
         } else {
-            return buffer().strong(formatDuration(duration1, false, false))
-                   + "/" + buffer().strong(formatDuration(duration2, false, false));
+            return buffer().strong(formatDuration(duration1))
+                   + "/" + buffer().strong(formatDuration(duration2));
         }
+    }
+
+    private String formatDuration(Duration duration) {
+        return buffer().strong(net.microfalx.maven.core.MavenUtils.formatDuration(duration, false, false)).toString();
+    }
+
+    private String formatBytes(long value) {
+        return buffer().strong(FormatterUtils.formatBytes(value)).toString();
     }
 
     private String formatDurations(Duration duration1, Duration duration2, Duration duration3) {
         if (duration1.isZero() && duration2.isZero() && duration3.isZero()) {
             return String.format("%8s", ZERO_DURATION);
         } else {
-            return buffer().strong(formatDuration(duration1, false, false))
-                   + "/" + buffer().strong(formatDuration(duration2, false, false))
-                   + "/" + buffer().strong(formatDuration(duration3, false, false));
+            return formatDuration(duration1)
+                   + "/" + formatDuration(duration2)
+                   + "/" + (duration3);
         }
     }
 

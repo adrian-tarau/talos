@@ -18,6 +18,7 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
@@ -36,9 +37,20 @@ public class TransferMetrics extends AbstractRepositoryMetrics implements Transf
     private MavenConfiguration configuration;
     private TransferListener listener;
 
+    private final AtomicLong downloadVolume = new AtomicLong();
+    private final AtomicLong uploadVolume = new AtomicLong();
+
     @PostConstruct
     public void postInit() {
         this.configuration = new MavenConfiguration(session);
+    }
+
+    public long getDownloadVolume() {
+        return downloadVolume.get();
+    }
+
+    public long getUploadVolume() {
+        return uploadVolume.get();
     }
 
     TransferMetrics intercept(TransferListener listener) {
@@ -128,6 +140,7 @@ public class TransferMetrics extends AbstractRepositoryMetrics implements Transf
             case ARTIFACT_RESOLVED:
                 artifact = convertArtifact(event);
                 if (artifact != null) metrics.artifactResolveStop(artifact, null);
+                uploadVolume(event);
                 break;
             case METADATA_RESOLVING:
                 metadata = convertMetadata(event);
@@ -136,10 +149,21 @@ public class TransferMetrics extends AbstractRepositoryMetrics implements Transf
             case METADATA_RESOLVED:
                 metadata = convertMetadata(event);
                 if (metadata != null) metrics.metadataResolveStop(null);
+                uploadVolume(event);
                 break;
         }
         LOGGER.debug("Track transfer: " + event.getResource().getResourceName() + ", event type: " + eventType
                      + ", artifact: " + artifact + ", metadata: " + metadata);
+    }
+
+    private void uploadVolume(TransferEvent event) {
+        boolean upload = event.getRequestType() == TransferEvent.RequestType.PUT;
+        if (upload) {
+            uploadVolume.addAndGet(event.getTransferredBytes());
+        } else {
+            downloadVolume.addAndGet(event.getTransferredBytes());
+
+        }
     }
 
     private boolean shouldForwardEvents() {

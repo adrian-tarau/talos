@@ -59,10 +59,9 @@ public class ProfilerMojoExecutionListener implements MojoExecutionListener {
     private void printMojo(MojoExecutionEvent event) {
         if (!configuration.isQuietAndWithProgress()) return;
         String goal = MavenUtils.getGoal(event.getExecution());
-        if (ObjectUtils.equals(lastGoal, goal)) return;
-        String action = goalsToPrint.get(goal);
-        if (action != null) {
-            print(action);
+        if (!ObjectUtils.equals(lastGoal, goal)) {
+            String action = goalsToPrint.get(goal);
+            if (action != null) print(action);
         }
         print(".");
         lastGoal = goal;
@@ -83,8 +82,10 @@ public class ProfilerMojoExecutionListener implements MojoExecutionListener {
         goalsToPrint.put("clean", "clean");
         goalsToPrint.put("compiler:compile", "compile");
         goalsToPrint.put("compiler:testCompile", "test");
+        goalsToPrint.put("failsafe:verify", "verify");
+        goalsToPrint.put("javadoc:jar", "doc");
         goalsToPrint.put("jar:jar", "package");
         goalsToPrint.put("install:install", "install");
-        goalsToPrint.put("install:deploy", "deploy");
+        goalsToPrint.put("deploy:deploy", "deploy");
     }
 }

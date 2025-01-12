@@ -50,7 +50,7 @@ public class MavenConfiguration {
      * @return {@code true} to disable all logging, {@code false} otherwise
      */
     public final boolean isQuiet() {
-        if (quiet == null) quiet = getProperty(session, "quiet", false);
+        if (quiet == null) quiet = getProperty(session, "quiet", true);
         return quiet;
     }
 
@@ -70,7 +70,7 @@ public class MavenConfiguration {
      * @return {@code true} to be verbose, {@code false} otherwise
      */
     public final boolean isProgress() {
-        if (progress == null) initProgress();
+        if (progress == null) progress = getProperty(session, "progress", true);
         return progress && isQuiet();
     }
 
@@ -81,6 +81,24 @@ public class MavenConfiguration {
      */
     public boolean isQuietAndWithProgress() {
         return isQuiet() && isProgress();
+    }
+
+    /**
+     * Returns whether the build uses multiple threads to build the project.
+     *
+     * @return {@code true} if parallel, {@code false} otherwise
+     */
+    public boolean isParallel() {
+        return getDop() > 1;
+    }
+
+    /**
+     * Returns the degree of parallelism.
+     *
+     * @return a positiver integer
+     */
+    public int getDop() {
+        return session.getRequest().getDegreeOfConcurrency();
     }
 
     /**
@@ -175,7 +193,7 @@ public class MavenConfiguration {
     }
 
     private void initProgress() {
-        progress = getProperty(session, "progress", false);
+        ;
     }
 
 }

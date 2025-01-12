@@ -59,8 +59,10 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
 
     private void initialize(MavenSession session) {
         configuration = new MavenConfiguration(session);
-        LOGGER.debug("Initialize extension, verbose: {}, quiet: {}, progress: {}",
-                configuration.isVerbose(), configuration.isQuiet(), configuration.isProgress());
+        LOGGER.debug("Initialize extension, verbose: {}, quiet: {}, progress: {}, performance: {}",
+                configuration.isVerbose(), configuration.isQuiet(), configuration.isProgress(),
+                configuration.isPerformanceEnabled()
+        );
         registerListeners(session);
         VirtualMachineMetrics.get().start();
         ServerMetrics.get().start();

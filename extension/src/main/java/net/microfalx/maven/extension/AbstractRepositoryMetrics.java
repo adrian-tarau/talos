@@ -67,6 +67,14 @@ public abstract class AbstractRepositoryMetrics {
         return TimeUtils.sum(getMetrics().stream().map(ArtifactMetrics::getArtifactDeployDuration));
     }
 
+    public long getDownloadVolume() {
+        return 0;
+    }
+
+    public long getUploadVolume() {
+        return 0;
+    }
+
     public Map<String, Collection<ArtifactMetrics>> getMetricsByGroup() {
         Map<String, Collection<ArtifactMetrics>> map = new TreeMap<>();
         for (ArtifactMetrics artifactMetric : getMetrics()) {
