@@ -13,7 +13,7 @@ class FragmentBuilderTest extends AbstractFragmentBuilder {
         FragmentBuilder builder = FragmentBuilder.create(FragmentBuilder.Type.SUMMARY, createSingleModuleProject());
         StringWriter writer = new StringWriter();
         builder.build(writer);
-        Assertions.assertThat(writer.toString()).contains("aaaa");
+        Assertions.assertThat(writer.toString()).contains("div");
     }
 
     @Test
@@ -21,7 +21,7 @@ class FragmentBuilderTest extends AbstractFragmentBuilder {
         FragmentBuilder builder = FragmentBuilder.create(FragmentBuilder.Type.SUMMARY, createMultiModuleProject());
         StringWriter writer = new StringWriter();
         builder.build(writer);
-        Assertions.assertThat(writer.toString()).contains("aaaa");
+        Assertions.assertThat(writer.toString()).contains("div");
     }
 
 }

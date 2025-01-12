@@ -19,6 +19,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.StringUtils.NA_STRING;
 
@@ -38,6 +39,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     private Collection<ProjectMetrics> modules = new ArrayList<>();
     private Collection<ArtifactMetrics> artifacts = new ArrayList<>();
     private Collection<DependencyMetrics> dependencies = new ArrayList<>();
+    private Collection<MojoMetrics> mojos = new ArrayList<>();
     private Collection<PluginMetrics> plugins = new ArrayList<>();
 
     private String log;
@@ -90,7 +92,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     }
 
     public Collection<ProjectMetrics> getModules() {
-        return modules;
+        return unmodifiableCollection(modules);
     }
 
     public void setModules(Collection<ProjectMetrics> modules) {
@@ -103,8 +105,17 @@ public class SessionMetrics extends NamedIdentityAware<String> {
         this.modules.add(module);
     }
 
+    public Collection<MojoMetrics> getMojos() {
+        return unmodifiableCollection(mojos);
+    }
+
+    public void setMojos(Collection<MojoMetrics> mojos) {
+        requireNonNull(modules);
+        this.mojos = new ArrayList<>(mojos);
+    }
+
     public Collection<ArtifactMetrics> getArtifacts() {
-        return artifacts;
+        return unmodifiableCollection(artifacts);
     }
 
     public void setArtifacts(Collection<ArtifactMetrics> artifacts) {
@@ -113,7 +124,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     }
 
     public Collection<DependencyMetrics> getDependencies() {
-        return dependencies;
+        return unmodifiableCollection(dependencies);
     }
 
     public void setDependencies(Collection<DependencyMetrics> dependencies) {
@@ -122,7 +133,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     }
 
     public Collection<PluginMetrics> getPlugins() {
-        return plugins;
+        return unmodifiableCollection(plugins);
     }
 
     public void setPlugins(Collection<PluginMetrics> plugins) {

@@ -10,10 +10,12 @@ import org.apache.maven.plugin.MojoExecution;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static java.time.Duration.ofNanos;
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 /**
  * Holds metrics about Mojo execution.
@@ -21,7 +23,7 @@ import static java.time.Duration.ofNanos;
 public final class MojoMetrics implements Nameable {
 
     private String name;
-    private Class<?> clazz;
+    private String className;
     private volatile Duration duration;
     private final Set<String> goals = new HashSet<>();
     private final AtomicInteger executionCount = new AtomicInteger(0);
@@ -37,7 +39,8 @@ public final class MojoMetrics implements Nameable {
     }
 
     public MojoMetrics(Mojo mojo) {
-        this.clazz = mojo.getClass();
+        requireNonNull(mojo);
+        this.className = ClassUtils.getName(mojo);
         this.name = MavenUtils.getName(mojo);
     }
 
@@ -51,7 +54,7 @@ public final class MojoMetrics implements Nameable {
     }
 
     public String getClassName() {
-        return ClassUtils.getName(clazz);
+        return className;
     }
 
     public void start(MojoExecution execution) {
@@ -81,5 +84,17 @@ public final class MojoMetrics implements Nameable {
     public Duration getDuration() {
         if (this.duration == null) this.duration = ofNanos(durationNano.get());
         return this.duration;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", MojoMetrics.class.getSimpleName() + "[", "]")
+                .add("name='" + name + "'")
+                .add("className='" + className + "'")
+                .add("goals=" + goals)
+                .add("duration=" + duration)
+                .add("executionCount=" + executionCount)
+                .add("failureCount=" + failureCount)
+                .toString();
     }
 }

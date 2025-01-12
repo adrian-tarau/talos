@@ -87,6 +87,7 @@ public class ProfilerMetrics {
         sessionMetrics.setEndTime(ZonedDateTime.now());
         sessionMetrics.setArtifacts(repositoryMetrics.getMetrics());
         sessionMetrics.setDependencies(dependencyMetrics.values());
+        sessionMetrics.setMojos(mojoMetrics.values());
         sessionMetrics.setPlugins(pluginMetrics.values());
     }
 
