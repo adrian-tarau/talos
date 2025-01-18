@@ -120,7 +120,7 @@ public class ProfilerMetrics {
         return MavenUtils.getDuration(sessionStartTime, sessionEndTime);
     }
 
-    public void print() {
+    void print() {
         if (!configuration.isConsoleEnabled()) return;
         LOGGER.info("");
         if (shouldShowLineSeparator()) infoLine('-');
@@ -135,7 +135,7 @@ public class ProfilerMetrics {
         printTestsSummary();
         printEnvironmentSummary();
         if (shouldShowLineSeparator()) infoLine('-');
-        if (isQuiet() || configuration.isQuiet()) {
+        if (configuration.isQuiet()) {
             logger.getSystemOutputPrintStream().println(LOGGER.getReport());
         }
     }
@@ -396,10 +396,6 @@ public class ProfilerMetrics {
         Map<String, Object> data = session.getRequest().getData();
         return data.entrySet().stream().map(e -> e.getKey() + "=" + TextUtils.abbreviateMiddle(ObjectUtils.toString(e.getValue()), 10))
                 .collect(joining(", "));
-    }
-
-    private boolean isQuiet() {
-        return session.getRequest().getLoggingLevel() > 1;
     }
 
     private Duration getGoalsDuration(String... goals) {

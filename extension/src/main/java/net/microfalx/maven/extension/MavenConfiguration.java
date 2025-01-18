@@ -13,7 +13,6 @@ import static net.microfalx.maven.core.MavenUtils.getProperty;
 public class MavenConfiguration extends net.microfalx.maven.core.MavenConfiguration {
 
     private Duration minimumDuration;
-    private Boolean consoleEnabled;
     private Boolean extensionEnabled;
     private Boolean performanceEnabled;
 
@@ -39,10 +38,7 @@ public class MavenConfiguration extends net.microfalx.maven.core.MavenConfigurat
      * @return {@code true} if enabled, {@code false} otherwise
      */
     public Boolean isConsoleEnabled() {
-        if (consoleEnabled == null) {
-            consoleEnabled = getProperty(getSession(), "console.enabled", true);
-        }
-        return consoleEnabled;
+        return getProperty(getSession(), "console.enabled", true);
     }
 
     /**
@@ -67,5 +63,14 @@ public class MavenConfiguration extends net.microfalx.maven.core.MavenConfigurat
             extensionEnabled = getProperty(getSession(), "extension.enabled", true);
         }
         return extensionEnabled;
+    }
+
+    /**
+     * Returns whether the extension is enabled.
+     *
+     * @return {@code true} if enabled, {@code false} otherwise
+     */
+    public Boolean isOpenReportEnabled() {
+        return getProperty(getSession(), "report.open", false);
     }
 }
