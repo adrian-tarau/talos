@@ -1,9 +1,6 @@
 package net.microfalx.maven.core;
 
-import net.microfalx.lang.NumberUtils;
-import net.microfalx.lang.ObjectUtils;
-import net.microfalx.lang.StringUtils;
-import net.microfalx.lang.TimeUtils;
+import net.microfalx.lang.*;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Plugin;
@@ -37,6 +34,16 @@ public class MavenUtils {
     private static final int DURATION_LENGTH = 9;
     private static final Map<String, String> mojoNames = new ConcurrentHashMap<>();
 
+    /**
+     * Returns whether the code is executed under the real Maven and not some Maven like processor (IDEs).
+     * <p>
+     * The method checks for the existence of classes which are present only when a real Maven executes the code.
+     *
+     * @return {@code true} if real Maven, {@code false} otherwise
+     */
+    public static boolean isRealMaven() {
+        return ClassUtils.exists("org.slf4j.impl.MavenSimpleLoggerFactory");
+    }
 
     /**
      * Returns the identifier of an artifact.

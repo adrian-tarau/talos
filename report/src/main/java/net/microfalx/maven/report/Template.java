@@ -3,6 +3,7 @@ package net.microfalx.maven.report;
 import net.microfalx.lang.Nameable;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.maven.model.SessionMetrics;
+import net.microfalx.resource.Resource;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.TemplateSpec;
 import org.thymeleaf.cache.StandardCacheManager;
@@ -76,12 +77,14 @@ public class Template implements Nameable {
      *
      * @throws IOException if an I/O error occurs
      */
-    public void render(Writer writer) throws IOException {
-        requireNonNull(writer);
+    public void render(Resource resource) throws IOException {
+        requireNonNull(resource);
         initEngine();
         Context context = initContext();
         TemplateSpec template = initTemplate();
-        templateEngine.process(template, context, writer);
+        try (Writer writer = resource.getWriter()) {
+            templateEngine.process(template, context, writer);
+        }
     }
 
     private static synchronized void initEngine() {

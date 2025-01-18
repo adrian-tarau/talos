@@ -10,6 +10,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.transfer.AbstractTransferListener;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferListener;
@@ -19,8 +20,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.concurrent.atomic.AtomicLong;
-
-import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 /**
  * A class which tracks repository activity.
@@ -54,8 +53,7 @@ public class TransferMetrics extends AbstractRepositoryMetrics implements Transf
     }
 
     TransferMetrics intercept(TransferListener listener) {
-        requireNonNull(listener);
-        this.listener = listener;
+        this.listener = listener != null ? listener : new NoopTransferListener();
         return this;
     }
 
@@ -168,5 +166,9 @@ public class TransferMetrics extends AbstractRepositoryMetrics implements Transf
 
     private boolean shouldForwardEvents() {
         return false;//!configuration.isQuiet();
+    }
+
+    static final class NoopTransferListener extends AbstractTransferListener {
+
     }
 }

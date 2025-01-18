@@ -3,6 +3,7 @@ package net.microfalx.maven.extension;
 import net.microfalx.jvm.ServerMetrics;
 import net.microfalx.jvm.VirtualMachineMetrics;
 import net.microfalx.maven.core.MavenLogger;
+import net.microfalx.maven.core.MavenUtils;
 import net.microfalx.maven.model.SessionMetrics;
 import net.microfalx.resource.Resource;
 import org.apache.maven.AbstractMavenLifecycleParticipant;
@@ -74,9 +75,11 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
                 configuration.isVerbose(), configuration.isQuiet(), configuration.isProgress(),
                 configuration.isPerformanceEnabled()
         );
-        registerListeners(session);
-        VirtualMachineMetrics.get().start();
-        ServerMetrics.get().start();
+        if (MavenUtils.isRealMaven()) {
+            registerListeners(session);
+            VirtualMachineMetrics.get().start();
+            ServerMetrics.get().start();
+        }
     }
 
     private void registerListeners(MavenSession session) {

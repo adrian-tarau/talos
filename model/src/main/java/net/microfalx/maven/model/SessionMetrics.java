@@ -13,6 +13,7 @@ import org.apache.maven.project.MavenProject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -193,17 +194,19 @@ public class SessionMetrics extends NamedIdentityAware<String> {
         kryo.register(Dependency.class, SERIALIZATION_ID + 5);
         kryo.register(Project.class, SERIALIZATION_ID + 6);
 
-        kryo.register(ProjectMetrics.class, SERIALIZATION_ID + 10);
-        kryo.register(ArtifactMetrics.class, SERIALIZATION_ID + 11);
-        kryo.register(DependencyMetrics.class, SERIALIZATION_ID + 12);
-        kryo.register(MojoMetrics.class, SERIALIZATION_ID + 13);
-        kryo.register(PluginMetrics.class, SERIALIZATION_ID + 14);
+        kryo.register(ProjectMetrics.class, SERIALIZATION_ID + 20);
+        kryo.register(ArtifactMetrics.class, SERIALIZATION_ID + 21);
+        kryo.register(DependencyMetrics.class, SERIALIZATION_ID + 22);
+        kryo.register(MojoMetrics.class, SERIALIZATION_ID + 23);
+        kryo.register(PluginMetrics.class, SERIALIZATION_ID + 24);
 
         kryo.addDefaultSerializer(AtomicInteger.class, new DefaultSerializers.AtomicIntegerSerializer());
         kryo.addDefaultSerializer(AtomicLong.class, new DefaultSerializers.AtomicLongSerializer());
+        kryo.addDefaultSerializer(URI.class, new DefaultSerializers.URISerializer());
 
         kryo.register(Duration.class, SERIALIZATION_ID + 100);
         kryo.register(ZonedDateTime.class, SERIALIZATION_ID + 101);
+        kryo.register(URI.class, SERIALIZATION_ID + 102);
 
         kryo.register(ArrayList.class, SERIALIZATION_ID + 110);
         kryo.register(HashSet.class, SERIALIZATION_ID + 111);

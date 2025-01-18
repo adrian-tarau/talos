@@ -65,8 +65,10 @@ public class ProfilerMojoExecutionListener implements MojoExecutionListener {
         synchronized (lock) {
             if (!ObjectUtils.equals(lastGoal, goal)) {
                 String action = goalsToPrint.get(goal);
-                if (action != null && !ObjectUtils.equals(lastAction, action)) print(action);
-                lastAction = action;
+                if (action != null && !ObjectUtils.equals(lastAction, action)) {
+                    print(action);
+                    lastAction = action;
+                }
             }
             print(".");
             lastProject = event.getProject();

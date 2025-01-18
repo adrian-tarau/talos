@@ -1,5 +1,6 @@
 package net.microfalx.maven.core;
 
+import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.IOUtils;
 import net.microfalx.resource.Resource;
 import org.apache.commons.io.output.TeeOutputStream;
@@ -12,9 +13,6 @@ import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.MessageFormatter;
-import org.slf4j.impl.MavenSimpleLoggerFactory;
-import org.slf4j.impl.SimpleLogger;
-import org.slf4j.impl.SimpleLoggerConfiguration;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -73,7 +71,7 @@ public class MavenLogger extends AbstractMavenLifecycleParticipant {
     public PrintStream getSystemOutputPrintStream() {
         return originalSystemOutputPrintStream;
     }
-    
+
     public Resource getSystemOutput() {
         return systemOutputResource;
     }
@@ -171,11 +169,15 @@ public class MavenLogger extends AbstractMavenLifecycleParticipant {
     }
 
     void initLogging() {
-        ILoggerFactory loggerFactory = LoggerFactory.getILoggerFactory();
-        if (!(loggerFactory instanceof MavenSimpleLoggerFactory)) return;
-        SimpleLoggerConfiguration config = Reflect.onClass(SimpleLogger.class).get("CONFIG_PARAMS");
-        Object outputChoice = Reflect.onClass("org.slf4j.impl.OutputChoice").create(systemOutputPrintStream).get();
-        Reflect.on(config).set("outputChoice", outputChoice);
-        if (!configuration.isQuiet()) return;
+        if (!MavenUtils.isRealMaven()) return;
+        try {
+            ILoggerFactory loggerFactory = LoggerFactory.getILoggerFactory();
+            if (!"org.slf4j.impl.MavenSimpleLoggerFactory".equals(ClassUtils.getName(loggerFactory))) return;
+            Object config = Reflect.onClass("org.slf4j.impl.SimpleLogger").get("CONFIG_PARAMS");
+            Object outputChoice = Reflect.onClass("org.slf4j.impl.OutputChoice").create(systemOutputPrintStream).get();
+            Reflect.on(config).set("outputChoice", outputChoice);
+        } catch (NoClassDefFoundError e) {
+            logger.warn("Failed to initialize logging, root cause: {}", getRootCauseMessage(e));
+        }
     }
 }
