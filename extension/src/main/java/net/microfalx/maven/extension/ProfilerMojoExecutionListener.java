@@ -90,11 +90,12 @@ public class ProfilerMojoExecutionListener implements MojoExecutionListener {
         goalsToPrint.put("clean", "clean");
         goalsToPrint.put("compiler:compile", "compile");
         goalsToPrint.put("compiler:testCompile", "compile");
-        goalsToPrint.put("surefire:test", "ut");
-        goalsToPrint.put("failsafe:integration-test", "it");
+        goalsToPrint.put("surefire:test", "unit-test");
+        goalsToPrint.put("failsafe:integration-test", "integration-test");
         goalsToPrint.put("failsafe:verify", "verify");
         goalsToPrint.put("javadoc:jar", "doc");
         goalsToPrint.put("jar:jar", "package");
+        goalsToPrint.put("site:site", "site");
         goalsToPrint.put("install:install", "install");
         goalsToPrint.put("deploy:deploy", "deploy");
     }

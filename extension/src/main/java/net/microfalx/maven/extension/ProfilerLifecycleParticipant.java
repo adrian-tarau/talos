@@ -4,7 +4,9 @@ import net.microfalx.jvm.ServerMetrics;
 import net.microfalx.jvm.VirtualMachineMetrics;
 import net.microfalx.maven.core.MavenLogger;
 import net.microfalx.maven.core.MavenUtils;
+import net.microfalx.maven.junit.SurefireTests;
 import net.microfalx.maven.model.SessionMetrics;
+import net.microfalx.maven.model.TestMetrics;
 import net.microfalx.maven.report.ReportBuilder;
 import net.microfalx.resource.Resource;
 import net.microfalx.resource.ResourceUtils;
@@ -12,6 +14,9 @@ import org.apache.maven.AbstractMavenLifecycleParticipant;
 import org.apache.maven.MavenExecutionException;
 import org.apache.maven.execution.MavenExecutionRequest;
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.plugins.surefire.report.ReportTestCase;
+import org.apache.maven.plugins.surefire.report.ReportTestSuite;
+import org.apache.maven.project.MavenProject;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.sisu.Priority;
@@ -26,6 +31,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
 
 @Named("microfalx")
 @Singleton
@@ -51,6 +58,9 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
     @Inject
     private ProfilerMojoExecutionListener mojoExecutionListener;
 
+    @Inject
+    private SurefireTests tests;
+
     @Override
     public void afterProjectsRead(MavenSession session) throws MavenExecutionException {
         super.afterProjectsRead(session);
@@ -69,6 +79,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
     @Override
     public void afterSessionEnd(MavenSession session) throws MavenExecutionException {
         profilerMetrics.sessionsEnd(sessionMetrics);
+        updateMetrics(session);
         storeMetrics();
         profilerMetrics.print();
         generateReports();
@@ -126,6 +137,38 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
         } catch (Exception e) {
             LOGGER.error("Failed to store metrics on disk", e);
         }
+    }
+
+    private void updateMetrics(MavenSession session) {
+        updateTests(session);
+        updateJvm(session);
+    }
+
+    private void updateJvm(MavenSession session) {
+        sessionMetrics.setJvm(VirtualMachineMetrics.get().getStore());
+        sessionMetrics.setServer(ServerMetrics.get().getStore());
+    }
+
+    private void updateTests(MavenSession session) {
+        tests.load(session);
+        Collection<TestMetrics> testMetrics = new ArrayList<>();
+        for (MavenProject project : tests.getProjects()) {
+            Collection<ReportTestSuite> testSuites = tests.getTestSuites(project);
+            for (ReportTestSuite testSuite : testSuites) {
+                for (ReportTestCase testCase : testSuite.getTestCases()) {
+                    testMetrics.add(getTestMetrics(project, testCase));
+                }
+            }
+        }
+        sessionMetrics.setTests(testMetrics);
+    }
+
+    private TestMetrics getTestMetrics(MavenProject project, ReportTestCase testCase) {
+        return new TestMetrics(project.getArtifactId(), testCase.getFullClassName(), testCase.getName())
+                .setFailureErrorLine(testCase.getFailureErrorLine())
+                .setFailureMessage(testCase.getFailureMessage()).setFailureType(testCase.getFailureType())
+                .setFailure(testCase.hasFailure()).setError(testCase.hasError()).setSkipped(testCase.hasSkipped())
+                .setFailureDetail(testCase.getFailureDetail()).setTime(testCase.getTime());
     }
 
     private void generateReports() {

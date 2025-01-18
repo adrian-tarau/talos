@@ -124,6 +124,7 @@ public class ProfilerMetrics {
         if (!configuration.isConsoleEnabled()) return;
         LOGGER.info("");
         if (shouldShowLineSeparator()) infoLine('-');
+        if (configuration.isQuiet()) LOGGER.info("");
         LOGGER.info(buffer().strong("Build Report for "
                                     + session.getTopLevelProject().getName() + " "
                                     + session.getTopLevelProject().getVersion()).toString());

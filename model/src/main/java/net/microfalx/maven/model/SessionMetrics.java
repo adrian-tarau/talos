@@ -4,9 +4,11 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.serializers.DefaultSerializers;
+import com.esotericsoftware.kryo.serializers.OptionalSerializers;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.NamedIdentityAware;
+import net.microfalx.metrics.*;
 import net.microfalx.resource.Resource;
 import org.apache.maven.project.MavenProject;
 
@@ -17,6 +19,7 @@ import java.net.URI;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -42,6 +45,10 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     private Collection<DependencyMetrics> dependencies = new ArrayList<>();
     private Collection<MojoMetrics> mojos = new ArrayList<>();
     private Collection<PluginMetrics> plugins = new ArrayList<>();
+    private Collection<TestMetrics> tests = new ArrayList<>();
+
+    private SeriesStore jvm = SeriesStore.memory();
+    private SeriesStore server = SeriesStore.memory();
 
     private String log;
 
@@ -142,6 +149,31 @@ public class SessionMetrics extends NamedIdentityAware<String> {
         this.plugins = new ArrayList<>(plugins);
     }
 
+    public Collection<TestMetrics> getTests() {
+        return unmodifiableCollection(tests);
+    }
+
+    public void setTests(Collection<TestMetrics> tests) {
+        requireNonNull(tests);
+        this.tests = tests;
+    }
+
+    public SeriesStore getJvm() {
+        return jvm;
+    }
+
+    public void setJvm(SeriesStore jvm) {
+        this.jvm = jvm;
+    }
+
+    public SeriesStore getServer() {
+        return server;
+    }
+
+    public void setServer(SeriesStore server) {
+        this.server = server;
+    }
+
     public String getLog() {
         return log;
     }
@@ -193,24 +225,37 @@ public class SessionMetrics extends NamedIdentityAware<String> {
 
         kryo.register(Dependency.class, SERIALIZATION_ID + 5);
         kryo.register(Project.class, SERIALIZATION_ID + 6);
+        kryo.register(TestMetrics.class, SERIALIZATION_ID + 7);
 
         kryo.register(ProjectMetrics.class, SERIALIZATION_ID + 20);
         kryo.register(ArtifactMetrics.class, SERIALIZATION_ID + 21);
         kryo.register(DependencyMetrics.class, SERIALIZATION_ID + 22);
         kryo.register(MojoMetrics.class, SERIALIZATION_ID + 23);
         kryo.register(PluginMetrics.class, SERIALIZATION_ID + 24);
+        kryo.register(TestMetrics.class, SERIALIZATION_ID + 25);
+
+        kryo.register(Metric.class, SERIALIZATION_ID + 30);
+        kryo.register(Value.class, SERIALIZATION_ID + 31);
+        kryo.register(SeriesMemoryStore.class, SERIALIZATION_ID + 32);
+        kryo.register(DefaultSeries.class, SERIALIZATION_ID + 33);
 
         kryo.addDefaultSerializer(AtomicInteger.class, new DefaultSerializers.AtomicIntegerSerializer());
         kryo.addDefaultSerializer(AtomicLong.class, new DefaultSerializers.AtomicLongSerializer());
         kryo.addDefaultSerializer(URI.class, new DefaultSerializers.URISerializer());
+        kryo.addDefaultSerializer(Optional.class, new OptionalSerializers.OptionalSerializer());
+        kryo.addDefaultSerializer(OptionalDouble.class, new OptionalSerializers.OptionalDoubleSerializer());
+        kryo.addDefaultSerializer(ConcurrentSkipListMap.class, new DefaultSerializers.ConcurrentSkipListMapSerializer());
 
         kryo.register(Duration.class, SERIALIZATION_ID + 100);
         kryo.register(ZonedDateTime.class, SERIALIZATION_ID + 101);
         kryo.register(URI.class, SERIALIZATION_ID + 102);
+        kryo.register(Optional.class, SERIALIZATION_ID + 103);
+        kryo.register(OptionalDouble.class, SERIALIZATION_ID + 104);
 
         kryo.register(ArrayList.class, SERIALIZATION_ID + 110);
         kryo.register(HashSet.class, SERIALIZATION_ID + 111);
         kryo.register(HashMap.class, SERIALIZATION_ID + 112);
+        kryo.register(ConcurrentSkipListMap.class, SERIALIZATION_ID + 113);
 
         kryo.register(AtomicInteger.class, SERIALIZATION_ID + 120);
         kryo.register(AtomicLong.class, SERIALIZATION_ID + 121);

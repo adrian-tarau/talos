@@ -12,12 +12,12 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.File;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 @Named("surefire")
@@ -32,6 +32,7 @@ public class SurefireTests {
     private int failedCount;
     private int errorCount;
     private int skippedCount;
+    private boolean loaded;
 
     /**
      * Returns the total number of tests across all projects.
@@ -84,7 +85,7 @@ public class SurefireTests {
      * @return a non-null instance
      */
     public Collection<MavenProject> getProjects() {
-        return Collections.unmodifiableCollection(testSuites.keySet());
+        return unmodifiableCollection(testSuites.keySet());
     }
 
     /**
@@ -106,7 +107,7 @@ public class SurefireTests {
      */
     public void load(MavenSession session) {
         requireNonNull(session);
-        reset();
+        if (loaded) return;
         LOGGER.debug("Load surefire test suites");
         for (MavenProject project : session.getProjects()) {
             SurefireReportParser parser = createParser(session, project);
@@ -116,6 +117,20 @@ public class SurefireTests {
             updateStat(project, reportTestSuites);
         }
         LOGGER.debug("Loaded {} projects with tests", testSuites.size());
+        loaded = true;
+    }
+
+    /**
+     * Resets the state.
+     */
+    public void reset() {
+        testSuites.clear();
+        totalCount = 0;
+        failedCount = 0;
+        skippedCount = 0;
+        errorCount = 0;
+        successfulCount = 0;
+        loaded = false;
     }
 
     private SurefireReportParser createParser(MavenSession session, MavenProject project) {
@@ -134,14 +149,5 @@ public class SurefireTests {
             errorCount += suite.getNumberOfErrors();
             successfulCount += suite.getNumberOfTests() - suite.getNumberOfErrors() - suite.getNumberOfFailures();
         }
-    }
-
-    private void reset() {
-        testSuites.clear();
-        totalCount = 0;
-        failedCount = 0;
-        skippedCount = 0;
-        errorCount = 0;
-        successfulCount = 0;
     }
 }
