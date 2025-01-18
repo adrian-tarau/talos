@@ -1,11 +1,9 @@
 package net.microfalx.maven.report;
 
-import net.microfalx.lang.EnumUtils;
-import net.microfalx.lang.Identifiable;
-import net.microfalx.lang.Nameable;
-import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.*;
 import net.microfalx.resource.Resource;
 
+import java.io.IOException;
 import java.util.StringJoiner;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -66,8 +64,18 @@ public class Fragment implements Identifiable<String>, Nameable {
         }
     }
 
-    public Resource getContent() {
+    public Resource getResource() {
         return content;
+    }
+
+    public String getContent() {
+        try {
+            return content.loadAsString();
+        } catch (IOException e) {
+            return "<div class=\"alert alert-primary\" role=\"alert\">\n" +
+                   "Failed to load fragment " + type + ", root cause: " + ExceptionUtils.getRootCauseMessage(e) +
+                   "    </div>";
+        }
     }
 
     @Override
