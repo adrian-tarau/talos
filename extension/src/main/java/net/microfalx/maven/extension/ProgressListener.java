@@ -50,6 +50,7 @@ public class ProgressListener extends AbstractExecutionListener {
     }
 
     public void projectEnded(ExecutionEvent event) {
+        if (!configuration.isProgress()) return;
         print(buffer().success("Done").toString());
     }
 
@@ -59,7 +60,7 @@ public class ProgressListener extends AbstractExecutionListener {
         println(buffer().strong("Building "
                                 + session.getTopLevelProject().getName() + " "
                                 + session.getTopLevelProject().getVersion()).toString()
-                + " ( " + MavenUtils.getRequestInfo(session) + ")");
+                + " (" + MavenUtils.getRequestInfo(session) + ")");
     }
 
     private void println(String message) {

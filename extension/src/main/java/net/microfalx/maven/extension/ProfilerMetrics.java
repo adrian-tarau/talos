@@ -11,6 +11,7 @@ import net.microfalx.maven.core.MavenTracker;
 import net.microfalx.maven.junit.SurefireTests;
 import net.microfalx.maven.model.*;
 import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.execution.MavenExecutionResult;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Plugin;
@@ -140,6 +141,7 @@ public class ProfilerMetrics {
         printRepositorySummary();
         printTestsSummary();
         printEnvironmentSummary();
+        printFailureSummary();
         if (shouldShowLineSeparator()) infoLine('-');
         if (configuration.isQuiet()) {
             logger.getSystemOutputPrintStream().println(LOGGER.getReport());
@@ -159,6 +161,9 @@ public class ProfilerMetrics {
         logNameValue("Package", formatDuration(getGoalsDuration(PACKAGE_GOALS)), true, SHORT_NAME_LENGTH);
         if (tracker.getDuration().toMillis() > configuration.getMinimumDuration().toMillis()) {
             logNameValue("Performance", formatDuration(tracker.getDuration()), true, SHORT_NAME_LENGTH);
+        }
+        if (MavenTracker.getFailureCount() > 0) {
+            logNameValue("Failures", FormatterUtils.formatNumber(MavenTracker.getFailureCount()), true, SHORT_NAME_LENGTH);
         }
         logNameValue("Local Repository", getRepositoryReport(repositoryMetrics), true, SHORT_NAME_LENGTH);
         logNameValue("Remote Repository", getRepositoryReport(transferMetrics), true, SHORT_NAME_LENGTH);
@@ -251,6 +256,18 @@ public class ProfilerMetrics {
                                + ", Memory: " + formatMemory(server.getMemoryActuallyUsed(), server.getMemoryTotal()));
         logNameValue("Process", "CPU: " + formatPercent(virtualMachineMetrics.getAverageCpu())
                                 + ", Memory: " + formatMemory(virtualMachineMetrics.getMemoryAverage(), virtualMachineMetrics.getMemoryMaximum()));
+    }
+
+    private void printFailureSummary() {
+        MavenExecutionResult result = session.getResult();
+        if (!result.hasExceptions()) return;
+        LOGGER.info("");
+        infoMain(buffer().failure("Failure") + " (" + result.getExceptions().size() + ")");
+        LOGGER.info("");
+        for (Throwable exception : result.getExceptions()) {
+            logNameValue("Exception Type", ClassUtils.getName(ExceptionUtils.getRootCause(exception)));
+            logNameValue("Exception Message", ExceptionUtils.getRootCauseMessage(exception));
+        }
     }
 
     private void printTestsSummary() {

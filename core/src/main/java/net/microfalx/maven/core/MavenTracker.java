@@ -5,6 +5,7 @@ import net.microfalx.metrics.Timer;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -20,6 +21,17 @@ public class MavenTracker {
 
     private final Class<?> clazz;
     private final org.slf4j.Logger logger;
+
+    private static final AtomicInteger FAILURE_COUNT = new AtomicInteger();
+
+    /**
+     * Returns the number of encountered failures.
+     *
+     * @return a positive integer
+     */
+    public static int getFailureCount() {
+        return FAILURE_COUNT.get();
+    }
 
     public MavenTracker(Class<?> clazz) {
         requireNonNull(clazz);
@@ -48,6 +60,7 @@ public class MavenTracker {
     }
 
     private void logFailure(String name, Throwable throwable) {
+        FAILURE_COUNT.incrementAndGet();
         logger.atError().setCause(throwable).log("Failed action '{}' in '{}'", name, ClassUtils.getName(clazz));
     }
 }
