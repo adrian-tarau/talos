@@ -20,13 +20,11 @@ public class ProfilerExecutionListener extends AbstractExecutionListener {
 
     @Override
     public void projectStarted(ExecutionEvent event) {
-        super.projectStarted(event);
         profilerMetrics.projectStart(event.getProject());
     }
 
     @Override
     public void projectSucceeded(ExecutionEvent event) {
-        super.projectSucceeded(event);
         profilerMetrics.projectStop(event.getProject(), null);
     }
 

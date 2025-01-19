@@ -3,6 +3,7 @@ package net.microfalx.maven.extension;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.maven.core.MavenConfiguration;
 import net.microfalx.maven.core.MavenLogger;
+import net.microfalx.maven.core.MavenTracker;
 import net.microfalx.maven.model.ArtifactMetrics;
 import org.apache.maven.execution.MavenSession;
 import org.eclipse.aether.RepositoryEvent;
@@ -33,6 +34,7 @@ public class TransferMetrics extends AbstractRepositoryMetrics implements Transf
     @Inject
     protected MavenSession session;
 
+    private final MavenTracker tracker = new MavenTracker(TransferMetrics.class);
     private MavenConfiguration configuration;
     private TransferListener listener;
 
@@ -60,7 +62,7 @@ public class TransferMetrics extends AbstractRepositoryMetrics implements Transf
     @Override
     public void transferInitiated(TransferEvent event) throws TransferCancelledException {
         if (shouldForwardEvents()) listener.transferInitiated(event);
-        trackEvent(event);
+        tracker.track("Repository", t -> trackEvent(event));
     }
 
     @Override
@@ -76,7 +78,7 @@ public class TransferMetrics extends AbstractRepositoryMetrics implements Transf
     @Override
     public void transferSucceeded(TransferEvent event) {
         if (shouldForwardEvents()) listener.transferSucceeded(event);
-        trackEvent(event);
+        tracker.track("Repository", t -> trackEvent(event));
     }
 
     @Override
@@ -87,7 +89,7 @@ public class TransferMetrics extends AbstractRepositoryMetrics implements Transf
     @Override
     public void transferFailed(TransferEvent event) {
         if (shouldForwardEvents()) listener.transferFailed(event);
-        trackEvent(event);
+        tracker.track("Repository", t -> trackEvent(event));
     }
 
     private Artifact convertArtifact(TransferEvent event) {
@@ -110,7 +112,6 @@ public class TransferMetrics extends AbstractRepositoryMetrics implements Transf
     private RepositoryEvent.EventType getEventType(TransferEvent event) {
         TransferEvent.EventType type = event.getType();
         String resourceName = event.getResource().getResourceName();
-        boolean isMetadata = resourceName.endsWith("metadata.xml");
         boolean isArtifact = resourceName.endsWith(".jar");
         switch (type) {
             case INITIATED:

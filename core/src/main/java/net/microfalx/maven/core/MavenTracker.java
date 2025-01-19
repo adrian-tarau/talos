@@ -1,0 +1,53 @@
+package net.microfalx.maven.core;
+
+import net.microfalx.lang.ClassUtils;
+import net.microfalx.metrics.Timer;
+import org.slf4j.LoggerFactory;
+
+import java.time.Duration;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
+import static java.time.Duration.ofNanos;
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.maven.core.MavenUtils.METRICS;
+
+/**
+ * Tracks and times activities of a class. The extension should not fail, and we should
+ * also report how much time is lost in the extension.
+ */
+public class MavenTracker {
+
+    private final Class<?> clazz;
+    private final org.slf4j.Logger logger;
+
+    public MavenTracker(Class<?> clazz) {
+        requireNonNull(clazz);
+        this.clazz = clazz;
+        logger = LoggerFactory.getLogger(clazz);
+    }
+
+    public <T> void track(String name, Consumer<T> consumer) {
+        try {
+            METRICS.time(name, (t) -> consumer.accept(null));
+        } catch (Exception e) {
+            logFailure(name, e);
+        }
+    }
+
+    public <T> void track(String name, Supplier<T> supplier) {
+        try {
+            METRICS.time(name, supplier);
+        } catch (Exception e) {
+            logFailure(name, e);
+        }
+    }
+
+    public Duration getDuration() {
+        return ofNanos(METRICS.getTimers().stream().map(Timer::getDuration).mapToLong(Duration::toNanos).sum());
+    }
+
+    private void logFailure(String name, Throwable throwable) {
+        logger.atError().setCause(throwable).log("Failed action '{}' in '{}'", name, ClassUtils.getName(clazz));
+    }
+}

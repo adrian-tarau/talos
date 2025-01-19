@@ -2,6 +2,7 @@ package net.microfalx.maven.extension;
 
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.maven.core.MavenLogger;
+import net.microfalx.maven.core.MavenTracker;
 import net.microfalx.maven.core.MavenUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.execution.MojoExecutionEvent;
@@ -32,6 +33,7 @@ public class ProfilerMojoExecutionListener implements MojoExecutionListener {
     @Inject
     private MavenSession session;
 
+    private final MavenTracker tracker = new MavenTracker(ProfilerMojoExecutionListener.class);
     private MavenConfiguration configuration;
     private PrintStream output;
 
@@ -45,18 +47,25 @@ public class ProfilerMojoExecutionListener implements MojoExecutionListener {
 
     @Override
     public void beforeMojoExecution(MojoExecutionEvent event) throws MojoExecutionException {
-        profilerMetrics.mojoStarted(event.getMojo(), event.getExecution());
-        if (configuration.isQuietAndWithProgress()) printMojo(event);
+        tracker.track("Mojo Execution", t -> {
+            profilerMetrics.mojoStarted(event.getMojo(), event.getExecution());
+            if (configuration.isQuietAndWithProgress()) printMojo(event);
+        });
+
     }
 
     @Override
     public void afterMojoExecutionSuccess(MojoExecutionEvent event) throws MojoExecutionException {
-        profilerMetrics.mojoStop(event.getMojo(), null);
+        tracker.track("Mojo Success", t -> {
+            profilerMetrics.mojoStop(event.getMojo(), null);
+        });
     }
 
     @Override
     public void afterExecutionFailure(MojoExecutionEvent event) {
-        profilerMetrics.mojoStop(event.getMojo(), event.getCause());
+        tracker.track("Mojo Failure", t -> {
+            profilerMetrics.mojoStop(event.getMojo(), event.getCause());
+        });
     }
 
     private void printMojo(MojoExecutionEvent event) {

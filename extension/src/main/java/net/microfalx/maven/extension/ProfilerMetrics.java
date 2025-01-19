@@ -7,6 +7,7 @@ import net.microfalx.jvm.model.Server;
 import net.microfalx.jvm.model.VirtualMachine;
 import net.microfalx.lang.*;
 import net.microfalx.maven.core.MavenLogger;
+import net.microfalx.maven.core.MavenTracker;
 import net.microfalx.maven.junit.SurefireTests;
 import net.microfalx.maven.model.*;
 import org.apache.maven.artifact.repository.ArtifactRepository;
@@ -31,7 +32,6 @@ import static java.util.stream.Collectors.joining;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.FormatterUtils.formatNumber;
 import static net.microfalx.lang.FormatterUtils.formatPercent;
-import static net.microfalx.lang.StringUtils.COMMA_WITH_SPACE;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 import static net.microfalx.maven.core.MavenUtils.*;
 import static net.microfalx.maven.extension.MavenUtils.LONG_NAME_LENGTH;
@@ -72,6 +72,7 @@ public class ProfilerMetrics {
     @Inject
     protected SurefireTests tests;
 
+    private final MavenTracker tracker = new MavenTracker(ProfilerMetrics.class);
     private MavenConfiguration configuration;
     SessionMetrics sessionMetrics;
 
@@ -92,13 +93,17 @@ public class ProfilerMetrics {
     }
 
     void projectStart(MavenProject project) {
-        sessionMetrics.addModule(getMetrics(project).setStartTime(ZonedDateTime.now()));
-        configuration = new MavenConfiguration(session);
-        registerDependencies(project);
+        tracker.track("Project Start", t -> {
+            sessionMetrics.addModule(getMetrics(project).setStartTime(ZonedDateTime.now()));
+            configuration = new MavenConfiguration(session);
+            registerDependencies(project);
+        });
     }
 
     void projectStop(MavenProject project, Throwable throwable) {
-        getMetrics(project).setStartTime(ZonedDateTime.now());
+        tracker.track("Project Stop", t -> {
+            getMetrics(project).setEndTime(ZonedDateTime.now());
+        });
     }
 
     void mojoStarted(Mojo mojo, MojoExecution execution) {
@@ -143,7 +148,7 @@ public class ProfilerMetrics {
 
     private void printSummary() {
         LOGGER.info("");
-        logNameValue("Request", getRequestInfo(), true, SHORT_NAME_LENGTH);
+        logNameValue("Request", MavenUtils.getRequestInfo(session), true, SHORT_NAME_LENGTH);
         logNameValue("Repositories", getRepositoriesInfo(), true, SHORT_NAME_LENGTH);
         if (!session.getRequest().getData().isEmpty()) logNameValue("Data", getData(), true, SHORT_NAME_LENGTH);
         LOGGER.info("");
@@ -152,6 +157,9 @@ public class ProfilerMetrics {
         logNameValue("Compile", formatDuration(getGoalsDuration(COMPILE_GOALS)), true, SHORT_NAME_LENGTH);
         logNameValue("Tests", formatDuration(getGoalsDuration(TESTS_GOALS)), true, SHORT_NAME_LENGTH);
         logNameValue("Package", formatDuration(getGoalsDuration(PACKAGE_GOALS)), true, SHORT_NAME_LENGTH);
+        if (tracker.getDuration().toMillis() > configuration.getMinimumDuration().toMillis()) {
+            logNameValue("Performance", formatDuration(tracker.getDuration()), true, SHORT_NAME_LENGTH);
+        }
         logNameValue("Local Repository", getRepositoryReport(repositoryMetrics), true, SHORT_NAME_LENGTH);
         logNameValue("Remote Repository", getRepositoryReport(transferMetrics), true, SHORT_NAME_LENGTH);
     }
@@ -364,27 +372,6 @@ public class ProfilerMetrics {
                     .append(buffer().strong(")"));
         }
         return builder.toString();
-    }
-
-    private String getRequestInfo() {
-        StringBuilder builder = new StringBuilder();
-        String profiles = getProfiles();
-        if (isNotEmpty(profiles)) StringUtils.append(builder, "Profiles: " + profiles, COMMA_WITH_SPACE);
-        String goals = getGoals();
-        if (isNotEmpty(goals)) StringUtils.append(builder, "Goals: " + goals, COMMA_WITH_SPACE);
-        if (session.getRequest().getDegreeOfConcurrency() > 0) {
-            StringUtils.append(builder, "DOP: " + configuration.getDop(), COMMA_WITH_SPACE);
-        }
-        if (session.getRequest().isOffline()) StringUtils.append(builder, "Offline");
-        return builder.toString();
-    }
-
-    private String getGoals() {
-        return String.join(" ", session.getRequest().getGoals());
-    }
-
-    private String getProfiles() {
-        return String.join(" ", session.getRequest().getActiveProfiles());
     }
 
     private String getRepositoriesInfo() {

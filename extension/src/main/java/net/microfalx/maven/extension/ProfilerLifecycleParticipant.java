@@ -3,6 +3,7 @@ package net.microfalx.maven.extension;
 import net.microfalx.jvm.ServerMetrics;
 import net.microfalx.jvm.VirtualMachineMetrics;
 import net.microfalx.maven.core.MavenLogger;
+import net.microfalx.maven.core.MavenTracker;
 import net.microfalx.maven.core.MavenUtils;
 import net.microfalx.maven.junit.SurefireTests;
 import net.microfalx.maven.model.SessionMetrics;
@@ -34,6 +35,8 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import static net.microfalx.maven.core.MavenUtils.METRICS;
+
 @Named("microfalx")
 @Singleton
 @Priority(Integer.MAX_VALUE)
@@ -61,29 +64,40 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
     @Inject
     private SurefireTests tests;
 
+    private final MavenTracker tracker = new MavenTracker(ProfilerLifecycleParticipant.class);
+    private Resource report;
+
     @Override
     public void afterProjectsRead(MavenSession session) throws MavenExecutionException {
         super.afterProjectsRead(session);
-        sessionMetrics = new SessionMetrics(session.getTopLevelProject()).setStartTime(startTime);
-        profilerMetrics.sessionMetrics = sessionMetrics;
-        progressListener.start();
+        tracker.track("Project Read", t -> {
+            sessionMetrics = new SessionMetrics(session.getTopLevelProject()).setStartTime(startTime);
+            profilerMetrics.sessionMetrics = sessionMetrics;
+            progressListener.start();
+        });
+
     }
 
     @Override
     public void afterSessionStart(MavenSession session) throws MavenExecutionException {
-        initialize(session);
-        startTime = ZonedDateTime.now();
-        profilerMetrics.sessionStart();
+        tracker.track("Session Start", t -> {
+            startTime = ZonedDateTime.now();
+            initialize(session);
+            profilerMetrics.sessionStart();
+        });
     }
 
     @Override
     public void afterSessionEnd(MavenSession session) throws MavenExecutionException {
-        profilerMetrics.sessionsEnd(sessionMetrics);
-        updateMetrics(session);
-        storeMetrics();
-        profilerMetrics.print();
-        generateReports();
-        printReport();
+        tracker.track("Session End", t -> {
+            profilerMetrics.sessionsEnd(sessionMetrics);
+            METRICS.time("Update Metrics", t2 -> updateMetrics(session));
+            METRICS.time("Store Metrics", t2 -> storeMetrics());
+            METRICS.time("Generate Report",t2->generateHtmlReports());
+            profilerMetrics.print();
+            printConsoleReport();
+            openHtmlReport();
+        });
     }
 
     private void initialize(MavenSession session) {
@@ -116,7 +130,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
         lifecycleListener.addChainListener(progressListener);
     }
 
-    private void printReport() {
+    private void printConsoleReport() {
         if (configuration.isQuiet()) {
             mavenLogger.getSystemOutputPrintStream().println(mavenLogger.getReport());
         }
@@ -171,25 +185,9 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
                 .setFailureDetail(testCase.getFailureDetail()).setTime(testCase.getTime());
     }
 
-    private void generateReports() {
-        Resource resource = configuration.getStorageDirectory().resolve("build.report.html");
-        try {
-            ReportBuilder.create(sessionMetrics).build(resource);
-        } catch (Exception e) {
-            LOGGER.error("Failed to generate build report", e);
-        }
-        Resource reportInTarget = configuration.getTargetFile("build.report.html", true);
-        try {
-            reportInTarget.copyFrom(resource);
-            if (configuration.isConsoleEnabled()) {
-                mavenLogger.info("");
-                mavenLogger.info("HTML report available at " + ResourceUtils.toFile(reportInTarget).getAbsolutePath());
-            }
-        } catch (IOException e) {
-            LOGGER.error("Failed to copy build report", e);
-        }
+    private void openHtmlReport() {
         if (configuration.isOpenReportEnabled()) {
-            File file = ResourceUtils.toFile(reportInTarget);
+            File file = ResourceUtils.toFile(this.report);
             try {
                 Desktop.getDesktop().open(file);
             } catch (UnsupportedOperationException e) {
@@ -198,6 +196,26 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
                 System.out.println("Failed to open " + file.getAbsolutePath());
             }
         }
+    }
+
+    private void generateHtmlReports() {
+        Resource resource = configuration.getStorageDirectory().resolve("build.report.html");
+        try {
+            ReportBuilder.create(sessionMetrics).build(resource);
+        } catch (Exception e) {
+            LOGGER.error("Failed to generate build report", e);
+        }
+        this.report = configuration.getTargetFile("build.report.html", true);
+        try {
+            this.report.copyFrom(resource);
+            if (configuration.isConsoleEnabled()) {
+                mavenLogger.info("");
+                mavenLogger.info("HTML report available at " + ResourceUtils.toFile(this.report).getAbsolutePath());
+            }
+        } catch (IOException e) {
+            LOGGER.error("Failed to copy build report", e);
+        }
+
 
     }
 

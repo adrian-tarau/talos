@@ -1,5 +1,6 @@
 package net.microfalx.maven.extension;
 
+import net.microfalx.maven.core.MavenTracker;
 import org.apache.maven.eventspy.EventSpy;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.artifact.Artifact;
@@ -19,6 +20,8 @@ public class RepositoryMetrics extends AbstractRepositoryMetrics implements Even
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RepositoryMetrics.class);
 
+    private final MavenTracker tracker = new MavenTracker(RepositoryMetrics.class);
+
     @Override
     public void init(Context context) throws Exception {
         // empty on purpose
@@ -27,7 +30,7 @@ public class RepositoryMetrics extends AbstractRepositoryMetrics implements Even
     @Override
     public void onEvent(Object event) throws Exception {
         if (event instanceof RepositoryEvent) {
-            repositoryEvent((RepositoryEvent) event);
+            tracker.track("Repository", t -> repositoryEvent((RepositoryEvent) event));
         }
     }
 

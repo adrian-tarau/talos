@@ -1,6 +1,7 @@
 package net.microfalx.maven.core;
 
 import net.microfalx.lang.*;
+import net.microfalx.metrics.Metrics;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Plugin;
@@ -29,6 +30,7 @@ public class MavenUtils {
 
     private static final String PROPERTY_PREFIX = "microfalx.";
 
+    public static Metrics METRICS = Metrics.of("Maven");
     public static final String ZERO_DURATION = "~0s";
 
     private static final int DURATION_LENGTH = 9;
