@@ -72,14 +72,20 @@ In order to use it, the extension needs to be registered using Maven's extension
 
 Once the registration is complete, the behavior of subsequent executions of any Maven goal will change.
 
-First, you will notice a decrease in logging. There will be a brief description of what is being built, along with the main build parameters such as profiles and goals. Each module will be summarized in a single line. The main Mojos will be logged with brief keywords, while any additional Mojo will be represented by a single dot (".").
+First, you will notice a decrease in logging. There will be a brief description of what is being built, along with the main build parameters such as profiles and goals. Each module will be summarized in a single line. The main Mojos will be logged with brief keywords, while any additional Mojo will be represented by a single dot (`.`).
 
 Second, after the build concludes, a summary report will be logged. This report will provide every developer with the important information they need.
 
-![Extension Build Output](docs/images/extension_build.png)
+![Extension Build Output](docs/images/extension_build_output.png)
 
 Third, an HTML report will be generated, which will be mentioned at the end of the summary report. This report can be opened for detailed inspection and can also be integrated with CI tools as needed.
 
 TODO: work in progress
+
+The behaviour of the extension can be changed with a few parameters:
+
+* `microfalx.extension.enabled=false` Disables the extension without the need to be removed from extensions.xml (might be useful if the extension misbehaves)
+* `microfalx.quiet=false` The default build behaviour can be reverted (verbose logging), while preserving the build report at the end
+* `microfals.progress=false` The progress is disabled, and the build is fully quiet; The only thing displayed on the screen (console) would be the report at the end
 
 
