@@ -25,12 +25,12 @@
     <parent>
         <groupId>net.microfalx.maven</groupId>
         <artifactId>maven</artifactId>
-        <version>0.8.1-SNAPSHOT</version>
+        <version>0.8.2-SNAPSHOT</version>
     </parent>
 
     <groupId>net.microfalx.maven</groupId>
     <artifactId>maven-extension</artifactId>
-    <version>0.8.1-SNAPSHOT</version>
+    <version>0.8.2-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Maven :: Extension</name>

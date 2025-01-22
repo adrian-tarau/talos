@@ -25,12 +25,12 @@
 
     <groupId>net.microfalx.maven</groupId>
     <artifactId>maven-core</artifactId>
-    <version>0.8.1-SNAPSHOT</version>
+    <version>0.8.2-SNAPSHOT</version>
 
     <parent>
         <groupId>net.microfalx.maven</groupId>
         <artifactId>maven</artifactId>
-        <version>0.8.1-SNAPSHOT</version>
+        <version>0.8.2-SNAPSHOT</version>
     </parent>
 
     <name>Maven :: Core</name>
