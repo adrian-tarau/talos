@@ -43,14 +43,14 @@ The parameters are declared as with any Maven plugins, in the <build></build> se
 
 I have used Maven as my build tool for over 15 years. While it is not perfect, it performs remarkably well for projects ranging from small to highly complex. However, there are a few aspects I wish were different, many of which have been echoed by other developers over the years in the issues they’ve logged.
 
-Logging  
-: Maven's verbose logging style does a good job of informing users about what is being done, but it can be overwhelming when details are not needed. There isn't much of an option between the verbose output and what I call _quiet mode_, which shows virtually nothing.
+### Logging  
+Maven's verbose logging style does a good job of informing users about what is being done, but it can be overwhelming when details are not needed. There isn't much of an option between the verbose output and what I call _quiet mode_, which shows virtually nothing.
 
-Performance  
-: In addition to reducing unnecessary logging, developers need to identify which parts of the build are slower or problematic. A report at the end of the build should indicate the total time spent on plugins (which handle most of the work), repository access, and any other activities that could take significant time.
+### Performance  
+In addition to reducing unnecessary logging, developers need to identify which parts of the build are slower or problematic. A report at the end of the build should indicate the total time spent on plugins (which handle most of the work), repository access, and any other activities that could take significant time.
 
-Reporting  
-: A concise summary report in the console should display where time is being utilized and the results of any tests that were run. Additionally, a detailed HTML report should be generated, providing more in-depth information about each part of the build, which can also be displayed in the CI tool for each build.
+### Reporting  
+A concise summary report in the console should display where time is being utilized and the results of any tests that were run. Additionally, a detailed HTML report should be generated, providing more in-depth information about each part of the build, which can also be displayed in the CI tool for each build.
 
 Gradle addresses most of these concerns, but I have never been able to fully embrace that build tool.
 
