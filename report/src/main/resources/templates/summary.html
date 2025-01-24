@@ -2,11 +2,112 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<div th:fragment="summary">
-    <div class="alert alert-primary" role="alert">
-        TODO
-    </div>
+<div th:fragment="summary" th:object="${session}">
+    <p>
+        Started at <span th:text="${#temporals.format(startTime)}"></span>,
+        finished at <span th:text="${#temporals.format(endTime)}"></span>,
+        total build time: <span th:text="${helper.getBuildTime()}"></span>
+    </p>
+    <h5 class="border-top  mt-3">
+        <span th:text="${#numbers.formatInteger(helper.getFailureCount(), 0)}"></span><span> failures</span>
+    </h5>
+    <span th:if="${#numbers.formatInteger(helper.getFailureCount(), 0)}==0">This build did not contain any failures.</span>
+    <h5 class="border-top  mt-3">
+        <span th:text="${#numbers.formatInteger(helper.getExecutionCount(),0)}"></span><span> tasks executed in </span>
+        <span th:text="${helper.getBuildTime()}"></span>
+    </h5>
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Class Name</th>
+            <th scope="col">Duration</th>
+            <th scope="col">Status</th>
+            <th scope="col">Execution Count</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="mojo : ${mojos}">
+            <td><span th:text="${mojo.name}"></span></td>
+            <td><span th:text="${mojo.className}"></span></td>
+            <td><span th:text="${#numbers.formatDecimal(mojo.duration.toSeconds(),2,3)}"></span>s</td>
+            <td>
+                <span th:if="${mojo.failureCount==0}">Success</span>
+                <span th:if="${mojo.failureCount>0}">Failure</span>
+            </td>
+            <td><span th:text="${mojo.executionCount}"></span></td>
+        </tr>
+        </tbody>
+    </table>
+    <h5 class="border-top  mt-3">
+        <span th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
+    </h5>
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Group Id</th>
+            <th scope="col">Artifact Id</th>
+            <th scope="col">Version</th>
+            <th scope="col">Description</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="module : ${modules}">
+            <td><span th:text="${module.name}"></span></td>
+            <td><span th:text="${module.groupId}"></span></td>
+            <td><span th:text="${module.artifactId}"></span></td>
+            <td><span th:text="${module.version}"></span></td>
+            <td><span th:text="${module.description}"></span></td>
+        </tr>
+        </tbody>
+    </table>
+    <h5 class="border-top  mt-3">
+        <span th:text="${#numbers.formatInteger(dependencies.size(),0)}"></span><span> dependencies resolved in </span>
+        <span th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
+    </h5>
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th scope="col">Group Id</th>
+            <th scope="col">Artifact Id</th>
+            <th scope="col">Version</th>
+            <th scope="col">Description</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="dependency : ${dependencies}">
+            <td><span th:text="${dependency.groupId}"></span></td>
+            <td><span th:text="${dependency.artifactId}"></span></td>
+            <td><span th:text="${dependency.version}"></span></td>
+            <td><span th:text="${dependency.description}"></span></td>
+        </tr>
+        </tbody>
+    </table>
+    <h5 class="border-top  mt-3">
+        <span th:text="${#numbers.formatInteger(plugins.size(),0)}"></span><span> plugins in </span>
+        <span th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
+    </h5>
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Group Id</th>
+            <th scope="col">Artifact Id</th>
+            <th scope="col">Version</th>
+            <th scope="col">Description</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="plugin : ${plugins}">
+            <td><span th:text="${plugin.name}"></span></td>
+            <td><span th:text="${plugin.groupId}"></span></td>
+            <td><span th:text="${plugin.artifactId}"></span></td>
+            <td><span th:text="${plugin.version}"></span></td>
+            <td><span th:text="${plugin.description}"></span></td>
+        </tr>
+        </tbody>
+    </table>
 </div>
-
 </body>
 </html>

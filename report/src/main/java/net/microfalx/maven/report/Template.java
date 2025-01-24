@@ -2,6 +2,7 @@ package net.microfalx.maven.report;
 
 import net.microfalx.lang.Nameable;
 import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.TimeUtils;
 import net.microfalx.maven.model.SessionMetrics;
 import net.microfalx.resource.Resource;
 import org.thymeleaf.TemplateEngine;
@@ -109,10 +110,12 @@ public class Template implements Nameable {
         if (session != null) {
             context.setVariable("session", session);
             context.setVariable("project", session.getProject());
+            context.setVariable("mojos", session.getMojos());
             context.setVariable("modules", session.getModules());
             context.setVariable("artifacts", session.getArtifacts());
             context.setVariable("dependencies", session.getDependencies());
             context.setVariable("plugins", session.getPlugins());
+            context.setVariable("helper", new ReportHelper(session));
         }
         context.setVariables(variables);
         return context;
