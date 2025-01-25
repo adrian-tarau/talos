@@ -1,6 +1,9 @@
 package net.microfalx.maven.model;
 
 import net.microfalx.lang.StringUtils;
+import org.apache.maven.execution.DefaultMavenExecutionRequest;
+import org.apache.maven.execution.DefaultMavenExecutionResult;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.jupiter.api.Test;
@@ -34,7 +37,7 @@ class SessionMetricsTest {
     }
 
     protected final SessionMetrics create() {
-        SessionMetrics session = new SessionMetrics(createProject("Single"));
+        SessionMetrics session = new SessionMetrics(createSession("Single"));
         session.setArtifacts(List.of(createArtifact()));
         return session;
     }
@@ -45,6 +48,13 @@ class SessionMetricsTest {
         metrics.artifactResolveStart(artifact);
         metrics.artifactResolveStop(artifact, null);
         return metrics;
+    }
+
+    protected final MavenSession createSession(String name) {
+        DefaultMavenExecutionRequest request = new DefaultMavenExecutionRequest();
+        DefaultMavenExecutionResult result = new DefaultMavenExecutionResult();
+        MavenSession session = new MavenSession(null, request, result, createProject(name));
+        return session;
     }
 
 

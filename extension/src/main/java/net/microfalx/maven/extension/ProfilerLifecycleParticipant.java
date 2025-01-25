@@ -71,7 +71,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
     public void afterProjectsRead(MavenSession session) throws MavenExecutionException {
         super.afterProjectsRead(session);
         tracker.track("Project Read", t -> {
-            sessionMetrics = new SessionMetrics(session.getTopLevelProject()).setStartTime(startTime);
+            sessionMetrics = new SessionMetrics(session).setStartTime(startTime);
             profilerMetrics.sessionMetrics = sessionMetrics;
             progressListener.start();
         });
@@ -93,7 +93,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
             profilerMetrics.sessionsEnd(sessionMetrics);
             METRICS.time("Update Metrics", t2 -> updateMetrics(session));
             METRICS.time("Store Metrics", t2 -> storeMetrics());
-            METRICS.time("Generate Report",t2->generateHtmlReports());
+            METRICS.time("Generate Report", t2 -> generateHtmlReports());
             profilerMetrics.print();
             printConsoleReport();
             openHtmlReport();

@@ -10,7 +10,8 @@ import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.NamedIdentityAware;
 import net.microfalx.metrics.*;
 import net.microfalx.resource.Resource;
-import org.apache.maven.project.MavenProject;
+import org.apache.maven.execution.MavenExecutionRequest;
+import org.apache.maven.execution.MavenSession;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,12 +41,17 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     private String throwableClass;
     private String throwable;
 
-    private Collection<ProjectMetrics> modules = new ArrayList<>();
-    private Collection<ArtifactMetrics> artifacts = new ArrayList<>();
-    private Collection<DependencyMetrics> dependencies = new ArrayList<>();
-    private Collection<MojoMetrics> mojos = new ArrayList<>();
-    private Collection<PluginMetrics> plugins = new ArrayList<>();
-    private Collection<TestMetrics> tests = new ArrayList<>();
+    private final Collection<ProjectMetrics> modules = new ArrayList<>();
+    private final Collection<ArtifactMetrics> artifacts = new ArrayList<>();
+    private final Collection<DependencyMetrics> dependencies = new ArrayList<>();
+    private final Collection<MojoMetrics> mojos = new ArrayList<>();
+    private final Collection<PluginMetrics> plugins = new ArrayList<>();
+    private final Collection<TestMetrics> tests = new ArrayList<>();
+
+    private final Collection<String> profiles = new ArrayList<>();
+    private final Collection<String> goals = new ArrayList<>();
+    private boolean offline = false;
+    private int dop;
 
     private SeriesStore jvm = SeriesStore.memory();
     private SeriesStore server = SeriesStore.memory();
@@ -55,10 +61,16 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     protected SessionMetrics() {
     }
 
-    public SessionMetrics(MavenProject project) {
-        this.project = new Project(project);
+    public SessionMetrics(MavenSession session) {
+        requireNonNull(session);
+        this.project = new Project(session.getTopLevelProject());
         setName(project.getName());
         setDescription(project.getDescription());
+        MavenExecutionRequest request = session.getRequest();
+        profiles.addAll(request.getActiveProfiles());
+        goals.addAll(request.getGoals());
+        offline = request.isOffline();
+        dop = request.getDegreeOfConcurrency();
     }
 
     public Project getProject() {
@@ -83,6 +95,22 @@ public class SessionMetrics extends NamedIdentityAware<String> {
         return this;
     }
 
+    public Collection<String> getProfiles() {
+        return profiles;
+    }
+
+    public Collection<String> getGoals() {
+        return goals;
+    }
+
+    public boolean isOffline() {
+        return offline;
+    }
+
+    public int getDop() {
+        return dop;
+    }
+
     public String getThrowableClass() {
         return throwableClass;
     }
@@ -105,7 +133,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
 
     public void setModules(Collection<ProjectMetrics> modules) {
         requireNonNull(modules);
-        this.modules = new ArrayList<>(modules);
+        this.modules.addAll(modules);
     }
 
     public void addModule(ProjectMetrics module) {
@@ -119,7 +147,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
 
     public void setMojos(Collection<MojoMetrics> mojos) {
         requireNonNull(modules);
-        this.mojos = new ArrayList<>(mojos);
+        this.mojos.addAll(mojos);
     }
 
     public Collection<ArtifactMetrics> getArtifacts() {
@@ -128,7 +156,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
 
     public void setArtifacts(Collection<ArtifactMetrics> artifacts) {
         requireNonNull(modules);
-        this.artifacts = new ArrayList<>(artifacts);
+        this.artifacts.addAll(artifacts);
     }
 
     public Collection<DependencyMetrics> getDependencies() {
@@ -137,7 +165,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
 
     public void setDependencies(Collection<DependencyMetrics> dependencies) {
         requireNonNull(modules);
-        this.dependencies = new ArrayList<>(dependencies);
+        this.dependencies.addAll(dependencies);
     }
 
     public Collection<PluginMetrics> getPlugins() {
@@ -146,7 +174,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
 
     public void setPlugins(Collection<PluginMetrics> plugins) {
         requireNonNull(modules);
-        this.plugins = new ArrayList<>(plugins);
+        this.plugins.addAll(plugins);
     }
 
     public Collection<TestMetrics> getTests() {
@@ -155,7 +183,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
 
     public void setTests(Collection<TestMetrics> tests) {
         requireNonNull(tests);
-        this.tests = tests;
+        this.tests.addAll(tests);
     }
 
     public SeriesStore getJvm() {
