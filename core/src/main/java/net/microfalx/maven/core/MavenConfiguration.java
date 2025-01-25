@@ -1,5 +1,6 @@
 package net.microfalx.maven.core;
 
+import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.Resource;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
@@ -9,6 +10,7 @@ import java.io.File;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.FileUtils.validateDirectoryExists;
 import static net.microfalx.lang.FileUtils.validateFileExists;
+import static net.microfalx.lang.StringUtils.isNotEmpty;
 import static net.microfalx.maven.core.MavenUtils.getProperty;
 
 /**
@@ -114,7 +116,7 @@ public class MavenConfiguration {
     /**
      * Returns a director inside the target directory.
      *
-     * @param name     the name of the directory
+     * @param name     the name of the directory, null to get the target directory
      * @param topLevel {@code true} to select the top level target directory, {@code false} for the target directory
      *                 of the current project
      * @return a non-null instance
@@ -164,7 +166,7 @@ public class MavenConfiguration {
             if (project != null) {
                 reference = getTargetReference(project, name);
             } else {
-                return new File(getTargetFromRequest(), name);
+                return isNotEmpty(name) ? new File(getTargetFromRequest(), name) : getTargetFromRequest();
             }
         } else {
             MavenProject project = session.getCurrentProject();
@@ -177,8 +179,12 @@ public class MavenConfiguration {
         return reference;
     }
 
-    private File getTargetReference(MavenProject project, String fileName) {
-        return new File(project.getBuild().getDirectory(), fileName);
+    private File getTargetReference(MavenProject project, String name) {
+        if (StringUtils.isEmpty(name)) {
+            return new File(project.getBuild().getDirectory());
+        } else {
+            return new File(project.getBuild().getDirectory(), name);
+        }
     }
 
     private File getTargetFromRequest() {

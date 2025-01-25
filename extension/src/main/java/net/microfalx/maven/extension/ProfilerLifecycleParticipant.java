@@ -11,6 +11,7 @@ import net.microfalx.maven.model.TestMetrics;
 import net.microfalx.maven.report.ReportBuilder;
 import net.microfalx.resource.Resource;
 import net.microfalx.resource.ResourceUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.AbstractMavenLifecycleParticipant;
 import org.apache.maven.MavenExecutionException;
 import org.apache.maven.execution.MavenExecutionRequest;
@@ -35,11 +36,12 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
 import static net.microfalx.maven.core.MavenUtils.METRICS;
 
 @Named("microfalx")
 @Singleton
-@Priority(Integer.MAX_VALUE)
+@Priority(100)
 public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticipant {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProfilerLifecycleParticipant.class);
@@ -73,7 +75,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
         tracker.track("Project Read", t -> {
             sessionMetrics = new SessionMetrics(session).setStartTime(startTime);
             profilerMetrics.sessionMetrics = sessionMetrics;
-            progressListener.start();
+            if (progressListener != null) progressListener.start();
         });
 
     }
@@ -102,15 +104,17 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
 
     private void initialize(MavenSession session) {
         configuration = new MavenConfiguration(session);
-        LOGGER.debug("Initialize extension, verbose: {}, quiet: {}, progress: {}, performance: {}",
-                configuration.isVerbose(), configuration.isQuiet(), configuration.isProgress(),
-                configuration.isPerformanceEnabled()
+        LOGGER.info("Initialize performance extension, logger: {}, verbose: {}, quiet: {}, console: {}, progress: {}, performance: {}",
+                MavenUtils.isMavenLoggerAvailable(), configuration.isVerbose(), configuration.isConsoleEnabled(),
+                configuration.isQuiet(), configuration.isProgress(), configuration.isPerformanceEnabled()
         );
-        if (MavenUtils.isRealMaven()) {
-            registerListeners(session);
+        registerListeners(session);
+        tracker.track("Start JVM Tracking", t -> {
             VirtualMachineMetrics.get().start();
+        });
+        tracker.track("Start Server Tracking", t -> {
             ServerMetrics.get().start();
-        }
+        });
     }
 
     private void registerListeners(MavenSession session) {
@@ -143,7 +147,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
         } catch (IOException e) {
             LOGGER.error("Failed to attach log", e);
         }
-        Resource resource = configuration.getStorageDirectory().resolve("build.metrics", Resource.Type.FILE);
+        Resource resource = configuration.getStorageDirectory().resolve("build.data", Resource.Type.FILE);
         try {
             try (OutputStream outputStream = resource.getOutputStream()) {
                 sessionMetrics.store(outputStream);
@@ -205,18 +209,27 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
         } catch (Exception e) {
             LOGGER.error("Failed to generate build report", e);
         }
+        moveResults();
         this.report = configuration.getTargetFile("build.report.html", true);
-        try {
-            this.report.copyFrom(resource);
-            if (configuration.isConsoleEnabled()) {
-                mavenLogger.info("");
-                mavenLogger.info("HTML report available at " + ResourceUtils.toFile(this.report).getAbsolutePath());
-            }
-        } catch (IOException e) {
-            LOGGER.error("Failed to copy build report", e);
+        if (configuration.isConsoleEnabled()) {
+            mavenLogger.info("");
+            mavenLogger.info("HTML report available at " + ResourceUtils.toFile(this.report).getAbsolutePath());
         }
+    }
 
-
+    private void moveResults() {
+        File target = ResourceUtils.toFile(configuration.getTargetDirectory(null, true));
+        File source = ResourceUtils.toFile(configuration.getStorageDirectory());
+        try {
+            FileUtils.copyDirectory(source, target);
+        } catch (IOException e) {
+            LOGGER.error("Failed to move results, root cause: {}", getRootCauseMessage(e));
+        }
+        try {
+            FileUtils.deleteDirectory(source);
+        } catch (IOException e) {
+            LOGGER.error("Failed to remove temporary directory {}, root cause: {}", source, getRootCauseMessage(e));
+        }
     }
 
 

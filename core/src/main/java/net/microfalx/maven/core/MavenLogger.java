@@ -32,7 +32,7 @@ import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
  */
 @Named
 @Singleton
-@Priority(Integer.MAX_VALUE)
+@Priority(1000)
 public class MavenLogger extends AbstractMavenLifecycleParticipant {
 
     private static final String LOGGER_PREFIX = "build.";
@@ -169,7 +169,7 @@ public class MavenLogger extends AbstractMavenLifecycleParticipant {
     }
 
     void initLogging() {
-        if (!MavenUtils.isRealMaven()) return;
+        if (!MavenUtils.isMavenLoggerAvailable()) return;
         try {
             ILoggerFactory loggerFactory = LoggerFactory.getILoggerFactory();
             if (!"org.slf4j.impl.MavenSimpleLoggerFactory".equals(ClassUtils.getName(loggerFactory))) return;

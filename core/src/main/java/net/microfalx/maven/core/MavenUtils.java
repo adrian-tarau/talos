@@ -37,13 +37,20 @@ public class MavenUtils {
     private static final Map<String, String> mojoNames = new ConcurrentHashMap<>();
 
     /**
-     * Returns whether the code is executed under the real Maven and not some Maven like processor (IDEs).
-     * <p>
-     * The method checks for the existence of classes which are present only when a real Maven executes the code.
+     * Returns whether a known logger to intercept is available.
      *
-     * @return {@code true} if real Maven, {@code false} otherwise
+     * @return {@code true} if Maven logger, {@code false} otherwise
      */
-    public static boolean isRealMaven() {
+    public static boolean isLoggerAvailable() {
+        return isMavenLoggerAvailable();
+    }
+
+    /**
+     * Returns whether the Maven logger is available.
+     *
+     * @return {@code true} if Maven logger, {@code false} otherwise
+     */
+    public static boolean isMavenLoggerAvailable() {
         return ClassUtils.exists("org.slf4j.impl.MavenSimpleLoggerFactory");
     }
 
@@ -349,7 +356,6 @@ public class MavenUtils {
         }
         return prefix + ':' + execution.getGoal();
     }
-
 
 
     static {
