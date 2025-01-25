@@ -60,7 +60,7 @@ public class ProgressListener extends AbstractExecutionListener {
         println(buffer().strong("Building "
                                 + session.getTopLevelProject().getName() + " "
                                 + session.getTopLevelProject().getVersion()).toString()
-                + " (" + MavenUtils.getRequestInfo(session) + ")");
+                + " (" + net.microfalx.maven.core.MavenUtils.getRequestInfo(session) + ")");
     }
 
     private void println(String message) {

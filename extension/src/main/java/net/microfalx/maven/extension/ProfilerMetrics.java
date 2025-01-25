@@ -150,7 +150,7 @@ public class ProfilerMetrics {
 
     private void printSummary() {
         LOGGER.info("");
-        logNameValue("Request", MavenUtils.getRequestInfo(session), true, SHORT_NAME_LENGTH);
+        logNameValue("Request", net.microfalx.maven.core.MavenUtils.getRequestInfo(session), true, SHORT_NAME_LENGTH);
         logNameValue("Repositories", getRepositoriesInfo(), true, SHORT_NAME_LENGTH);
         if (!session.getRequest().getData().isEmpty()) logNameValue("Data", getData(), true, SHORT_NAME_LENGTH);
         LOGGER.info("");

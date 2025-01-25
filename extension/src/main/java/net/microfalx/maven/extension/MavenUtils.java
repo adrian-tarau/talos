@@ -1,12 +1,7 @@
 package net.microfalx.maven.extension;
 
-import net.microfalx.lang.StringUtils;
-import org.apache.maven.execution.MavenSession;
-
 import java.time.Duration;
 
-import static net.microfalx.lang.StringUtils.COMMA_WITH_SPACE;
-import static net.microfalx.lang.StringUtils.isNotEmpty;
 import static net.microfalx.lang.TimeUtils.NANOSECONDS_IN_MILLISECONDS;
 
 /**
@@ -55,37 +50,6 @@ public class MavenUtils {
         }
         return builder;
     }
-
-    /**
-     * Returns a string describing the most important request parameters for a session.
-     * @param session the session
-     * @return the info
-     */
-    public static String getRequestInfo(MavenSession session) {
-        MavenConfiguration configuration = new MavenConfiguration(session);
-        StringBuilder builder = new StringBuilder();
-        String profiles = getProfiles(session);
-        if (isNotEmpty(profiles)) StringUtils.append(builder, "Profiles: " + profiles, COMMA_WITH_SPACE);
-        String goals = getGoals(session);
-        if (isNotEmpty(goals)) StringUtils.append(builder, "Goals: " + goals, COMMA_WITH_SPACE);
-        if (session.getRequest().getDegreeOfConcurrency() > 0) {
-            StringUtils.append(builder, "DOP: " + configuration.getDop(), COMMA_WITH_SPACE);
-        }
-        if (session.getRequest().isOffline()) StringUtils.append(builder, "Offline");
-        return builder.toString();
-    }
-
-
-
-    private static String getGoals(MavenSession session) {
-        return String.join(" ", session.getRequest().getGoals());
-    }
-
-    private static String getProfiles(MavenSession session) {
-        return String.join(" ", session.getRequest().getActiveProfiles());
-    }
-
-
 
 
 }

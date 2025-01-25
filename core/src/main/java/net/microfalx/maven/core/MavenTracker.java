@@ -1,6 +1,8 @@
 package net.microfalx.maven.core;
 
 import net.microfalx.lang.ClassUtils;
+import net.microfalx.lang.ExceptionUtils;
+import net.microfalx.lang.StringUtils;
 import net.microfalx.metrics.Timer;
 import org.slf4j.LoggerFactory;
 
@@ -61,6 +63,10 @@ public class MavenTracker {
 
     private void logFailure(String name, Throwable throwable) {
         FAILURE_COUNT.incrementAndGet();
-        logger.atError().setCause(throwable).log("Failed action '{}' in '{}'", name, ClassUtils.getName(clazz));
+        String stackTrace = StringUtils.EMPTY_STRING;
+        if (throwable != null) {
+            stackTrace = ", stack trace\n" + ExceptionUtils.getStackTrace(throwable);
+        }
+        logger.error("Failed action '{}' in '{}'{}", name, ClassUtils.getName(clazz), stackTrace);
     }
 }

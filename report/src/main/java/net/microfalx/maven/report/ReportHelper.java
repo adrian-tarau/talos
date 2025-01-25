@@ -1,10 +1,12 @@
 package net.microfalx.maven.report;
 
-import net.microfalx.lang.ArgumentUtils;
+import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.TimeUtils;
 import net.microfalx.maven.model.MojoMetrics;
 import net.microfalx.maven.model.SessionMetrics;
+import net.microfalx.resource.Resource;
 
+import java.io.IOException;
 import java.time.Duration;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -32,6 +34,16 @@ public class ReportHelper {
 
     public long getProjectCount() {
         return session.getModules().size();
+    }
+
+    public String getLogAsHtml() {
+        AnsiToHtml ansiToHtml = new AnsiToHtml();
+        try {
+            Resource resource = ansiToHtml.transform(Resource.text(session.getLog()));
+            return resource.loadAsString();
+        } catch (IOException e) {
+            return "#ERROR: " + ExceptionUtils.getRootCauseMessage(e);
+        }
     }
 
 }
