@@ -215,7 +215,7 @@ public class MavenUtils {
             format = "%2$02d:%3$02dm";
         } else {
             // Length 7-8 chars
-            format = "%3$d.%4$02ds";
+            format = "%3$d.%4$03ds";
         }
         return String.format(format, h, m, s, ms);
     }
