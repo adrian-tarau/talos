@@ -14,7 +14,7 @@ public abstract class AbstractFragmentBuilder {
     }
 
     protected final SessionMetrics createMultiModuleProject() throws IOException {
-        Resource file = ClassPathResource.file("model/spirent.atlas.metrics");
+        Resource file = ClassPathResource.file("model/resource.metrics");
         return SessionMetrics.load(file);
     }
 
