@@ -1,5 +1,6 @@
 package net.microfalx.maven.report;
 
+import net.microfalx.lang.FormatterUtils;
 import net.microfalx.lang.Nameable;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.TimeUtils;
@@ -108,14 +109,16 @@ public class Template implements Nameable {
     private Context initContext() {
         Context context = new Context();
         if (session != null) {
+            ReportHelper helper = new ReportHelper(session);
             context.setVariable("session", session);
             context.setVariable("project", session.getProject());
-            context.setVariable("mojos", session.getMojos());
-            context.setVariable("modules", session.getModules());
-            context.setVariable("artifacts", session.getArtifacts());
-            context.setVariable("dependencies", session.getDependencies());
-            context.setVariable("plugins", session.getPlugins());
-            context.setVariable("helper", new ReportHelper(session));
+            context.setVariable("mojos", helper.getMojos());
+            context.setVariable("modules", helper.getModules());
+            context.setVariable("artifacts", helper.getArtifacts());
+            context.setVariable("dependencies", helper.getDependencies());
+            context.setVariable("plugins", helper.getPlugins());
+            context.setVariable("helper", helper);
+            context.setVariable("formatters", FormatterUtils.class);
         }
         context.setVariables(variables);
         return context;

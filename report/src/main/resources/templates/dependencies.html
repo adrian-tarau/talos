@@ -3,9 +3,26 @@
 <body>
 
 <div th:fragment="dependencies">
-    <div class="alert alert-primary" role="alert">
-        TODO
-    </div>
+    <h5 class="border-top  mt-3">
+        <span th:text="${#numbers.formatInteger(artifacts.size(),0)}"></span><span> dependencies resolved in </span>
+        <span th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
+    </h5>
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th scope="col">Group Id</th>
+            <th scope="col">Artifact Id</th>
+            <th scope="col">Version</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="artifact : ${artifacts}">
+            <td><span th:text="${artifact.groupId}"></span></td>
+            <td><span th:text="${artifact.artifactId}"></span></td>
+            <td><span th:text="${artifact.version}"></span></td>
+        </tr>
+        </tbody>
+    </table>
 </div>
 
 </body>

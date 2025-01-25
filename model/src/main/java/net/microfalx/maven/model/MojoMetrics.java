@@ -86,6 +86,10 @@ public final class MojoMetrics implements Nameable {
         return this.duration;
     }
 
+    public Duration getAverageDuration() {
+        return getExecutionCount() > 0 ? getDuration().dividedBy(getExecutionCount()) : Duration.ZERO;
+    }
+
     @Override
     public String toString() {
         return new StringJoiner(", ", MojoMetrics.class.getSimpleName() + "[", "]")

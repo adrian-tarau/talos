@@ -4,8 +4,8 @@
 
 <div th:fragment="summary" th:object="${session}">
     <p>
-        Started at <span th:text="${#temporals.format(startTime)}"></span>,
-        finished at <span th:text="${#temporals.format(endTime)}"></span>,
+        Started at <span th:text="${helper.formatDateTime(session.startTime)}"></span>,
+        finished at <span th:text="${helper.formatDateTime(session.endTime)}"></span>,
         total build time: <span th:text="${helper.getBuildTime()}"></span>
     </p>
     <h5 class="border-top  mt-3">
@@ -19,18 +19,23 @@
     <table class="table table-hover">
         <thead>
         <tr>
-            <th scope="col">Name</th>
-            <th scope="col">Class Name</th>
-            <th scope="col">Duration</th>
-            <th scope="col">Status</th>
-            <th scope="col">Execution Count</th>
+            <th scope="col" rowspan="2" class="align-top">Name</th>
+            <th scope="col" rowspan="2" class="align-top">Class Name</th>
+            <th scope="col" colspan="2" class="text-center">Duration</th>
+            <th scope="col" rowspan="2" class="align-top">Status</th>
+            <th scope="col" rowspan="2" class="align-top">Execution Count</th>
+        </tr>
+        <tr>
+            <th scope="col" class="text-end">Total</th>
+            <th scope="col" class="text-end">Average</th>
         </tr>
         </thead>
         <tbody>
         <tr th:each="mojo : ${mojos}">
-            <td><span th:text="${mojo.name}"></span></td>
-            <td><span th:text="${mojo.className}"></span></td>
-            <td><span th:text="${#numbers.formatDecimal(mojo.duration.toSeconds(),2,3)}"></span>s</td>
+            <td th:text="${mojo.name}"></td>
+            <td th:text="${mojo.className}"></td>
+            <td class="text-end" th:text="${helper.formatDuration(mojo.duration)}"></td>
+            <td class="text-end" th:text="${helper.formatDuration(mojo.averageDuration)}"></td>
             <td>
                 <span th:if="${mojo.failureCount==0}">Success</span>
                 <span th:if="${mojo.failureCount>0}">Failure</span>
@@ -72,7 +77,6 @@
             <th scope="col">Group Id</th>
             <th scope="col">Artifact Id</th>
             <th scope="col">Version</th>
-            <th scope="col">Description</th>
         </tr>
         </thead>
         <tbody>
@@ -80,7 +84,6 @@
             <td><span th:text="${dependency.groupId}"></span></td>
             <td><span th:text="${dependency.artifactId}"></span></td>
             <td><span th:text="${dependency.version}"></span></td>
-            <td><span th:text="${dependency.description}"></span></td>
         </tr>
         </tbody>
     </table>
@@ -91,20 +94,16 @@
     <table class="table table-hover">
         <thead>
         <tr>
-            <th scope="col">Name</th>
             <th scope="col">Group Id</th>
             <th scope="col">Artifact Id</th>
             <th scope="col">Version</th>
-            <th scope="col">Description</th>
         </tr>
         </thead>
         <tbody>
         <tr th:each="plugin : ${plugins}">
-            <td><span th:text="${plugin.name}"></span></td>
             <td><span th:text="${plugin.groupId}"></span></td>
             <td><span th:text="${plugin.artifactId}"></span></td>
             <td><span th:text="${plugin.version}"></span></td>
-            <td><span th:text="${plugin.description}"></span></td>
         </tr>
         </tbody>
     </table>
