@@ -59,6 +59,8 @@ public class Fragment implements Identifiable<String>, Nameable {
                 return "fa-solid fa-plug";
             case PROJECTS:
                 return "fa-solid fa-diagram-project";
+            case TESTS:
+                return "fa-solid fa-clipboard-check";
             default:
                 return "fa-solid fa-notdef";
         }
@@ -120,6 +122,11 @@ public class Fragment implements Identifiable<String>, Nameable {
          * Which plugins were used (and their parameters)
          */
         PLUGINS,
+
+        /**
+         * Executed tests
+         */
+        TESTS,
 
         /**
          * Performance metrics (CPU, Memory, etc)
