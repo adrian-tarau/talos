@@ -3,9 +3,51 @@
 <body>
 
 <div th:fragment="plugins">
-    <div class="alert alert-primary" role="alert">
-        TODO
-    </div>
+    <table class="table">
+        <thead class="table-dark">
+        <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Group Id</th>
+            <th scope="col">Artifact Id</th>
+            <th scope="col">Version</th>
+            <th scope="col">Description</th>
+        </tr>
+        </thead>
+        <tbody>
+        <div th:each="projectDetails : ${helper.getProjectDetails()}" th:remove="tag">
+            <tr>
+                <td th:text="${projectDetails.project.name}"></td>
+                <td th:text="${projectDetails.project.groupId}"></td>
+                <td th:text="${projectDetails.project.artifactId}"></td>
+                <td th:text="${projectDetails.project.version}"></td>
+                <td th:text="${projectDetails.project.description}"></td>
+            </tr>
+            <tr>
+                <td>&nbsp;</td>
+                <td colspan="4">
+                    <table class="table table-hover table-sm">
+                        <thead class="table-dark">
+                        <tr>
+                            <th scope="col">Group Id</th>
+                            <th scope="col">Artifact Id</th>
+                            <th scope="col">Version</th>
+                            <th scope="col">Goals</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="plugin : ${projectDetails.plugins}">
+                            <td><span th:text="${plugin.groupId}"></span></td>
+                            <td><span th:text="${plugin.artifactId}"></span></td>
+                            <td><span th:text="${plugin.version}"></span></td>
+                            <td><span th:text="${helper.toString(plugin.goals)}"></span></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </div>
+        </tbody>
+    </table>
 </div>
 
 </body>

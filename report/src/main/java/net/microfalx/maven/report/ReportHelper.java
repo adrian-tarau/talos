@@ -1,19 +1,13 @@
 package net.microfalx.maven.report;
 
-import net.microfalx.lang.ExceptionUtils;
-import net.microfalx.lang.FormatterUtils;
-import net.microfalx.lang.NamedIdentityAware;
-import net.microfalx.lang.TimeUtils;
+import net.microfalx.lang.*;
 import net.microfalx.maven.core.MavenUtils;
 import net.microfalx.maven.model.*;
 import net.microfalx.resource.Resource;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
@@ -30,16 +24,28 @@ public class ReportHelper {
         return FormatterUtils.formatDateTime(temporal);
     }
 
+    public String formatBytes(Number value) {
+        return FormatterUtils.formatBytes(value);
+    }
+
     public String formatDuration(Duration duration) {
         return MavenUtils.formatDuration(duration, false, false);
     }
 
-    public long getFailureCount() {
-        return session.getMojos().stream().mapToLong(MojoMetrics::getFailureCount).sum();
+    public String toString(Object value) {
+        if (value instanceof Collection<?>) {
+            StringBuilder builder = new StringBuilder();
+            for (Object o : (Collection<?>) value) {
+                StringUtils.append(builder, o, ", ");
+            }
+            return builder.toString();
+        } else {
+            return ObjectUtils.toString(value);
+        }
     }
 
-    public long getExecutionCount() {
-        return session.getMojos().stream().mapToLong(MojoMetrics::getExecutionCount).sum();
+    public long getFailureCount() {
+        return session.getMojos().stream().mapToLong(MojoMetrics::getFailureCount).sum();
     }
 
     public String getBuildTime() {
@@ -80,6 +86,19 @@ public class ReportHelper {
         return artifacts;
     }
 
+    public Collection<ProjectDetails> getProjectDetails() {
+        Map<Project, ProjectDetails> projectDetails = new HashMap<>();
+        for (PluginMetrics pluginMetrics : session.getPlugins()) {
+            for (Project project : pluginMetrics.getProjects()) {
+                ProjectDetails details = projectDetails.computeIfAbsent(project, ProjectDetails::new);
+                details.plugins.add(pluginMetrics);
+            }
+        }
+        List<ProjectDetails> details = new ArrayList<>(projectDetails.values());
+        details.sort(Comparator.comparing(p -> p.getProject().getName()));
+        return details;
+    }
+
     public String getLogAsHtml() {
         AnsiToHtml ansiToHtml = new AnsiToHtml();
         try {
@@ -87,6 +106,25 @@ public class ReportHelper {
             return resource.loadAsString();
         } catch (IOException e) {
             return "#ERROR: " + ExceptionUtils.getRootCauseMessage(e);
+        }
+    }
+
+    public static class ProjectDetails {
+
+        private final Project project;
+        private final Collection<PluginMetrics> plugins = new ArrayList<>();
+
+        public ProjectDetails(Project project) {
+            requireNonNull(project);
+            this.project = project;
+        }
+
+        public Project getProject() {
+            return project;
+        }
+
+        public Collection<PluginMetrics> getPlugins() {
+            return plugins;
         }
     }
 

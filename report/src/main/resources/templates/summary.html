@@ -4,20 +4,49 @@
 
 <div th:fragment="summary" th:object="${session}">
     <p>
-        Started at <span th:text="${helper.formatDateTime(session.startTime)}"></span>,
-        finished at <span th:text="${helper.formatDateTime(session.endTime)}"></span>,
-        total build time: <span th:text="${helper.getBuildTime()}"></span>
+        Started at <span class="text-primary" th:text="${helper.formatDateTime(session.startTime)}"></span>,
+        finished at <span class="text-primary" th:text="${helper.formatDateTime(session.endTime)}"></span>,
+        build time: <span class="text-primary" th:text="${helper.getBuildTime()}"></span>
+    </p>
+    <p>
+        <span th:unless="${session.profiles.isEmpty()}"><span>Profiles: </span><span class="text-primary"th:text="${helper.toString(session.profiles)}"></span></span>
+        <span th:unless="${session.goals.isEmpty()}"><span>Goals:</span><span class="text-primary" th:text="${helper.toString(session.goals)}"></span></span>
+        <span><span>Degree Of Parallelism: </span><span class="text-primary" th:text="${session.dop}"></span></span>
+        <span th:if="${session.offline}" class="text-primary"><span>, </span><span class="text-primary">Offline</span></span>
     </p>
     <h5 class="border-top  mt-3">
         <span th:text="${#numbers.formatInteger(helper.getFailureCount(), 0)}"></span><span> failures</span>
     </h5>
     <span th:if="${#numbers.formatInteger(helper.getFailureCount(), 0)}==0">This build did not contain any failures.</span>
     <h5 class="border-top  mt-3">
-        <span th:text="${#numbers.formatInteger(helper.getExecutionCount(),0)}"></span><span> tasks executed in </span>
+        <span th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
+    </h5>
+    <table class="table table-hover">
+        <thead class="table-dark">
+        <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Group Id</th>
+            <th scope="col">Artifact Id</th>
+            <th scope="col">Version</th>
+            <th scope="col">Description</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="module : ${modules}">
+            <td><span th:text="${module.name}"></span></td>
+            <td><span th:text="${module.groupId}"></span></td>
+            <td><span th:text="${module.artifactId}"></span></td>
+            <td><span th:text="${module.version}"></span></td>
+            <td><span th:text="${module.description}"></span></td>
+        </tr>
+        </tbody>
+    </table>
+    <h5 class="border-top  mt-3">
+        <span th:text="${#numbers.formatInteger(mojos.size(),0)}"></span><span> tasks executed in </span>
         <span th:text="${helper.getBuildTime()}"></span>
     </h5>
     <table class="table table-hover">
-        <thead>
+        <thead class="table-dark">
         <tr>
             <th scope="col" rowspan="2" class="align-top">Name</th>
             <th scope="col" rowspan="2" class="align-top">Class Name</th>
@@ -44,35 +73,13 @@
         </tr>
         </tbody>
     </table>
+
     <h5 class="border-top  mt-3">
+        <span th:text="${#numbers.formatInteger(dependencies.size(),0)}"></span><span> direct dependencies resolved in </span>
         <span th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
     </h5>
     <table class="table table-hover">
-        <thead>
-        <tr>
-            <th scope="col">Name</th>
-            <th scope="col">Group Id</th>
-            <th scope="col">Artifact Id</th>
-            <th scope="col">Version</th>
-            <th scope="col">Description</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="module : ${modules}">
-            <td><span th:text="${module.name}"></span></td>
-            <td><span th:text="${module.groupId}"></span></td>
-            <td><span th:text="${module.artifactId}"></span></td>
-            <td><span th:text="${module.version}"></span></td>
-            <td><span th:text="${module.description}"></span></td>
-        </tr>
-        </tbody>
-    </table>
-    <h5 class="border-top  mt-3">
-        <span th:text="${#numbers.formatInteger(dependencies.size(),0)}"></span><span> dependencies resolved in </span>
-        <span th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
-    </h5>
-    <table class="table table-hover">
-        <thead>
+        <thead class="table-dark">
         <tr>
             <th scope="col">Group Id</th>
             <th scope="col">Artifact Id</th>
@@ -92,7 +99,7 @@
         <span th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
     </h5>
     <table class="table table-hover">
-        <thead>
+        <thead class="table-dark">
         <tr>
             <th scope="col">Group Id</th>
             <th scope="col">Artifact Id</th>
