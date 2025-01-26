@@ -57,7 +57,7 @@ public class Fragment implements Identifiable<String>, Nameable {
                 return "fa-solid fa-flag-checkered";
             case PLUGINS:
                 return "fa-solid fa-plug";
-            case PROJECTS:
+            case PROJECT:
                 return "fa-solid fa-diagram-project";
             case TESTS:
                 return "fa-solid fa-clipboard-check";
@@ -109,9 +109,9 @@ public class Fragment implements Identifiable<String>, Nameable {
         FAILURE,
 
         /**
-         * The projects (modules) part of the session.
+         * The project information.
          */
-        PROJECTS,
+        PROJECT,
 
         /**
          * The artifacts of the project

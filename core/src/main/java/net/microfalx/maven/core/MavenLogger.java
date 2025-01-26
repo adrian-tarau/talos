@@ -73,10 +73,12 @@ public class MavenLogger extends AbstractMavenLifecycleParticipant {
     }
 
     public Resource getSystemOutput() {
+        flushSystemStreams();
         return systemOutputResource;
     }
 
     public Resource getSystemError() {
+        flushSystemStreams();
         return systemErrorResource;
     }
 
@@ -166,6 +168,11 @@ public class MavenLogger extends AbstractMavenLifecycleParticipant {
     private void releaseSystemStreams() {
         IOUtils.closeQuietly(systemOutputPrintStream);
         IOUtils.closeQuietly(systemErrorPrintStream);
+    }
+
+    private void flushSystemStreams() {
+        systemOutputPrintStream.flush();
+        systemErrorPrintStream.flush();
     }
 
     void initLogging() {

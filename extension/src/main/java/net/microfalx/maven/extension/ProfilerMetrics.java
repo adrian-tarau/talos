@@ -85,12 +85,13 @@ public class ProfilerMetrics {
     }
 
     void sessionsEnd(SessionMetrics sessionMetrics) {
-        sessionEndTime = System.nanoTime();
+        updateLifeCycle(sessionMetrics);
         sessionMetrics.setEndTime(ZonedDateTime.now());
         sessionMetrics.setArtifacts(repositoryMetrics.getMetrics());
         sessionMetrics.setDependencies(dependencyMetrics.values());
         sessionMetrics.setMojos(mojoMetrics.values());
         sessionMetrics.setPlugins(pluginMetrics.values());
+        sessionEndTime = System.nanoTime();
     }
 
     void projectStart(MavenProject project) {
@@ -159,6 +160,8 @@ public class ProfilerMetrics {
         logNameValue("Compile", formatDuration(getGoalsDuration(COMPILE_GOALS)), true, SHORT_NAME_LENGTH);
         logNameValue("Tests", formatDuration(getGoalsDuration(TESTS_GOALS)), true, SHORT_NAME_LENGTH);
         logNameValue("Package", formatDuration(getGoalsDuration(PACKAGE_GOALS)), true, SHORT_NAME_LENGTH);
+        logNameValue("Install", formatDuration(getGoalsDuration(INSTALL_GOALS)), true, SHORT_NAME_LENGTH);
+        logNameValue("Deploy", formatDuration(getGoalsDuration(DEPLOY_GOALS)), true, SHORT_NAME_LENGTH);
         if (tracker.getDuration().toMillis() > configuration.getMinimumDuration().toMillis()) {
             logNameValue("Performance", formatDuration(tracker.getDuration()), true, SHORT_NAME_LENGTH);
         }
@@ -391,6 +394,10 @@ public class ProfilerMetrics {
         return builder.toString();
     }
 
+    private Duration getRepositoryDuration(AbstractRepositoryMetrics repositoryMetrics) {
+        return TimeUtils.sum(repositoryMetrics.getMetadataResolvedDuration(), repositoryMetrics.getArtifactResolveDuration());
+    }
+
     private String getRepositoriesInfo() {
         return "Local: " + session.getLocalRepository().getBasedir() + ", Remote: " +
                session.getRequest().getRemoteRepositories().stream().map(ArtifactRepository::getUrl)
@@ -457,6 +464,19 @@ public class ProfilerMetrics {
         }
     }
 
+    private void updateLifeCycle(SessionMetrics sessionMetrics) {
+        Collection<LifecycleMetrics> lifecycles = new ArrayList<>();
+        lifecycles.add(new LifecycleMetrics("Configuration").addDuration(getConfigurationDuration()));
+        lifecycles.add(new LifecycleMetrics("Compile").addDuration(getGoalsDuration(COMPILE_GOALS)));
+        lifecycles.add(new LifecycleMetrics("Tests").addDuration(getGoalsDuration(TESTS_GOALS)));
+        lifecycles.add(new LifecycleMetrics("Package").addDuration(getGoalsDuration(PACKAGE_GOALS)));
+        lifecycles.add(new LifecycleMetrics("Install").addDuration(getGoalsDuration(INSTALL_GOALS)));
+        lifecycles.add(new LifecycleMetrics("Deploy").addDuration(getGoalsDuration(DEPLOY_GOALS)));
+        lifecycles.add(new LifecycleMetrics("Local Repository").addDuration(getRepositoryDuration(repositoryMetrics)));
+        lifecycles.add(new LifecycleMetrics("Remote Repository").addDuration(getRepositoryDuration(transferMetrics)));
+        sessionMetrics.setLifeCycles(lifecycles);
+    }
+
     private DependencyMetrics getMetrics(Dependency dependency) {
         return dependencyMetrics.computeIfAbsent(net.microfalx.maven.core.MavenUtils.getId(dependency), k -> new DependencyMetrics(dependency));
     }
@@ -500,5 +520,7 @@ public class ProfilerMetrics {
 
     private static final String[] COMPILE_GOALS = {"compiler:compile", "compiler:testCompile", "resources:resources", "resources:testResources"};
     private static final String[] TESTS_GOALS = {"surefire:test", "failsafe:verify", "jacoco:report"};
-    private static final String[] PACKAGE_GOALS = {"jar:jar", "install:install", "install:deploy"};
+    private static final String[] PACKAGE_GOALS = {"jar:jar",};
+    private static final String[] INSTALL_GOALS = {"install:install"};
+    private static final String[] DEPLOY_GOALS = {"install:deploy"};
 }

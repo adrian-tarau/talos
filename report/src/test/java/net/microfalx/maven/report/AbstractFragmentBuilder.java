@@ -10,12 +10,15 @@ public abstract class AbstractFragmentBuilder {
 
     protected final SessionMetrics createSingleModuleProject() throws IOException {
         Resource file = ClassPathResource.file("model/jvm.metrics");
-        return SessionMetrics.load(file);
+        SessionMetrics session = SessionMetrics.load(file);
+        return session;
     }
 
     protected final SessionMetrics createMultiModuleProject() throws IOException {
         Resource file = ClassPathResource.file("model/resource.metrics");
-        return SessionMetrics.load(file);
+        SessionMetrics session = SessionMetrics.load(file);
+        session.setThrowable(new IOException("Problem"));
+        return session;
     }
 
 }

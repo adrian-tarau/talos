@@ -18,11 +18,11 @@
                 class="text-primary-emphasis fw-bold">Offline</span></span>
     </p>
     <h5 class="border-top  mt-3">
-        <span th:text="${#numbers.formatInteger(helper.getFailureCount(), 0)}"></span><span> failures</span>
+        <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(helper.getFailureCount(), 0)}"></span><span> failures</span>
     </h5>
-    <span th:if="${#numbers.formatInteger(helper.getFailureCount(), 0)}==0">This build did not contain any failures.</span>
+    <span th:unless="${helper.hasFailures()}">This build did not contain any failures.</span>
     <h5 class="border-top  mt-3">
-        <span th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
+        <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
     </h5>
     <table class="table table-hover">
         <thead class="table-light">
@@ -46,9 +46,9 @@
     </table>
 
     <h5 class="border-top  mt-3">
-        <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(helper.getTestSummary().total,0)}"></span><span> tests, failed tests:</span>
-        <span class="fw-bold" th:addclass="${helper.getTestSummary().failed!=0}? text-danger : text-success" th:text="${#numbers.formatInteger(helper.getTestSummary().failed, 0)}"></span>
-        <span>, skipped tests:</span><span class="text-secondary" th:text="${#numbers.formatInteger(helper.getTestSummary().skipped, 0)}"></span>
+        <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(helper.getTestSummary().total,0)}"></span><span> tests, failed tests: </span>
+        <span class="fw-bold" th:classappend="${helper.getTestSummary().failed!=0}? text-danger : text-success" th:text="${#numbers.formatInteger(helper.getTestSummary().failed, 0)}"></span>
+        <span>, skipped tests: </span><span class="text-secondary" th:text="${#numbers.formatInteger(helper.getTestSummary().skipped, 0)}"></span>
     </h5>
 
     <table class="table table-hover">
@@ -71,8 +71,8 @@
     </table>
 
     <h5 class="border-top  mt-3">
-        <span th:text="${#numbers.formatInteger(mojos.size(),0)}"></span><span> tasks executed in </span>
-        <span th:text="${helper.getBuildTime()}"></span>
+        <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(mojos.size(),0)}"></span><span> tasks executed in </span>
+        <span class="text-primary-emphasis fw-bold" th:text="${helper.getBuildTime()}"></span>
     </h5>
     <table class="table table-hover">
         <thead class="table-light">
@@ -104,8 +104,8 @@
     </table>
 
     <h5 class="border-top  mt-3">
-        <span th:text="${#numbers.formatInteger(dependencies.size(),0)}"></span><span> direct dependencies resolved in </span>
-        <span th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
+        <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(dependencies.size(),0)}"></span><span> dependencies in </span>
+        <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
     </h5>
     <table class="table table-hover">
         <thead class="table-light">
@@ -124,8 +124,8 @@
         </tbody>
     </table>
     <h5 class="border-top  mt-3">
-        <span th:text="${#numbers.formatInteger(plugins.size(),0)}"></span><span> plugins in </span>
-        <span th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
+        <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(plugins.size(),0)}"></span><span> plugins in </span>
+        <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
     </h5>
     <table class="table table-hover">
         <thead class="table-light">

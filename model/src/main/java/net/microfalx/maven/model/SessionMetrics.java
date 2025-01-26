@@ -36,8 +36,8 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     private static final int SERIALIZATION_ID = 1000;
 
     private Project project;
-    private ZonedDateTime startTime;
-    private ZonedDateTime endTime;
+    private ZonedDateTime startTime = ZonedDateTime.now();
+    private ZonedDateTime endTime = startTime;
     private String throwableClass;
     private String throwable;
 
@@ -47,18 +47,22 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     private final Collection<MojoMetrics> mojos = new ArrayList<>();
     private final Collection<PluginMetrics> plugins = new ArrayList<>();
     private final Collection<TestMetrics> tests = new ArrayList<>();
+    private final Collection<LifecycleMetrics> lifecycles = new ArrayList<>();
 
     private final Collection<String> profiles = new ArrayList<>();
     private final Collection<String> goals = new ArrayList<>();
     private boolean offline = false;
     private int dop;
 
+    private URI localRepository;
+    private Collection<URI> remoteRepositories;
+
     private transient Map<String, ProjectMetrics> modulesById;
 
     private SeriesStore jvm = SeriesStore.memory();
     private SeriesStore server = SeriesStore.memory();
 
-    private String log;
+    private String logs;
 
     protected SessionMetrics() {
     }
@@ -98,6 +102,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     }
 
     public SessionMetrics setStartTime(ZonedDateTime startTime) {
+        requireNonNull(startTime);
         this.startTime = startTime;
         return this;
     }
@@ -107,8 +112,13 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     }
 
     public SessionMetrics setEndTime(ZonedDateTime endTime) {
+        requireNonNull(endTime);
         this.endTime = endTime;
         return this;
+    }
+
+    public Duration getDuration() {
+        return Duration.between(startTime, endTime);
     }
 
     public Collection<String> getProfiles() {
@@ -127,6 +137,22 @@ public class SessionMetrics extends NamedIdentityAware<String> {
         return dop;
     }
 
+    public URI getLocalRepository() {
+        return localRepository;
+    }
+
+    public void setLocalRepository(URI localRepository) {
+        this.localRepository = localRepository;
+    }
+
+    public Collection<URI> getRemoteRepositories() {
+        return remoteRepositories;
+    }
+
+    public void setRemoteRepositories(Collection<URI> remoteRepositories) {
+        this.remoteRepositories = remoteRepositories;
+    }
+
     public String getThrowableClass() {
         return throwableClass;
     }
@@ -137,7 +163,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
 
     public SessionMetrics setThrowable(Throwable throwable) {
         if (throwable != null) {
-            this.throwable = ClassUtils.getName(throwable);
+            this.throwableClass = ClassUtils.getName(throwable);
             this.throwable = ExceptionUtils.getStackTrace(throwable);
         }
         return this;
@@ -202,6 +228,15 @@ public class SessionMetrics extends NamedIdentityAware<String> {
         this.tests.addAll(tests);
     }
 
+    public Collection<LifecycleMetrics> getLifecycles() {
+        return lifecycles;
+    }
+
+    public void setLifeCycles(Collection<LifecycleMetrics> lifecycles) {
+        requireNonNull(tests);
+        this.lifecycles.addAll(lifecycles);
+    }
+
     public SeriesStore getJvm() {
         return jvm;
     }
@@ -218,13 +253,13 @@ public class SessionMetrics extends NamedIdentityAware<String> {
         this.server = server;
     }
 
-    public String getLog() {
-        return log;
+    public String getLogs() {
+        return logs;
     }
 
-    public void setLog(String log) {
-        requireNonNull(modules);
-        this.log = log;
+    public void setLogs(String logs) {
+        requireNonNull(logs);
+        this.logs = logs;
     }
 
     public void store(OutputStream outputStream) throws IOException {
@@ -246,7 +281,8 @@ public class SessionMetrics extends NamedIdentityAware<String> {
                 .add("artifacts=" + artifacts.size())
                 .add("dependencies=" + dependencies.size())
                 .add("plugins=" + plugins.size())
-                .add("log='" + (log != null ? log.length() : NA_STRING) + "'")
+                .add("lifecycles=" + lifecycles.size())
+                .add("log='" + (logs != null ? logs.length() : NA_STRING) + "'")
                 .toString();
     }
 
@@ -277,6 +313,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
         kryo.register(MojoMetrics.class, SERIALIZATION_ID + 23);
         kryo.register(PluginMetrics.class, SERIALIZATION_ID + 24);
         kryo.register(TestMetrics.class, SERIALIZATION_ID + 25);
+        kryo.register(LifecycleMetrics.class, SERIALIZATION_ID + 26);
 
         kryo.register(Metric.class, SERIALIZATION_ID + 30);
         kryo.register(Value.class, SERIALIZATION_ID + 31);

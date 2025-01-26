@@ -2,6 +2,7 @@ package net.microfalx.maven.extension;
 
 import net.microfalx.jvm.ServerMetrics;
 import net.microfalx.jvm.VirtualMachineMetrics;
+import net.microfalx.lang.UriUtils;
 import net.microfalx.maven.core.MavenLogger;
 import net.microfalx.maven.core.MavenTracker;
 import net.microfalx.maven.core.MavenUtils;
@@ -14,6 +15,7 @@ import net.microfalx.resource.ResourceUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.AbstractMavenLifecycleParticipant;
 import org.apache.maven.MavenExecutionException;
+import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.execution.MavenExecutionRequest;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugins.surefire.report.ReportTestCase;
@@ -35,8 +37,10 @@ import java.io.OutputStream;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
+import static net.microfalx.lang.UriUtils.parseUri;
 import static net.microfalx.maven.core.MavenUtils.METRICS;
 
 @Named("microfalx")
@@ -98,6 +102,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
             METRICS.time("Generate Report", t2 -> generateHtmlReports());
             profilerMetrics.print();
             printConsoleReport();
+            METRICS.time("Move Results", t2 -> moveResults());
             openHtmlReport();
         });
     }
@@ -143,7 +148,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
     private void storeMetrics() {
         sessionMetrics.setEndTime(ZonedDateTime.now());
         try {
-            sessionMetrics.setLog(mavenLogger.getSystemOutput().loadAsString());
+            sessionMetrics.setLogs(mavenLogger.getSystemOutput().loadAsString());
         } catch (IOException e) {
             LOGGER.error("Failed to attach log", e);
         }
@@ -160,6 +165,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
     private void updateMetrics(MavenSession session) {
         updateTests(session);
         updateJvm(session);
+        updateRepositories(session);
     }
 
     private void updateJvm(MavenSession session) {
@@ -179,6 +185,12 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
             }
         }
         sessionMetrics.setTests(testMetrics);
+    }
+
+    private void updateRepositories(MavenSession session) {
+        sessionMetrics.setLocalRepository(parseUri(session.getLocalRepository().getBasedir()));
+        sessionMetrics.setRemoteRepositories(session.getRequest().getRemoteRepositories().stream().map(ArtifactRepository::getUrl)
+                .map(UriUtils::parseUri).collect(Collectors.toList()));
     }
 
     private TestMetrics getTestMetrics(MavenProject project, ReportTestCase testCase) {
@@ -209,7 +221,6 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
         } catch (Exception e) {
             LOGGER.error("Failed to generate build report", e);
         }
-        moveResults();
         this.report = configuration.getTargetFile("build.report.html", true);
         if (configuration.isConsoleEnabled()) {
             mavenLogger.info("");

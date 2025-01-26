@@ -2,10 +2,16 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<div th:fragment="failure" th:object="session">
-    <div th:if="${!#strings.isEmpty(throwableClass)}">
-        <div th:text="#{throwableClass}"></div>
-        <div th:text="#{throwable}"></div>
+<div th:fragment="failure">
+    <div th:if="${helper.hasFailures()}">
+        <div>
+            <span>Exception Class: </span><span th:text="${session.throwableClass}" class="text-primary-emphasis fw-bold"></span>
+            <span>, stack trace: </span>
+            <div th:text="${session.throwable}" class="bg-secondary-subtle" style="white-space: pre-wrap; font-family: monospace; font-size: smaller"></div>
+        </div>
+    </div>
+    <div th:unless="${helper.hasFailures()}">
+        This build did not contain any failures.
     </div>
 </div>
 

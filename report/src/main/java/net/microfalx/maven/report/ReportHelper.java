@@ -8,7 +8,6 @@ import net.microfalx.resource.Resource;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
@@ -55,6 +54,10 @@ public class ReportHelper {
 
     public long getProjectCount() {
         return session.getModules().size();
+    }
+
+    public boolean hasFailures() {
+        return StringUtils.isNotEmpty(session.getThrowableClass());
     }
 
     public Collection<MojoMetrics> getMojos() {
@@ -126,7 +129,7 @@ public class ReportHelper {
     public String getLogAsHtml() {
         AnsiToHtml ansiToHtml = new AnsiToHtml();
         try {
-            Resource resource = ansiToHtml.transform(Resource.text(session.getLog()));
+            Resource resource = ansiToHtml.transform(Resource.text(session.getLogs()));
             return resource.loadAsString();
         } catch (IOException e) {
             return "#ERROR: " + ExceptionUtils.getRootCauseMessage(e);
