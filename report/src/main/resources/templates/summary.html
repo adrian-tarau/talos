@@ -7,6 +7,28 @@
         Started at <span class="text-primary" th:text="${helper.formatDateTime(session.startTime)}"></span>,
         finished at <span class="text-primary" th:text="${helper.formatDateTime(session.endTime)}"></span>,
         build time: <span class="text-primary" th:text="${helper.getBuildTime()}"></span>
+
+        Total Tests: <span th:text="${helper.getTestSummary().total}"></span>
+        Total Fail Tests: <span class="text-danger" th:text="${helper.getTestSummary().failed}"></span>
+        Total Skip Tests: <span class="text-secondary" th:text="${helper.getTestSummary().skipped}"></span>
+    <table class="table table-hover">
+        <thead class="table-dark">
+        <tr>
+            <th scope="col">Module</th>
+            <th scope="col">Total Tests</th>
+            <th scope="col">Fail Tests</th>
+            <th scope="col">Skip Tests</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="testDetail : ${helper.getTestDetails()}">
+            <td><span th:text="${testDetail.module}"></span></td>
+            <td><span th:text="${testDetail.total}"></span></td>
+            <td><span class="text-danger" th:text="${testDetail.failed}"></span></td>
+            <td><span class="text-secondary" th:text="${testDetail.skipped}"></span></td>
+        </tr>
+        </tbody>
+    </table>
     </p>
     <p>
         <span th:unless="${session.profiles.isEmpty()}"><span>Profiles: </span><span class="text-primary"th:text="${helper.toString(session.profiles)}"></span></span>

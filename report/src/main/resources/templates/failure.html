@@ -2,9 +2,10 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<div th:fragment="failure">
-    <div class="alert alert-primary" role="alert">
-        TODO
+<div th:fragment="failure" th:object="session">
+    <div th:if="${!#strings.isEmpty(throwableClass)}">
+        <div th:text="#{throwableClass}"></div>
+        <div th:text="#{throwable}"></div>
     </div>
 </div>
 

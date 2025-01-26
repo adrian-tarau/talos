@@ -8,6 +8,7 @@ import net.microfalx.resource.Resource;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
@@ -99,6 +100,29 @@ public class ReportHelper {
         return details;
     }
 
+    public TestSummary getTestSummary() {
+        TestSummary summary = new TestSummary();
+        for (TestDetails testDetail : getTestDetails()) {
+            summary.total += testDetail.total;
+            summary.failed += testDetail.failed;
+            summary.skipped += testDetail.skipped;
+        }
+        return summary;
+    }
+
+    public Collection<TestDetails> getTestDetails() {
+        Map<String, TestDetails> testDetails = new HashMap<>();
+        for (TestMetrics testMetrics : session.getTests()) {
+            TestDetails tests = testDetails.computeIfAbsent(testMetrics.getModule(), TestDetails::new);
+            tests.total++;
+            if (testMetrics.isFailure() || testMetrics.isError()) tests.failed++;
+            if (testMetrics.isSkipped()) tests.skipped++;
+        }
+        List<TestDetails> details = new ArrayList<>(testDetails.values());
+        details.sort(Comparator.comparing(TestDetails::getModule));
+        return details;
+    }
+
     public String getLogAsHtml() {
         AnsiToHtml ansiToHtml = new AnsiToHtml();
         try {
@@ -125,6 +149,53 @@ public class ReportHelper {
 
         public Collection<PluginMetrics> getPlugins() {
             return plugins;
+        }
+    }
+
+    public static class TestSummary {
+        private int total;
+        private int failed;
+        private int skipped;
+
+        public int getTotal() {
+            return total;
+        }
+
+        public int getFailed() {
+            return failed;
+        }
+
+        public int getSkipped() {
+            return skipped;
+        }
+    }
+
+    public static class TestDetails {
+
+        private final String module;
+        private int total;
+        private int failed;
+        private int skipped;
+
+        public TestDetails(String module) {
+            requireNonNull(module);
+            this.module = module;
+        }
+
+        public String getModule() {
+            return module;
+        }
+
+        public int getTotal() {
+            return total;
+        }
+
+        public int getFailed() {
+            return failed;
+        }
+
+        public int getSkipped() {
+            return skipped;
         }
     }
 
