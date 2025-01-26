@@ -45,11 +45,11 @@ public class Fragment implements Identifiable<String>, Nameable {
         switch (type) {
             case SUMMARY:
                 return "fa-solid fa-list-check";
-            case DEPENDENCIES:
+            case ARTIFACTS:
                 return "fa-solid fa-circle-nodes";
             case ENVIRONMENT:
                 return "fa-solid fa-gauge";
-            case LOG:
+            case LOGS:
                 return "fa-regular fa-file-lines";
             case FAILURE:
                 return "fa-solid fa-triangle-exclamation";
@@ -101,7 +101,7 @@ public class Fragment implements Identifiable<String>, Nameable {
         /**
          * The log produced by the build
          */
-        LOG,
+        LOGS,
 
         /**
          * The failure, if any
@@ -114,9 +114,9 @@ public class Fragment implements Identifiable<String>, Nameable {
         PROJECTS,
 
         /**
-         * The dependencies of the project
+         * The artifacts of the project
          */
-        DEPENDENCIES,
+        ARTIFACTS,
 
         /**
          * Which plugins were used (and their parameters)
