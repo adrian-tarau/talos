@@ -53,6 +53,8 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     private boolean offline = false;
     private int dop;
 
+    private transient Map<String, ProjectMetrics> modulesById;
+
     private SeriesStore jvm = SeriesStore.memory();
     private SeriesStore server = SeriesStore.memory();
 
@@ -75,6 +77,20 @@ public class SessionMetrics extends NamedIdentityAware<String> {
 
     public Project getProject() {
         return project;
+    }
+
+    public ProjectMetrics getModule(String id) {
+        requireNonNull(id);
+        if (modulesById == null) {
+            modulesById = new HashMap<>();
+            for (ProjectMetrics module : modules) {
+                modulesById.put(module.getId(), module);
+                modulesById.put(module.getArtifactId(), module);
+            }
+        }
+        ProjectMetrics projectMetrics = modulesById.get(id);
+        if (projectMetrics == null) throw new IllegalArgumentException("A module with id " + id + " does not exist");
+        return projectMetrics;
     }
 
     public ZonedDateTime getStartTime() {

@@ -4,40 +4,18 @@
 
 <div th:fragment="summary" th:object="${session}">
     <p>
-        Started at <span class="text-primary" th:text="${helper.formatDateTime(session.startTime)}"></span>,
-        finished at <span class="text-primary" th:text="${helper.formatDateTime(session.endTime)}"></span>,
-        build time: <span class="text-primary" th:text="${helper.getBuildTime()}"></span>
-
-        Total Tests: <span th:text="${helper.getTestSummary().total}"></span>
-        Total Fail Tests: <span class="text-danger" th:text="${helper.getTestSummary().failed}"></span>
-        Total Skip Tests: <span class="text-secondary" th:text="${helper.getTestSummary().skipped}"></span>
-    <table class="table table-hover">
-        <thead class="table-dark">
-        <tr>
-            <th scope="col">Module</th>
-            <th scope="col">Total Tests</th>
-            <th scope="col">Fail Tests</th>
-            <th scope="col">Skip Tests</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="testDetail : ${helper.getTestDetails()}">
-            <td><span th:text="${testDetail.module}"></span></td>
-            <td><span th:text="${testDetail.total}"></span></td>
-            <td><span th:class="${testDetail.failed!=0}? text-danger : text-success" th:text="${testDetail.failed}"></span></td>
-            <td><span class="text-secondary" th:text="${testDetail.skipped}"></span></td>
-        </tr>
-        </tbody>
-    </table>
+        Started at <span class="text-primary-emphasis fw-bold" th:text="${helper.formatDateTime(session.startTime)}"></span>,
+        finished at <span class="text-primary-emphasis fw-bold" th:text="${helper.formatDateTime(session.endTime)}"></span>,
+        build time: <span class="text-primary-emphasis fw-bold" th:text="${helper.getBuildTime()}"></span>
     </p>
     <p>
-        <span th:unless="${session.profiles.isEmpty()}"><span>Profiles: </span><span class="text-primary"
+        <span th:unless="${session.profiles.isEmpty()}"><span>Profiles: </span><span class="text-primary-emphasis fw-bold"
                                                                                      th:text="${helper.toString(session.profiles)}"></span></span>
-        <span th:unless="${session.goals.isEmpty()}"><span>Goals:</span><span class="text-primary"
+        <span th:unless="${session.goals.isEmpty()}"><span>Goals: </span><span class="text-primary-emphasis fw-bold"
                                                                               th:text="${helper.toString(session.goals)}"></span></span>
-        <span><span>Degree Of Parallelism: </span><span class="text-primary" th:text="${session.dop}"></span></span>
-        <span th:if="${session.offline}" class="text-primary"><span>, </span><span
-                class="text-primary">Offline</span></span>
+        <span><span>, Degree Of Parallelism: </span><span class="text-primary-emphasis fw-bold" th:text="${session.dop}"></span></span>
+        <span th:if="${session.offline}" class="text-primary-emphasis fw-bold"><span>, </span><span
+                class="text-primary-emphasis fw-bold">Offline</span></span>
     </p>
     <h5 class="border-top  mt-3">
         <span th:text="${#numbers.formatInteger(helper.getFailureCount(), 0)}"></span><span> failures</span>
@@ -47,7 +25,7 @@
         <span th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
     </h5>
     <table class="table table-hover">
-        <thead class="table-dark">
+        <thead class="table-light">
         <tr>
             <th scope="col">Name</th>
             <th scope="col">Group Id</th>
@@ -66,12 +44,38 @@
         </tr>
         </tbody>
     </table>
+
+    <h5 class="border-top  mt-3">
+        <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(helper.getTestSummary().total,0)}"></span><span> tests, failed tests:</span>
+        <span class="fw-bold" th:addclass="${helper.getTestSummary().failed!=0}? text-danger : text-success" th:text="${#numbers.formatInteger(helper.getTestSummary().failed, 0)}"></span>
+        <span>, skipped tests:</span><span class="text-secondary" th:text="${#numbers.formatInteger(helper.getTestSummary().skipped, 0)}"></span>
+    </h5>
+
+    <table class="table table-hover">
+        <thead class="table-light">
+        <tr>
+            <th scope="col">Module</th>
+            <th scope="col">Total</th>
+            <th scope="col">Failed</th>
+            <th scope="col">Skipped</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="testDetail : ${helper.getTestDetails()}">
+            <td><span th:text="${session.getModule(testDetail.module).getName()}"></span></td>
+            <td><span th:text="${#numbers.formatInteger(testDetail.total,0)}"></span></td>
+            <td><span th:class="${testDetail.failed!=0}? text-danger : text-success" th:text="${#numbers.formatInteger(testDetail.failed, 0)}"></span></td>
+            <td><span class="text-secondary" th:text="${#numbers.formatInteger(testDetail.skipped, 0)}"></span></td>
+        </tr>
+        </tbody>
+    </table>
+
     <h5 class="border-top  mt-3">
         <span th:text="${#numbers.formatInteger(mojos.size(),0)}"></span><span> tasks executed in </span>
         <span th:text="${helper.getBuildTime()}"></span>
     </h5>
     <table class="table table-hover">
-        <thead class="table-dark">
+        <thead class="table-light">
         <tr>
             <th scope="col" rowspan="2" class="align-top">Name</th>
             <th scope="col" rowspan="2" class="align-top">Class Name</th>
@@ -104,7 +108,7 @@
         <span th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
     </h5>
     <table class="table table-hover">
-        <thead class="table-dark">
+        <thead class="table-light">
         <tr>
             <th scope="col">Group Id</th>
             <th scope="col">Artifact Id</th>
@@ -124,7 +128,7 @@
         <span th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
     </h5>
     <table class="table table-hover">
-        <thead class="table-dark">
+        <thead class="table-light">
         <tr>
             <th scope="col">Group Id</th>
             <th scope="col">Artifact Id</th>
