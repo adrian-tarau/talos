@@ -24,17 +24,20 @@
         <tr th:each="testDetail : ${helper.getTestDetails()}">
             <td><span th:text="${testDetail.module}"></span></td>
             <td><span th:text="${testDetail.total}"></span></td>
-            <td><span class="text-danger" th:text="${testDetail.failed}"></span></td>
+            <td><span th:class="${testDetail.failed!=0}? text-danger : text-success" th:text="${testDetail.failed}"></span></td>
             <td><span class="text-secondary" th:text="${testDetail.skipped}"></span></td>
         </tr>
         </tbody>
     </table>
     </p>
     <p>
-        <span th:unless="${session.profiles.isEmpty()}"><span>Profiles: </span><span class="text-primary"th:text="${helper.toString(session.profiles)}"></span></span>
-        <span th:unless="${session.goals.isEmpty()}"><span>Goals:</span><span class="text-primary" th:text="${helper.toString(session.goals)}"></span></span>
+        <span th:unless="${session.profiles.isEmpty()}"><span>Profiles: </span><span class="text-primary"
+                                                                                     th:text="${helper.toString(session.profiles)}"></span></span>
+        <span th:unless="${session.goals.isEmpty()}"><span>Goals:</span><span class="text-primary"
+                                                                              th:text="${helper.toString(session.goals)}"></span></span>
         <span><span>Degree Of Parallelism: </span><span class="text-primary" th:text="${session.dop}"></span></span>
-        <span th:if="${session.offline}" class="text-primary"><span>, </span><span class="text-primary">Offline</span></span>
+        <span th:if="${session.offline}" class="text-primary"><span>, </span><span
+                class="text-primary">Offline</span></span>
     </p>
     <h5 class="border-top  mt-3">
         <span th:text="${#numbers.formatInteger(helper.getFailureCount(), 0)}"></span><span> failures</span>
