@@ -8,12 +8,15 @@ import net.microfalx.resource.Resource;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 public class ReportHelper {
 
     private final SessionMetrics session;
+
+    private List<TestDetails> testDetails;
 
     public ReportHelper(SessionMetrics session) {
         requireNonNull(session);
@@ -108,22 +111,60 @@ public class ReportHelper {
         for (TestDetails testDetail : getTestDetails()) {
             summary.total += testDetail.total;
             summary.failed += testDetail.failed;
+            summary.error += testDetail.error;
             summary.skipped += testDetail.skipped;
+            summary.duration = summary.duration.plus(testDetail.duration);
         }
         return summary;
     }
 
-    public Collection<TestDetails> getTestDetails() {
+    public List<TestDetails> getTestDetails() {
+        if (testDetails != null) return testDetails;
         Map<String, TestDetails> testDetails = new HashMap<>();
         for (TestMetrics testMetrics : session.getTests()) {
-            TestDetails tests = testDetails.computeIfAbsent(testMetrics.getModule(), TestDetails::new);
+            TestDetails tests = testDetails.computeIfAbsent(testMetrics.getModule(), s -> new TestDetails(s, session.getModule(s).getName()));
             tests.total++;
-            if (testMetrics.isFailure() || testMetrics.isError()) tests.failed++;
+            tests.duration = tests.duration.plus(Duration.ofMillis((long) (testMetrics.getTime() * 1000L)));
+            if (testMetrics.isFailure()) tests.failed++;
+            if (testMetrics.isError()) tests.error++;
             if (testMetrics.isSkipped()) tests.skipped++;
         }
-        List<TestDetails> details = new ArrayList<>(testDetails.values());
-        details.sort(Comparator.comparing(TestDetails::getModule));
-        return details;
+        this.testDetails = new ArrayList<>(testDetails.values());
+        this.testDetails.sort(Comparator.comparing(TestDetails::getModule));
+        return this.testDetails;
+    }
+
+    public List<TestFailureType> getTestFailureTypes() {
+        Map<String, TestFailureType> testDetails = new HashMap<>();
+        List<TestMetrics> tests = session.getTests().stream().filter(TestMetrics::isFailureOrError)
+                .filter(t -> StringUtils.isNotEmpty(t.getFailureType())).collect(Collectors.toUnmodifiableList());
+        for (TestMetrics testMetrics : tests) {
+            TestFailureType failureType = testDetails.computeIfAbsent(testMetrics.getFailureType(), TestFailureType::new);
+            failureType.total++;
+        }
+        List<TestFailureType> testFailureTypes = new ArrayList<>(testDetails.values());
+        testFailureTypes.sort(Comparator.comparing(TestFailureType::getName));
+        return testFailureTypes;
+    }
+
+    public List<Integer> getTestDurationDistribution() {
+        int[] buckets = new int[DURATION_BUCKETS_LENGTH];
+        for (TestMetrics testMetrics : session.getTests()) {
+            long duration = (long) (testMetrics.getTime() * 1000);
+            if (duration > DURATION_BUCKETS[DURATION_BUCKETS_LENGTH - 1]) {
+                buckets[DURATION_BUCKETS_LENGTH - 1]++;
+            } else if (duration < DURATION_BUCKETS[0]) {
+                buckets[0]++;
+            } else {
+                for (int index = DURATION_BUCKETS_LENGTH - 2; index >= 0; index--) {
+                    if (duration >= DURATION_BUCKETS[index]) {
+                        buckets[index == 0 ? index + 1 : index]++;
+                        break;
+                    }
+                }
+            }
+        }
+        return Arrays.stream(buckets).boxed().collect(Collectors.toList());
     }
 
     public String getLogAsHtml() {
@@ -156,9 +197,12 @@ public class ReportHelper {
     }
 
     public static class TestSummary {
+
         private int total;
         private int failed;
+        private int error;
         private int skipped;
+        private Duration duration = Duration.ZERO;
 
         public int getTotal() {
             return total;
@@ -168,21 +212,42 @@ public class ReportHelper {
             return failed;
         }
 
+        public int getError() {
+            return error;
+        }
+
+        public int getFailedAndError() {
+            return failed + error;
+        }
+
         public int getSkipped() {
             return skipped;
         }
+
+        public Duration getDuration() {
+            return duration;
+        }
     }
 
-    public static class TestDetails {
+    public static class TestDetails implements Nameable {
 
         private final String module;
+        private final String name;
         private int total;
         private int failed;
+        private int error;
         private int skipped;
+        private Duration duration = Duration.ZERO;
 
-        public TestDetails(String module) {
+        public TestDetails(String module, String name) {
             requireNonNull(module);
             this.module = module;
+            this.name = name;
+        }
+
+        @Override
+        public String getName() {
+            return name;
         }
 
         public String getModule() {
@@ -197,9 +262,46 @@ public class ReportHelper {
             return failed;
         }
 
+        public int getError() {
+            return error;
+        }
+
         public int getSkipped() {
             return skipped;
         }
+
+        public Duration getDuration() {
+            return duration;
+        }
     }
+
+    public static class TestFailureType implements Nameable {
+
+        private final String name;
+        private int total;
+
+        public TestFailureType(String name) {
+            requireNonNull(name);
+            this.name = name;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        public int getTotal() {
+            return total;
+        }
+    }
+
+    static final long[] DURATION_BUCKETS = new long[]{
+            1, 5, 10, 20, 50, 100, 200, 500, 1_000, 2_000, 5_000, 10_000, 20_000, 30_000, 60_000
+    };
+    private static final int DURATION_BUCKETS_LENGTH = DURATION_BUCKETS.length;
+
+    static final String[] DURATION_BUCKET_NAMES = new String[]{
+            "<1ms", "5ms", "10ms", "20ms", "50ms", "100ms", "200ms", "500ms", "1s", "2s", "5s", "10s", "20s", "30s", ">60s"
+    };
 
 }

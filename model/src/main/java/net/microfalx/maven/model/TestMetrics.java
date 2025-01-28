@@ -104,6 +104,10 @@ public class TestMetrics extends NamedIdentityAware<String> {
         return module;
     }
 
+    public boolean isFailureOrError() {
+        return isError() || isFailure();
+    }
+
     public boolean isFailure() {
         return failure;
     }

@@ -46,29 +46,42 @@
     </table>
 
     <h5 class="border-top  mt-3">
-        <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(helper.getTestSummary().total,0)}"></span><span> tests, failed tests: </span>
-        <span class="fw-bold" th:classappend="${helper.getTestSummary().failed!=0}? text-danger : text-success" th:text="${#numbers.formatInteger(helper.getTestSummary().failed, 0)}"></span>
-        <span>, skipped tests: </span><span class="text-secondary" th:text="${#numbers.formatInteger(helper.getTestSummary().skipped, 0)}"></span>
+        <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(helper.getTestSummary().total,0)}"></span><span> tests, failed: </span>
+        <span class="fw-bold" th:classappend="${helper.getTestSummary().failedAndError!=0}? text-danger : text-success" th:text="${#numbers.formatInteger(helper.getTestSummary().failedAndError, 0)}"></span>
+        <span>, skipped: </span><span class="text-secondary" th:text="${#numbers.formatInteger(helper.getTestSummary().skipped, 0)}"></span>
     </h5>
 
-    <table class="table table-hover">
-        <thead class="table-light">
-        <tr>
-            <th scope="col">Module</th>
-            <th scope="col">Total</th>
-            <th scope="col">Failed</th>
-            <th scope="col">Skipped</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="testDetail : ${helper.getTestDetails()}">
-            <td><span th:text="${session.getModule(testDetail.module).getName()}"></span></td>
-            <td><span th:text="${#numbers.formatInteger(testDetail.total,0)}"></span></td>
-            <td><span th:class="${testDetail.failed!=0}? text-danger : text-success" th:text="${#numbers.formatInteger(testDetail.failed, 0)}"></span></td>
-            <td><span class="text-secondary" th:text="${#numbers.formatInteger(testDetail.skipped, 0)}"></span></td>
-        </tr>
-        </tbody>
-    </table>
+    <div class="container-fluid">
+        <div class="row justify-content-start g-0">
+            <div class="col-6">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                    <tr>
+                        <th scope="col">Module</th>
+                        <th scope="col">Total</th>
+                        <th scope="col">Failed</th>
+                        <th scope="col">Error</th>
+                        <th scope="col">Skipped</th>
+                        <th scope="col">Duration</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="testDetail : ${helper.getTestDetails()}">
+                        <td><span th:text="${testDetail.getName()}"></span></td>
+                        <td><span th:text="${#numbers.formatInteger(testDetail.total,0)}"></span></td>
+                        <td><span th:class="${testDetail.failed!=0}? text-danger : text-success" th:text="${#numbers.formatInteger(testDetail.failed, 0)}"></span></td>
+                        <td><span th:class="${testDetail.error!=0}? text-danger : text-success" th:text="${#numbers.formatInteger(testDetail.error, 0)}"></span></td>
+                        <td><span class="text-secondary" th:text="${#numbers.formatInteger(testDetail.skipped, 0)}"></span></td>
+                        <td th:text="${helper.formatDuration(testDetail.duration)}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-2" id="summary_tests_total"></div>
+            <div class="col-2" id="summary_tests_failed"></div>
+            <div class="col-2" id="summary_tests_duration"></div>
+        </div>
+    </div>
 
     <h5 class="border-top  mt-3">
         <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(mojos.size(),0)}"></span><span> tasks executed in </span>

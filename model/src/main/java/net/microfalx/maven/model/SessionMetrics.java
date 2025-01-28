@@ -97,6 +97,10 @@ public class SessionMetrics extends NamedIdentityAware<String> {
         return projectMetrics;
     }
 
+    public boolean isMultiModule() {
+        return modules.size() > 1;
+    }
+
     public ZonedDateTime getStartTime() {
         return startTime;
     }

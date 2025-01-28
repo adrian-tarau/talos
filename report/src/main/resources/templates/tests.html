@@ -3,8 +3,19 @@
 <body>
 
 <div th:fragment="tests">
-    <div class="alert alert-primary" role="alert">
-        TODO
+    <div class="container-fluid">
+        <div class="row justify-content-start g-2">
+            <div class="col-6" id="tests_total"></div>
+            <div class="col-6" id="tests_failed"></div>
+        </div>
+        <div class="row justify-content-start g-2">
+            <div class="col-6" id="tests_error"></div>
+            <div class="col-6" id="tests_duration"></div>
+        </div>
+        <div class="row justify-content-start g-2">
+            <div class="col-6" id="tests_failure_types"></div>
+            <div class="col-6" id="tests_duration_distribution"></div>
+        </div>
     </div>
 </div>
 

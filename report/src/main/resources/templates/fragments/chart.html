@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="pie(chart)" th:remove="tag">
+    <script th:inline="javascript">
+        var id = [[${chart.id}]]
+        var options = {
+            title: {
+                text: [[${chart.name}]],
+                align: 'left',
+                margin: 10
+            },
+            legend: {
+                show: [[${chart.legend.show}]]
+            },
+            series: [[${chart.getSeries()}]],
+            noData: {
+                text: "No data available",
+                align: 'center',
+                verticalAlign: 'middle',
+                style: {
+                    fontSize: '14px',
+                },
+            },
+            chart: {
+                type: 'pie',
+                width: [[${chart.width}]],
+                height: [[${chart.height}]],
+                animations: {
+                    enabled: false
+                }
+            },
+            labels: [[${chart.getLabels()}]],
+        };
+        var chart = new ApexCharts(document.querySelector("#" + id), options);
+        chart.render();
+    </script>
+</div>
+
+<div th:fragment="bar(chart)" th:remove="tag">
+    <script th:inline="javascript">
+        var id = [[${chart.id}]]
+        var options = {
+            series: [{
+                name: [[${chart.getSeriesName()}]],
+                data: [[${chart.getSeries()}]]
+            }],
+            chart: {
+                type: 'bar',
+                width: [[${chart.width}]],
+                height: [[${chart.height}]],
+                animations: {
+                    enabled: false
+                }
+            },
+            plotOptions: {
+                bar: {
+                    borderRadius: 4,
+                    borderRadiusApplication: 'end',
+                    horizontal: true,
+                }
+            },
+            dataLabels: {
+                enabled: false
+            },
+            xaxis: {
+                categories: [[${chart.getLabels()}]]
+            }
+        };
+        var chart = new ApexCharts(document.querySelector("#" + id), options);
+        chart.render();
+    </script>
+</div>
+
+<div th:fragment="column(chart)" th:remove="tag">
+    <script th:inline="javascript">
+        var id = [[${chart.id}]]
+        var options = {
+            series: [{
+                name: [[${chart.getSeriesName()}]],
+                data: [[${chart.getSeries()}]]
+            }],
+            chart: {
+                type: 'bar',
+                width: [[${chart.width}]],
+                height: [[${chart.height}]],
+                animations: {
+                    enabled: false
+                }
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '55%',
+                    borderRadius: 5,
+                    borderRadiusApplication: 'end'
+                },
+            },
+            dataLabels: {
+                enabled: false
+            },
+            stroke: {
+                show: true,
+                width: 2,
+                colors: ['transparent']
+            },
+            xaxis: {
+                categories: [[${chart.getLabels()}]]
+            },
+            fill: {
+                opacity: 1
+            },
+            tooltip: {
+                y: {
+                    formatter: function (val) {
+                        return val
+                    }
+                }
+            }
+        };
+        var chart = new ApexCharts(document.querySelector("#" + id), options);
+        chart.render();
+    </script>
+</div>
+
+<div th:fragment="treemap(chart)" th:remove="tag">
+    <script th:inline="javascript">
+        var id = [[${chart.id}]]
+        var options = {
+            series: [{
+                data: [[${chart.getData()}]],
+            }],
+            legend: {
+                show: [[${chart.legend.show}]]
+            },
+            title: {
+                text: [[${chart.name}]],
+                align: 'left',
+                margin: 10
+            },
+            noData: {
+                text: "No data available",
+                align: 'center',
+                verticalAlign: 'middle',
+                style: {
+                    fontSize: '14px',
+                },
+            },
+            chart: {
+                type: 'treemap',
+                width: [[${chart.width}]],
+                height: [[${chart.height}]],
+                animations: {
+                    enabled: false
+                }
+            }
+        };
+
+        var chart = new ApexCharts(document.querySelector("#" + id), options);
+        chart.render();
+    </script>
+</div>
+
+<div th:fragment="render" th:remove="tag">
+    <div th:replace="~{fragments/chart :: pie(${chartHelper.getTotalTestsPieChart('summary_tests_total', null)})}"></div>
+    <div th:replace="~{fragments/chart :: pie(${chartHelper.getFailedTestsPieChart('summary_tests_failed',null)})}"></div>
+    <div th:replace="~{fragments/chart :: pie(${chartHelper.getDurationTestsPieChart('summary_tests_duration',null)})}"></div>
+
+    <div th:replace="~{fragments/chart :: treemap(${chartHelper.getTotalTestsTreeMapChart('tests_total', null)})}"></div>
+    <div th:replace="~{fragments/chart :: treemap(${chartHelper.getFailedTestsTreeMapChart('tests_failed',null)})}"></div>
+    <div th:replace="~{fragments/chart :: treemap(${chartHelper.getErrorTestsTreeMapChart('tests_error',null)})}"></div>
+    <div th:replace="~{fragments/chart :: treemap(${chartHelper.getDurationTestsTreeMapChart('tests_duration',null)})}"></div>
+    
+    <div th:replace="~{fragments/chart :: bar(${chartHelper.getTestFailureTypesBarChart('tests_failure_types',null)})}"></div>
+    <div th:replace="~{fragments/chart :: column(${chartHelper.getTestDurationDistributionColumnChart('tests_duration_distribution',null)})}"></div>
+</div>
+</body>
+</html>
