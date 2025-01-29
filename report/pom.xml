@@ -54,6 +54,11 @@
         </dependency>
 
         <dependency>
+            <groupId>net.microfalx</groupId>
+            <artifactId>jvm</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.thymeleaf</groupId>
             <artifactId>thymeleaf</artifactId>
         </dependency>

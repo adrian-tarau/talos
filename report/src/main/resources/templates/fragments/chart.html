@@ -124,6 +124,48 @@
     </script>
 </div>
 
+<div th:fragment="area(chart)" th:remove="tag">
+    <script th:inline="javascript">
+        var id = [[${chart.id}]]
+        var options = {
+            series: [[${chart.getSeries()}]],
+            chart: {
+                type: 'area',
+                width: [[${chart.width}]],
+                height: [[${chart.height}]],
+                stacked: [[${chart.stacked}]]
+            },
+            dataLabels: {
+                enabled: false
+            },
+            stroke: {
+                curve: 'monotoneCubic'
+            },
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    opacityFrom: 0.6,
+                    opacityTo: 0.8,
+                }
+            },
+            title: {
+                text: [[${chart.name}]],
+                align: 'left',
+                margin: 10
+            },
+            legend: {
+                position: 'top',
+                horizontalAlign: 'left'
+            },
+            xaxis: {
+                type: [[${chart.getXDataType()}]]
+            }
+        };
+        var chart = new ApexCharts(document.querySelector("#" + id), options);
+        chart.render();
+    </script>
+</div>
+
 <div th:fragment="treemap(chart)" th:remove="tag">
     <script th:inline="javascript">
         var id = [[${chart.id}]]
@@ -174,6 +216,11 @@
     
     <div th:replace="~{fragments/chart :: bar(${chartHelper.getTestFailureTypesBarChart('tests_failure_types',null)})}"></div>
     <div th:replace="~{fragments/chart :: column(${chartHelper.getTestDurationDistributionColumnChart('tests_duration_distribution',null)})}"></div>
+
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getServerCpu('server_cpu',null)})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getServerMemory('server_memory',null)})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getProcessCpu('process_cpu',null)})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getProcessMemory('process_memory',null)})}"></div>
 </div>
 </body>
 </html>
