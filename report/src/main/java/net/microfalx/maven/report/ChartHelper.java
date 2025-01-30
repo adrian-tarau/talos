@@ -91,6 +91,7 @@ public class ChartHelper {
         TreeMapChart<Long> chart = new TreeMapChart<>(id, "Durations");
         chart.setWidth(width);
         chart.getLegend().setShow(false);
+        chart.getYaxis().setUnit(Unit.DURATION);
         reportHelper.getTestDetails().forEach(report -> chart.add(report.getName(), report.getDuration().toMillis()));
         return chart;
     }

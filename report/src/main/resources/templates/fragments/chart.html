@@ -5,8 +5,16 @@
 <div th:fragment="utils" th:remove="tag">
     <script th:inline="javascript">
 
+        isNumber = function (value) {
+            return typeof value === 'number' && isFinite(value);
+        }
+
+        isDefined = function (value) {
+            return typeof value !== 'undefined';
+        }
+
         formatMillis = function (value, units) {
-            if (!Utils.isDefined(units)) units = true;
+            if (!isDefined(units)) units = true;
 
             // Pad to 2 or 3 digits, default is 2
             function pad(n, z) {
@@ -51,10 +59,6 @@
                 }
             }
             return displayValue;
-        }
-
-        isNumber = function (value) {
-            return typeof value === 'number' && isFinite(value);
         }
 
         formatDuration = function (value) {
@@ -282,10 +286,6 @@
                 onDatasetHover: {
                     highlightDataSeries: true,
                 },
-                x: {
-                    show: true,
-                    formatter: undefined,
-                },
                 y: {
                     formatter: function (value) {
                         return formatValue(value, [[${chart.yaxis.unit}]])
@@ -330,12 +330,10 @@
                 onDatasetHover: {
                     highlightDataSeries: true,
                 },
-                x: {
-                    show: true,
-                    formatter: undefined,
-                },
                 y: {
-                    formatter: undefined,
+                    formatter: function (value) {
+                        return formatValue(value, [[${chart.yaxis.unit}]])
+                    },
                     title: {
                         formatter: (seriesName) => seriesName,
                     },
