@@ -121,6 +121,7 @@ public class ChartHelper {
         chart.add(convert("Nice", session.getServer().get(ServerMetrics.CPU_NICE)));
         chart.add(convert("I/O Wait", session.getServer().get(ServerMetrics.CPU_IO_WAIT)));
         chart.setStacked(true);
+        chart.getYaxis().setUnit(Unit.PERCENT);
         return chart;
     }
 
@@ -128,6 +129,7 @@ public class ChartHelper {
         AreaChart<Long, Float> chart = new AreaChart<>(id, "Server / Memory");
         chart.add(convert("Maximum", session.getServer().get(ServerMetrics.MEMORY_MAX)));
         chart.add(convert("Used", session.getServer().get(ServerMetrics.MEMORY_USED)));
+        chart.getYaxis().setUnit(Unit.BYTE);
         return chart;
     }
 
@@ -136,6 +138,7 @@ public class ChartHelper {
         chart.add(convert("System", session.getJvm().get(VirtualMachineMetrics.CPU_SYSTEM)));
         chart.add(convert("User", session.getJvm().get(VirtualMachineMetrics.CPU_USER)));
         chart.setStacked(true);
+        chart.getYaxis().setUnit(Unit.PERCENT);
         return chart;
     }
 
@@ -144,6 +147,7 @@ public class ChartHelper {
         chart.add(convert("Heap", session.getJvm().get(VirtualMachineMetrics.MEMORY_HEAP_USED)));
         chart.add(convert("Non-Heap", session.getJvm().get(VirtualMachineMetrics.MEMORY_NON_HEAP_USED)));
         chart.setStacked(true);
+        chart.getYaxis().setUnit(Unit.BYTE);
         return chart;
     }
 
@@ -169,6 +173,14 @@ public class ChartHelper {
         } else {
             return value;
         }
+    }
+
+    public enum Unit {
+        COUNT,
+        DATE_TIME,
+        DURATION,
+        BYTE,
+        PERCENT
     }
 
     public static class Data<X, Y extends Number> {
@@ -245,11 +257,28 @@ public class ChartHelper {
         }
     }
 
+    public static class Axis {
+
+        private Unit unit = Unit.COUNT;
+
+        public Unit getUnit() {
+            return unit;
+        }
+
+        public Axis setUnit(Unit unit) {
+            requireNonNull(unit);
+            this.unit = unit;
+            return this;
+        }
+    }
+
     public static class Chart extends NamedIdentityAware<String> {
 
         private Integer width;
         private Integer height;
         private Legend legend = new Legend();
+        private Axis xaxis = new Axis();
+        private Axis yaxis = new Axis();
 
         public Chart(String id, String name) {
             setId(id);
@@ -280,6 +309,24 @@ public class ChartHelper {
 
         public Chart setLegend(Legend legend) {
             this.legend = legend;
+            return this;
+        }
+
+        public Axis getXaxis() {
+            return xaxis;
+        }
+
+        public Chart setXaxis(Axis xaxis) {
+            this.xaxis = xaxis;
+            return this;
+        }
+
+        public Axis getYaxis() {
+            return yaxis;
+        }
+
+        public Chart setYaxis(Axis yaxis) {
+            this.yaxis = yaxis;
             return this;
         }
     }

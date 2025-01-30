@@ -2,6 +2,109 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 
+<div th:fragment="utils" th:remove="tag">
+    <script th:inline="javascript">
+
+        formatMillis = function (value, units) {
+            if (!Utils.isDefined(units)) units = true;
+
+            // Pad to 2 or 3 digits, default is 2
+            function pad(n, z) {
+                z = z || 2;
+                return ('00' + n).slice(-z);
+            }
+
+            value = Math.abs(value);
+            let ms = value % 1000;
+            let msp = pad(ms, 3);
+            value = (value - ms) / 1000;
+            let secs = value % 60;
+            let secsp = pad(secs);
+            value = (value - secs) / 60;
+            let mins = value % 60;
+            let minsp = pad(mins);
+            let hrs = (value - mins) / 60;
+            let displayValue;
+            if (units) {
+                if (hrs === 0) {
+                    if (mins === 0) {
+                        if (secs === 0) {
+                            displayValue = ms + "ms";
+                        } else {
+                            displayValue = secs + 's ' + ms + "ms";
+                        }
+                    } else {
+                        displayValue = mins + 'm ' + secs + 's ' + ms + "ms";
+                    }
+                } else {
+                    displayValue = hrs + 'h ' + mins + 'm ' + secs + 's ' + msp + "ms";
+                }
+            } else {
+                if (hrs === 0) {
+                    if (mins === 0) {
+                        displayValue = secsp + '.' + msp;
+                    } else {
+                        displayValue = minsp + ':' + secsp + '.' + msp;
+                    }
+                } else {
+                    displayValue = pad(hrs) + ':' + minsp + ':' + secsp + '.' + msp;
+                }
+            }
+            return displayValue;
+        }
+
+        isNumber = function (value) {
+            return typeof value === 'number' && isFinite(value);
+        }
+
+        formatDuration = function (value) {
+            if (isNumber(value)) {
+                return formatMillis(value);
+            } else {
+                return value;
+            }
+        }
+
+        formatByte = function (value) {
+            let unit;
+            if (value < 10000000) {
+                value = value / 1000;
+                unit = "KB";
+            } else if (value < 10000000000) {
+                value = value / 1000000;
+                unit = "MB";
+            } else {
+                value = value / 1000000000;
+                unit = "GB";
+            }
+            return Number(value).toFixed(0) + " " + unit;
+        }
+
+        formatPercent = function (value) {
+            let precision = 2;
+            if (value > 100 || value < 0.01) {
+                precision = 0;
+            } else if (value > 5) {
+                precision = 1;
+            }
+            return Number(value).toFixed(precision) + " %";
+        }
+
+        formatValue = function (value, unit) {
+            if (unit === "COUNT") {
+                return value;
+            } else if (unit === "DURATION") {
+                return formatDuration(value);
+            } else if (unit === "BYTE") {
+                return formatByte(value);
+            } else if (unit === "PERCENT") {
+                return formatPercent(value);
+            }
+        }
+
+    </script>
+</div>
+
 <div th:fragment="pie(chart)" th:remove="tag">
     <script th:inline="javascript">
         var id = [[${chart.id}]]
@@ -133,7 +236,13 @@
                 type: 'area',
                 width: [[${chart.width}]],
                 height: [[${chart.height}]],
-                stacked: [[${chart.stacked}]]
+                stacked: [[${chart.stacked}]],
+                toolbar: {
+                    show: false
+                },
+                zoom: {
+                    enabled: false,
+                }
             },
             dataLabels: {
                 enabled: false
@@ -159,7 +268,33 @@
             },
             xaxis: {
                 type: [[${chart.getXDataType()}]]
-            }
+            },
+            yaxis: {
+                labels: {
+                    formatter: function(value) {
+                        return formatValue(value, [[${chart.yaxis.unit}]])
+                    }
+                }
+            },
+            tooltip: {
+                enabled: true,
+                followCursor: true,
+                onDatasetHover: {
+                    highlightDataSeries: true,
+                },
+                x: {
+                    show: true,
+                    formatter: undefined,
+                },
+                y: {
+                    formatter: function (value) {
+                        return formatValue(value, [[${chart.yaxis.unit}]])
+                    },
+                    title: {
+                        formatter: (seriesName) => seriesName,
+                    },
+                }
+            },
         };
         var chart = new ApexCharts(document.querySelector("#" + id), options);
         chart.render();
@@ -189,6 +324,23 @@
                     fontSize: '14px',
                 },
             },
+            tooltip: {
+                enabled: true,
+                followCursor: true,
+                onDatasetHover: {
+                    highlightDataSeries: true,
+                },
+                x: {
+                    show: true,
+                    formatter: undefined,
+                },
+                y: {
+                    formatter: undefined,
+                    title: {
+                        formatter: (seriesName) => seriesName,
+                    },
+                }
+            },
             chart: {
                 type: 'treemap',
                 width: [[${chart.width}]],
@@ -205,6 +357,8 @@
 </div>
 
 <div th:fragment="render" th:remove="tag">
+    <div th:replace="~{fragments/chart :: utils}"></div>
+
     <div th:replace="~{fragments/chart :: pie(${chartHelper.getTotalTestsPieChart('summary_tests_total', null)})}"></div>
     <div th:replace="~{fragments/chart :: pie(${chartHelper.getFailedTestsPieChart('summary_tests_failed',null)})}"></div>
     <div th:replace="~{fragments/chart :: pie(${chartHelper.getDurationTestsPieChart('summary_tests_duration',null)})}"></div>
@@ -213,7 +367,7 @@
     <div th:replace="~{fragments/chart :: treemap(${chartHelper.getFailedTestsTreeMapChart('tests_failed',null)})}"></div>
     <div th:replace="~{fragments/chart :: treemap(${chartHelper.getErrorTestsTreeMapChart('tests_error',null)})}"></div>
     <div th:replace="~{fragments/chart :: treemap(${chartHelper.getDurationTestsTreeMapChart('tests_duration',null)})}"></div>
-    
+
     <div th:replace="~{fragments/chart :: bar(${chartHelper.getTestFailureTypesBarChart('tests_failure_types',null)})}"></div>
     <div th:replace="~{fragments/chart :: column(${chartHelper.getTestDurationDistributionColumnChart('tests_duration_distribution',null)})}"></div>
 
