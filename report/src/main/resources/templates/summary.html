@@ -4,26 +4,35 @@
 
 <div th:fragment="summary" th:object="${session}">
     <p>
-        Started at <span class="text-primary-emphasis fw-bold" th:text="${helper.formatDateTime(session.startTime)}"></span>,
-        finished at <span class="text-primary-emphasis fw-bold" th:text="${helper.formatDateTime(session.endTime)}"></span>,
+        Started at <span class="text-primary-emphasis fw-bold"
+                         th:text="${helper.formatDateTime(session.startTime)}"></span>,
+        finished at <span class="text-primary-emphasis fw-bold"
+                          th:text="${helper.formatDateTime(session.endTime)}"></span>,
         build time: <span class="text-primary-emphasis fw-bold" th:text="${helper.getBuildTime()}"></span>
     </p>
     <p>
-        <span th:unless="${session.profiles.isEmpty()}"><span>Profiles: </span><span class="text-primary-emphasis fw-bold"
-                                                                                     th:text="${helper.toString(session.profiles)}"></span></span>
+        Local Repository <span class="text-primary-emphasis fw-bold" th:text="${session.localRepository}"></span>,
+        Remote Repositories <span class="text-primary-emphasis fw-bold" th:text="${helper.toString(session.remoteRepositories)}"></span>
+    </p>
+    <p>
+      <span th:unless="${session.profiles.isEmpty()}"><span>Profiles: </span><span class="text-primary-emphasis fw-bold"
+                                                                                   th:text="${helper.toString(session.profiles)}"></span></span>
         <span th:unless="${session.goals.isEmpty()}"><span>Goals: </span><span class="text-primary-emphasis fw-bold"
-                                                                              th:text="${helper.toString(session.goals)}"></span></span>
-        <span><span>, Degree Of Parallelism: </span><span class="text-primary-emphasis fw-bold" th:text="${session.dop}"></span></span>
+                                                                               th:text="${helper.toString(session.goals)}"></span></span>
+        <span><span>, Degree Of Parallelism: </span><span class="text-primary-emphasis fw-bold"
+                                                          th:text="${session.dop}"></span></span>
         <span th:if="${session.offline}" class="text-primary-emphasis fw-bold"><span>, </span><span
                 class="text-primary-emphasis fw-bold">Offline</span></span>
     </p>
-    <h5 class="border-top  mt-3">
-        <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(helper.getFailureCount(), 0)}"></span><span> failures</span>
-    </h5>
+    <h4 class="border-top mt-3 pt-2">
+        <span class="text-primary-emphasis fw-bold"
+              th:text="${#numbers.formatInteger(helper.getFailureCount(), 0)}"></span><span> failures</span>
+    </h4>
     <span th:unless="${helper.hasFailures()}">This build did not contain any failures.</span>
-    <h5 class="border-top  mt-3">
-        <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
-    </h5>
+    <h4 class="border-top mt-3 pt-2">
+        <span class="text-primary-emphasis fw-bold"
+              th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
+    </h4>
     <table class="table table-hover">
         <thead class="table-light">
         <tr>
@@ -45,11 +54,14 @@
         </tbody>
     </table>
 
-    <h5 class="border-top  mt-3">
-        <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(helper.getTestSummary().total,0)}"></span><span> tests, failed: </span>
-        <span class="fw-bold" th:classappend="${helper.getTestSummary().failedAndError!=0}? text-danger : text-success" th:text="${#numbers.formatInteger(helper.getTestSummary().failedAndError, 0)}"></span>
-        <span>, skipped: </span><span class="text-secondary" th:text="${#numbers.formatInteger(helper.getTestSummary().skipped, 0)}"></span>
-    </h5>
+    <h4 class="border-top mt-3 pt-2">
+        <span class="text-primary-emphasis fw-bold"
+              th:text="${#numbers.formatInteger(helper.getTestSummary().total,0)}"></span><span> tests, failed: </span>
+        <span class="fw-bold" th:classappend="${helper.getTestSummary().failedAndError!=0}? text-danger : text-success"
+              th:text="${#numbers.formatInteger(helper.getTestSummary().failedAndError, 0)}"></span>
+        <span>, skipped: </span><span class="text-secondary"
+                                      th:text="${#numbers.formatInteger(helper.getTestSummary().skipped, 0)}"></span>
+    </h4>
 
     <div class="container-fluid">
         <div class="row justify-content-start g-0">
@@ -69,9 +81,12 @@
                     <tr th:each="testDetail : ${helper.getTestDetails()}">
                         <td><span th:text="${testDetail.getName()}"></span></td>
                         <td><span th:text="${#numbers.formatInteger(testDetail.total,0)}"></span></td>
-                        <td><span th:class="${testDetail.failed!=0}? text-danger : text-success" th:text="${#numbers.formatInteger(testDetail.failed, 0)}"></span></td>
-                        <td><span th:class="${testDetail.error!=0}? text-danger : text-success" th:text="${#numbers.formatInteger(testDetail.error, 0)}"></span></td>
-                        <td><span class="text-secondary" th:text="${#numbers.formatInteger(testDetail.skipped, 0)}"></span></td>
+                        <td><span th:class="${testDetail.failed!=0}? text-danger : text-success"
+                                  th:text="${#numbers.formatInteger(testDetail.failed, 0)}"></span></td>
+                        <td><span th:class="${testDetail.error!=0}? text-danger : text-success"
+                                  th:text="${#numbers.formatInteger(testDetail.error, 0)}"></span></td>
+                        <td><span class="text-secondary"
+                                  th:text="${#numbers.formatInteger(testDetail.skipped, 0)}"></span></td>
                         <td th:text="${helper.formatDuration(testDetail.duration)}"></td>
                     </tr>
                     </tbody>
@@ -83,10 +98,10 @@
         </div>
     </div>
 
-    <h5 class="border-top  mt-3">
+    <h4 class="border-top mt-3 pt-2">
         <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(mojos.size(),0)}"></span><span> tasks executed in </span>
         <span class="text-primary-emphasis fw-bold" th:text="${helper.getBuildTime()}"></span>
-    </h5>
+    </h4>
     <table class="table table-hover">
         <thead class="table-light">
         <tr>
@@ -116,10 +131,12 @@
         </tbody>
     </table>
 
-    <h5 class="border-top  mt-3">
-        <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(dependencies.size(),0)}"></span><span> dependencies in </span>
-        <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
-    </h5>
+    <h4 class="border-top mt-3 pt-2">
+        <span class="text-primary-emphasis fw-bold"
+              th:text="${#numbers.formatInteger(dependencies.size(),0)}"></span><span> dependencies in </span>
+        <span class="text-primary-emphasis fw-bold"
+              th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
+    </h4>
     <table class="table table-hover">
         <thead class="table-light">
         <tr>
@@ -136,10 +153,11 @@
         </tr>
         </tbody>
     </table>
-    <h5 class="border-top  mt-3">
+    <h4 class="border-top mt-3 pt-2">
         <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(plugins.size(),0)}"></span><span> plugins in </span>
-        <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
-    </h5>
+        <span class="text-primary-emphasis fw-bold"
+              th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
+    </h4>
     <table class="table table-hover">
         <thead class="table-light">
         <tr>
