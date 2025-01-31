@@ -357,6 +357,8 @@
 <div th:fragment="render" th:remove="tag">
     <div th:replace="~{fragments/chart :: utils}"></div>
 
+    <div th:replace="~{fragments/chart :: pie(${chartHelper.getBuildEventsPieChart('build_events', null)})}"></div>
+
     <div th:replace="~{fragments/chart :: pie(${chartHelper.getTotalTestsPieChart('summary_tests_total', null)})}"></div>
     <div th:replace="~{fragments/chart :: pie(${chartHelper.getFailedTestsPieChart('summary_tests_failed',null)})}"></div>
     <div th:replace="~{fragments/chart :: pie(${chartHelper.getDurationTestsPieChart('summary_tests_duration',null)})}"></div>

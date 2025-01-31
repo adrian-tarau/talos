@@ -26,12 +26,43 @@
     </p>
     <h4 class="border-top mt-3 pt-2">
         <span class="text-primary-emphasis fw-bold"
-              th:text="${#numbers.formatInteger(helper.getFailureCount(), 0)}"></span><span> failures</span>
+              th:text="${#numbers.formatInteger(helper.getFailureCount(), 0)}"></span><span> Failures</span>
     </h4>
     <span th:unless="${helper.hasFailures()}">This build did not contain any failures.</span>
+
+    <!-- LifeCycles -->
+
     <h4 class="border-top mt-3 pt-2">
         <span class="text-primary-emphasis fw-bold"
-              th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
+              th:text="${#numbers.formatInteger(session.getLifecycles().size(),0)}"></span><span> Build events</span>
+    </h4>
+    <div class="container-fluid">
+        <div class="row justify-content-start g-0">
+            <div class="col-8">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Duration</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="lifeCycle : ${helper.getLifeCycles()}">
+                        <td><span th:text="${lifeCycle.name}"></span></td>
+                        <td><span th:text="${helper.formatDuration(lifeCycle.getDuration())}"></span></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-4" id="build_events"></div>
+        </div>
+    </div>
+
+    <!-- Modules -->
+
+    <h4 class="border-top mt-3 pt-2">
+        <span class="text-primary-emphasis fw-bold"
+              th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> Modules</span>
     </h4>
     <table class="table table-hover">
         <thead class="table-light">
@@ -54,9 +85,11 @@
         </tbody>
     </table>
 
+    <!-- Tests -->
+
     <h4 class="border-top mt-3 pt-2">
         <span class="text-primary-emphasis fw-bold"
-              th:text="${#numbers.formatInteger(helper.getTestSummary().total,0)}"></span><span> tests, failed: </span>
+              th:text="${#numbers.formatInteger(helper.getTestSummary().total,0)}"></span><span> Tests, failed: </span>
         <span class="fw-bold" th:classappend="${helper.getTestSummary().failedAndError!=0}? text-danger : text-success"
               th:text="${#numbers.formatInteger(helper.getTestSummary().failedAndError, 0)}"></span>
         <span>, skipped: </span><span class="text-secondary"
@@ -98,8 +131,10 @@
         </div>
     </div>
 
+    <!-- Tasks -->
+
     <h4 class="border-top mt-3 pt-2">
-        <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(mojos.size(),0)}"></span><span> tasks executed in </span>
+        <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(mojos.size(),0)}"></span><span> Tasks executed in </span>
         <span class="text-primary-emphasis fw-bold" th:text="${helper.getBuildTime()}"></span>
     </h4>
     <table class="table table-hover">
@@ -131,9 +166,11 @@
         </tbody>
     </table>
 
+    <!-- Dependencies -->
+
     <h4 class="border-top mt-3 pt-2">
         <span class="text-primary-emphasis fw-bold"
-              th:text="${#numbers.formatInteger(dependencies.size(),0)}"></span><span> dependencies in </span>
+              th:text="${#numbers.formatInteger(dependencies.size(),0)}"></span><span> Dependencies in </span>
         <span class="text-primary-emphasis fw-bold"
               th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
     </h4>
@@ -154,7 +191,7 @@
         </tbody>
     </table>
     <h4 class="border-top mt-3 pt-2">
-        <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(plugins.size(),0)}"></span><span> plugins in </span>
+        <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(plugins.size(),0)}"></span><span> Plugins in </span>
         <span class="text-primary-emphasis fw-bold"
               th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
     </h4>

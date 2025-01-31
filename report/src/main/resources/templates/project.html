@@ -2,10 +2,38 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<div th:fragment="projects">
-    <div class="alert alert-primary" role="alert">
-        TODO
+<div th:fragment="project">
+    <h4>Information</h4>
+    <div class="container-fluid">
+        <div class="row justify-content-start g-0">
+            <div class="col-2">Name:</div>
+            <div class="col-4 text-primary-emphasis fw-bold" th:text="${project.name}"></div>
+            <div class="col-2">Home:</div>
+            <div class="col-4 text-primary-emphasis fw-bold"><a th:href="${project.uri}" target="_blank" th:text="${project.uri}"></a></div>
+        </div>
+        <div class="row justify-content-start g-0">
+            <div class="col-2">Group Id:</div>
+            <div class="col-4 text-primary-emphasis fw-bold" th:text="${project.groupId}"></div>
+            <div class="col-2">Artifact Id:</div>
+            <div class="col-4 text-primary-emphasis fw-bold" th:text="${project.groupId}"></div>
+        </div>
     </div>
+
+    <h4>Properties</h4>
+    <table class="table table-hover">
+        <thead class="table-light">
+        <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Duration</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="property : ${helper.getProperties()}">
+            <td><span th:text="${property.name}"></span></td>
+            <td><span th:text="${property.value}"></span></td>
+        </tr>
+        </tbody>
+    </table>
 </div>
 
 </body>

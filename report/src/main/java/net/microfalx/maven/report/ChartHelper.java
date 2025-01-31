@@ -55,6 +55,14 @@ public class ChartHelper {
         return chart;
     }
 
+    public PieChart<Long> getBuildEventsPieChart(String id, Integer width) {
+        PieChart<Long> chart = new PieChart<>(id, "Build Events");
+        chart.setWidth(width);
+        chart.getLegend().setShow(false);
+        reportHelper.getLifeCycles().forEach(event -> chart.add(event.getName(), event.getDuration().toMillis()));
+        return chart;
+    }
+
     public TreeMapChart<Integer> getTotalTestsTreeMapChart(String id, Integer width) {
         TreeMapChart<Integer> chart = new TreeMapChart<>(id, "Total");
         chart.setWidth(width);
