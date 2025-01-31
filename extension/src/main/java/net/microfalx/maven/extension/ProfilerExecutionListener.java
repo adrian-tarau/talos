@@ -25,17 +25,20 @@ public class ProfilerExecutionListener extends AbstractExecutionListener {
 
     @Override
     public void projectSucceeded(ExecutionEvent event) {
-        profilerMetrics.projectStop(event.getProject(), null);
+        projectStop(event);
     }
 
     @Override
     public void projectFailed(ExecutionEvent event) {
-        super.projectFailed(event);
-        profilerMetrics.projectStop(event.getProject(), event.getException());
+        projectStop(event);
     }
 
     @Override
     public void projectSkipped(ExecutionEvent event) {
-        profilerMetrics.projectStop(event.getProject(), null);
+        projectStop(event);
+    }
+
+    private void projectStop(ExecutionEvent event) {
+        profilerMetrics.projectStop(event.getProject(), event.getException());
     }
 }

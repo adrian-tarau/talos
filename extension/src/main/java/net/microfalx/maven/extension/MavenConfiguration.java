@@ -73,4 +73,13 @@ public class MavenConfiguration extends net.microfalx.maven.core.MavenConfigurat
     public Boolean isOpenReportEnabled() {
         return getProperty(getSession(), "report.open", false);
     }
+
+    /**
+     * Returns whether the environment report is enabled (in the terminal).
+     *
+     * @return {@code true} if enabled, {@code false} otherwise
+     */
+    public Boolean isEnvironmentEnabled() {
+        return getProperty(getSession(), "report.environment.enable", false);
+    }
 }

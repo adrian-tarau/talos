@@ -12,6 +12,8 @@ public class ProjectMetrics extends Project {
     private ZonedDateTime startTime;
     private ZonedDateTime endTime;
 
+    private FailureMetrics failureMetrics;
+
     protected ProjectMetrics() {
     }
 
@@ -35,5 +37,13 @@ public class ProjectMetrics extends Project {
     public ProjectMetrics setEndTime(ZonedDateTime endTime) {
         this.endTime = endTime;
         return this;
+    }
+
+    public FailureMetrics getFailureMetrics() {
+        return failureMetrics;
+    }
+
+    public void setFailureMetrics(FailureMetrics failureMetrics) {
+        this.failureMetrics = failureMetrics;
     }
 }

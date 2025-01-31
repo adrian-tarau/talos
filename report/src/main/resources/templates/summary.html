@@ -28,7 +28,12 @@
         <span class="text-primary-emphasis fw-bold"
               th:text="${#numbers.formatInteger(helper.getFailureCount(), 0)}"></span><span> Failures</span>
     </h4>
-    <span th:unless="${helper.hasFailures()}">This build did not contain any failures.</span>
+    <div th:if="${helper.hasProjectFailures()}" th:remove="tag">
+        <div th:replace="~{fragments/utils :: failures_summary(${session.getProjectFailures()})}"></div>
+    </div>
+    <p th:unless="${helper.hasProjectFailures()}">
+        This build did not contain any failures.
+    </p>
 
     <!-- LifeCycles -->
 
@@ -87,7 +92,7 @@
 
     <!-- Tests -->
 
-    <h4 class="border-top mt-3 pt-2">
+    <h4 class="border-top mt-3 pt-2" th:if="${helper.hasTests()}">
         <span class="text-primary-emphasis fw-bold"
               th:text="${#numbers.formatInteger(helper.getTestSummary().total,0)}"></span><span> Tests, failed: </span>
         <span class="fw-bold" th:classappend="${helper.getTestSummary().failedAndError!=0}? text-danger : text-success"
@@ -96,7 +101,7 @@
                                       th:text="${#numbers.formatInteger(helper.getTestSummary().skipped, 0)}"></span>
     </h4>
 
-    <div class="container-fluid">
+    <div class="container-fluid" th:if="${helper.hasTests()}">
         <div class="row justify-content-start g-0">
             <div class="col-6">
                 <table class="table table-hover">

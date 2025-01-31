@@ -50,22 +50,22 @@ public class ProfilerMojoExecutionListener implements MojoExecutionListener {
         tracker.track("Mojo Execution", t -> {
             profilerMetrics.mojoStarted(event.getMojo(), event.getExecution());
             if (configuration.isQuietAndWithProgress()) printMojo(event);
-        });
+        }, event.getProject(), event.getMojo());
 
     }
 
     @Override
     public void afterMojoExecutionSuccess(MojoExecutionEvent event) throws MojoExecutionException {
         tracker.track("Mojo Success", t -> {
-            profilerMetrics.mojoStop(event.getMojo(), null);
-        });
+            profilerMetrics.mojoStop(event.getProject(), event.getMojo(), null);
+        }, event.getProject(), event.getMojo());
     }
 
     @Override
     public void afterExecutionFailure(MojoExecutionEvent event) {
         tracker.track("Mojo Failure", t -> {
-            profilerMetrics.mojoStop(event.getMojo(), event.getCause());
-        });
+            profilerMetrics.mojoStop(event.getProject(), event.getMojo(), event.getCause());
+        }, event.getProject(), event.getMojo());
     }
 
     private void printMojo(MojoExecutionEvent event) {

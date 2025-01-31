@@ -28,6 +28,7 @@ import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.joining;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -49,6 +50,7 @@ public class ProfilerMetrics {
     private static final MavenLogger LOGGER = MavenLogger.create(ProfilerMetrics.class);
 
     private static final int LINE_LENGTH = 110;
+    private static final int INDENT_STEP = 4;
 
     private final Map<Class<?>, MojoMetrics> mojoMetrics = new ConcurrentHashMap<>();
     private final Map<String, DependencyMetrics> dependencyMetrics = new ConcurrentHashMap<>();
@@ -75,6 +77,7 @@ public class ProfilerMetrics {
 
     private final MavenTracker tracker = new MavenTracker(ProfilerMetrics.class);
     private MavenConfiguration configuration;
+    private int indent;
     SessionMetrics sessionMetrics;
 
     void sessionStart() {
@@ -91,6 +94,11 @@ public class ProfilerMetrics {
         sessionMetrics.setDependencies(dependencyMetrics.values());
         sessionMetrics.setMojos(mojoMetrics.values());
         sessionMetrics.setPlugins(pluginMetrics.values());
+        tracker.track("Record Failures", t -> {
+            sessionMetrics.setExtensionFailures(MavenTracker.getFailures().stream()
+                    .map(f -> new FailureMetrics(f.getProject(), f.getMojo(), f.getName(), f.getThrowable()))
+                    .collect(Collectors.toList()));
+        });
         sessionEndTime = System.nanoTime();
     }
 
@@ -99,12 +107,16 @@ public class ProfilerMetrics {
             sessionMetrics.addModule(getMetrics(project).setStartTime(ZonedDateTime.now()));
             configuration = new MavenConfiguration(session);
             registerDependencies(project);
-        });
+        }, project);
     }
 
     void projectStop(MavenProject project, Throwable throwable) {
         tracker.track("Project Stop", t -> {
-            getMetrics(project).setEndTime(ZonedDateTime.now());
+            ProjectMetrics projectMetrics = getMetrics(project);
+            projectMetrics.setEndTime(ZonedDateTime.now());
+            if (throwable != null) {
+                projectMetrics.setFailureMetrics(new FailureMetrics(project, null, "Project Stop", throwable));
+            }
         });
     }
 
@@ -114,9 +126,9 @@ public class ProfilerMetrics {
         getMetrics(execution.getPlugin()).registerGoal(execution.getGoal());
     }
 
-    void mojoStop(Mojo mojo, Throwable throwable) {
+    void mojoStop(MavenProject project, Mojo mojo, Throwable throwable) {
         requireNonNull(mojo);
-        getMetrics(mojo).stop(throwable);
+        getMetrics(mojo).stop(project, throwable);
     }
 
     Duration getConfigurationDuration() {
@@ -141,7 +153,7 @@ public class ProfilerMetrics {
         printPluginSummary();
         printRepositorySummary();
         printTestsSummary();
-        printEnvironmentSummary();
+        if (configuration.isEnvironmentEnabled() || configuration.isVerbose()) printEnvironmentSummary();
         printFailureSummary();
         if (shouldShowLineSeparator()) infoLine('-');
         if (configuration.isQuiet()) {
@@ -151,6 +163,7 @@ public class ProfilerMetrics {
 
     private void printSummary() {
         LOGGER.info("");
+        increaseIndent();
         logNameValue("Request", MavenUtils.getRequestInfo(session), true, SHORT_NAME_LENGTH);
         logNameValue("Repositories", getRepositoriesInfo(), true, SHORT_NAME_LENGTH);
         if (!session.getRequest().getData().isEmpty()) logNameValue("Data", getData(), true, SHORT_NAME_LENGTH);
@@ -165,11 +178,12 @@ public class ProfilerMetrics {
         if (tracker.getDuration().toMillis() > configuration.getMinimumDuration().toMillis()) {
             logNameValue("Performance", formatDuration(tracker.getDuration()), true, SHORT_NAME_LENGTH);
         }
-        if (MavenTracker.getFailureCount() > 0) {
-            logNameValue("Failures", FormatterUtils.formatNumber(MavenTracker.getFailureCount()), true, SHORT_NAME_LENGTH);
+        if (!MavenTracker.getFailures().isEmpty()) {
+            logNameValue("Extension Failures", FormatterUtils.formatNumber(MavenTracker.getFailures()), true, SHORT_NAME_LENGTH);
         }
         logNameValue("Local Repository", getRepositoryReport(repositoryMetrics), true, SHORT_NAME_LENGTH);
         logNameValue("Remote Repository", getRepositoryReport(transferMetrics), true, SHORT_NAME_LENGTH);
+        decreaseIndent();
     }
 
     private void printDependencySummary() {
@@ -179,6 +193,7 @@ public class ProfilerMetrics {
         infoMain("Dependencies (" + dependencyMetrics.size() + " direct dependencies from " + dependencyMetricsByGroup.size()
                  + " groups and across " + session.getProjects().size() + " modules):");
         LOGGER.info("");
+        increaseIndent();
         for (Map.Entry<String, Collection<DependencyMetrics>> entry : dependencyMetricsByGroup.entrySet()) {
             Collection<DependencyMetrics> metrics = entry.getValue();
             String name = entry.getKey() + " (" + String.format("%1$d", metrics.size()) + ")";
@@ -186,6 +201,7 @@ public class ProfilerMetrics {
                            + ", Size: " + String.format("%1$8s", formatBytes(getSize(metrics))) + "]";
             logNameValue(name, value);
         }
+        decreaseIndent();
     }
 
     private void printPluginSummary() {
@@ -193,12 +209,14 @@ public class ProfilerMetrics {
         LOGGER.info("");
         infoMain("Plugins (" + pluginMetrics.size() + " and across " + session.getProjects().size() + " modules):");
         LOGGER.info("");
+        increaseIndent();
         for (Map.Entry<String, PluginMetrics> entry : pluginMetrics.entrySet()) {
             PluginMetrics metrics = entry.getValue();
             String value = "[Modules:" + String.format("%1$2d", metrics.getProjects().size())
                            + ", Goals: '" + String.join(", ", metrics.getGoals()) + "']";
             logNameValue(metrics.getName(), value, true, LONG_NAME_LENGTH);
         }
+        decreaseIndent();
     }
 
     private void printRepositorySummary() {
@@ -219,6 +237,7 @@ public class ProfilerMetrics {
         LOGGER.info("");
         infoMain(title + " " + details + ":");
         LOGGER.info("");
+        increaseIndent();
         boolean remote = repositoryMetrics instanceof TransferMetrics;
         for (Map.Entry<String, Collection<ArtifactMetrics>> entry : repositoryMetrics.getMetricsByGroup().entrySet()) {
             Collection<ArtifactMetrics> metrics = entry.getValue();
@@ -240,12 +259,14 @@ public class ProfilerMetrics {
             }
             logNameValue(name, value);
         }
+        decreaseIndent();
     }
 
     private void printEnvironmentSummary() {
         LOGGER.info("");
         infoMain("Environment:");
         LOGGER.info("");
+        increaseIndent();
         VirtualMachineMetrics virtualMachineMetrics = VirtualMachineMetrics.get();
         ServerMetrics serverMetrics = ServerMetrics.get();
         VirtualMachine virtualMachine = virtualMachineMetrics.getLast();
@@ -259,6 +280,7 @@ public class ProfilerMetrics {
                                + ", Memory: " + formatMemory(server.getMemoryActuallyUsed(), server.getMemoryTotal()));
         logNameValue("Process", "CPU: " + formatPercent(virtualMachineMetrics.getAverageCpu())
                                 + ", Memory: " + formatMemory(virtualMachineMetrics.getMemoryAverage(), virtualMachineMetrics.getMemoryMaximum()));
+        decreaseIndent();
     }
 
     private void printFailureSummary() {
@@ -281,6 +303,7 @@ public class ProfilerMetrics {
         LOGGER.info("");
         infoMain("Tests " + totals + ":");
         LOGGER.info("");
+        increaseIndent();
         for (MavenProject project : tests.getProjects()) {
             Collection<ReportTestSuite> testSuites = tests.getTestSuites(project);
             StringBuilder buffer = new StringBuilder(128);
@@ -290,8 +313,9 @@ public class ProfilerMetrics {
                     getSum(testSuites, ReportTestSuite::getNumberOfFailures),
                     getSum(testSuites, ReportTestSuite::getNumberOfErrors),
                     getSum(testSuites, ReportTestSuite::getNumberOfSkipped)));
-            LOGGER.info(buffer.toString());
+            LOGGER.info(getIndentSpaces() + buffer);
         }
+        decreaseIndent();
         LOGGER.info("");
     }
 
@@ -299,6 +323,7 @@ public class ProfilerMetrics {
         LOGGER.info("");
         infoMain("Tasks:");
         LOGGER.info("");
+        increaseIndent();
         for (MojoMetrics metric : getMojoMetrics()) {
             if (metric.getDuration().toMillis() == 0) continue;
             StringBuilder buffer = new StringBuilder(128);
@@ -313,8 +338,9 @@ public class ProfilerMetrics {
             }
             buffer.append(", ").append(buffer().strong("Executions " + metric.getExecutionCount()));
             buffer.append(")");
-            LOGGER.info(buffer.toString());
+            LOGGER.info(getIndentSpaces() + buffer);
         }
+        decreaseIndent();
     }
 
     private Collection<MojoMetrics> getMojoMetrics() {
@@ -336,15 +362,15 @@ public class ProfilerMetrics {
     }
 
     private void logNameValue(String name, String value) {
-        LOGGER.info(printNameValue(name, value));
+        LOGGER.info(getIndentSpaces()+printNameValue(name, value));
     }
 
     private void logNameValue(String name, String value, boolean highlight) {
-        LOGGER.info(printNameValue(name, value, highlight));
+        LOGGER.info(getIndentSpaces() + printNameValue(name, value, highlight));
     }
 
     private void logNameValue(String name, String value, boolean highlight, int length) {
-        LOGGER.info(printNameValue(name, value, highlight, length));
+        LOGGER.info(getIndentSpaces() + printNameValue(name, value, highlight, length));
     }
 
     private String printNameValue(String name, String value) {
@@ -443,7 +469,7 @@ public class ProfilerMetrics {
         } else {
             return formatDuration(duration1)
                    + "/" + formatDuration(duration2)
-                   + "/" + (duration3);
+                   + "/" + formatDuration(duration3);
         }
     }
 
@@ -514,6 +540,19 @@ public class ProfilerMetrics {
         return map;
     }
 
+    private String getIndentSpaces() {
+        return INDENTS[Math.min(INDENTS.length - 1, indent)];
+    }
+
+    private void increaseIndent() {
+        indent++;
+    }
+
+    private void decreaseIndent() {
+        indent--;
+        if (indent < 0) indent = 0;
+    }
+
     private boolean shouldShowLineSeparator() {
         return !configuration.isQuietAndWithProgress();
     }
@@ -523,4 +562,6 @@ public class ProfilerMetrics {
     private static final String[] PACKAGE_GOALS = {"jar:jar",};
     private static final String[] INSTALL_GOALS = {"install:install"};
     private static final String[] DEPLOY_GOALS = {"install:deploy"};
+
+    private static final String[] INDENTS = {"", "  ", "    "};
 }

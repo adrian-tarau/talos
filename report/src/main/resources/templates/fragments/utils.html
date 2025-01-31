@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="failures_summary(failures)" class="bt-1">
+    <div th:each="failure : ${failures}">
+        <span>Exception Class: </span><span th:text="${failure.throwableClass}" class="text-primary-emphasis fw-bold"></span>
+        <span>Root Cause: </span><span th:text="${failure.rootCauseMessage}" class="text-primary-emphasis fw-bold"></span>
+    </div>
+</div>
+
+<div th:fragment="failures_details(failures)" class="bt-1">
+    <table class="table">
+        <thead class="table-light">
+            <tr>
+                <th scope="col">Module</th>
+                <th scope="col">Mojo</th>
+                <th scope="col">Exception Type</th>
+                <th scope="col">Message</th>
+                <th scope="col">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <th:block th:each="failure : ${failures}">
+            <tr>
+                <td><span th:text="${helper.toDisplay(failure.module)}"></span></td>
+                <td><span th:text="${helper.toDisplay(failure.mojo)}"></span></td>
+                <td><span th:text="${helper.toDisplay(failure.throwableClass)}"></span></td>
+                <td><span th:text="${helper.toDisplay(failure.rootCauseMessage)}"></span></td>
+                <td>
+                    <button class="btn btn-primary btn-sm btn-light" type="button" data-bs-toggle="collapse" th:attr="data-bs-target=${helper.toHtmlId(failure.id)}">
+                        <i class="fa-solid fa-square-caret-down"></i>
+                    </button>
+                </td>
+            </tr>
+            <tr>
+                <td th:colspan="5" class="p-0" style="border-bottom-width: 0">
+                    <div class="collapse font-monospace" style="white-space: pre-wrap; font-size: smaller" th:id="${failure.id}">
+                        <div class="card card-body" th:text="${failure.throwableStacktrace}">
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            </th:block>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>

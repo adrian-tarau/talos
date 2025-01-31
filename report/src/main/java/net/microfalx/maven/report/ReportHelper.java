@@ -1,5 +1,6 @@
 package net.microfalx.maven.report;
 
+import net.microfalx.jvm.ServerMetrics;
 import net.microfalx.lang.*;
 import net.microfalx.maven.core.MavenUtils;
 import net.microfalx.maven.model.*;
@@ -47,8 +48,18 @@ public class ReportHelper {
         }
     }
 
+    public String toDisplay(Object value) {
+        String text = toString(value);
+        return StringUtils.isEmpty(text) ? "-" : text;
+    }
+
+    public String toHtmlId(Object value) {
+        if (value == null) return null;
+        return "#"+ObjectUtils.toString(value);
+    }
+
     public long getFailureCount() {
-        return session.getMojos().stream().mapToLong(MojoMetrics::getFailureCount).sum();
+        return session.getProjectFailures().size() + session.getExtensionFailures().size();
     }
 
     public String getBuildTime() {
@@ -59,8 +70,24 @@ public class ReportHelper {
         return session.getModules().size();
     }
 
+    public boolean hasTests() {
+        return !session.getTests().isEmpty();
+    }
+
     public boolean hasFailures() {
-        return StringUtils.isNotEmpty(session.getThrowableClass());
+        return hasProjectFailures() || hasExtensionFailures();
+    }
+
+    public boolean hasProjectFailures() {
+        return !session.getProjectFailures().isEmpty();
+    }
+
+    public boolean hasExtensionFailures() {
+        return !session.getProjectFailures().isEmpty();
+    }
+
+    public Long getAverageServerCpu() {
+        return (long) session.getServer().getAverage(ServerMetrics.CPU_TOTAL, Duration.ofDays(1)).orElse(0);
     }
 
     public Collection<MojoMetrics> getMojos() {

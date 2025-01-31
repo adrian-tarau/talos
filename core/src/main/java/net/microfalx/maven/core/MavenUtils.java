@@ -61,6 +61,7 @@ public class MavenUtils {
      * @return a non-null instance
      */
     public static String getId(Artifact artifact) {
+        requireNonNull(artifact);
         return StringUtils.toIdentifier(artifact.getGroupId() + ":" + artifact.getArtifactId());
     }
 
@@ -71,16 +72,18 @@ public class MavenUtils {
      * @return a non-null instance
      */
     public static String getId(org.apache.maven.artifact.Artifact artifact) {
+        requireNonNull(artifact);
         return StringUtils.toIdentifier(artifact.getGroupId() + ":" + artifact.getArtifactId());
     }
 
     /**
-     * Returns the identifier of an dependency.
+     * Returns the identifier of a dependency.
      *
      * @param dependency the dependency
      * @return a non-null instance
      */
     public static String getId(Dependency dependency) {
+        requireNonNull(dependency);
         return StringUtils.toIdentifier(dependency.getGroupId() + ":" + dependency.getArtifactId());
     }
 
@@ -91,7 +94,19 @@ public class MavenUtils {
      * @return a non-null instance
      */
     public static String getId(Plugin plugin) {
+        requireNonNull(plugin);
         return StringUtils.toIdentifier(plugin.getGroupId() + ":" + plugin.getArtifactId());
+    }
+
+    /**
+     * Returns the identifier of a mojo.
+     *
+     * @param mojo the Mojo
+     * @return a non-null instance
+     */
+    public static String getId(Mojo mojo) {
+        requireNonNull(mojo);
+        return StringUtils.toIdentifier(ClassUtils.getName(mojo));
     }
 
     /**

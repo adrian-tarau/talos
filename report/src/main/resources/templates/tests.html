@@ -3,7 +3,7 @@
 <body>
 
 <div th:fragment="tests">
-    <div class="container-fluid">
+    <div class="container-fluid" th:if="${helper.hasTests()}">
         <div class="row justify-content-start g-2">
             <div class="col-6" id="tests_total"></div>
             <div class="col-6" id="tests_failed"></div>
@@ -17,6 +17,7 @@
             <div class="col-6" id="tests_duration_distribution"></div>
         </div>
     </div>
+    <span th:unless="${helper.hasTests()}">This build did not contain any tests information.</span>
 </div>
 
 </body>

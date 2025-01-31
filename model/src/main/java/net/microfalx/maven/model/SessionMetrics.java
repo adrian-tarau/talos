@@ -5,8 +5,7 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.serializers.DefaultSerializers;
 import com.esotericsoftware.kryo.serializers.OptionalSerializers;
-import net.microfalx.lang.ClassUtils;
-import net.microfalx.lang.ExceptionUtils;
+import net.microfalx.lang.IOUtils;
 import net.microfalx.lang.NamedIdentityAware;
 import net.microfalx.metrics.*;
 import net.microfalx.resource.Resource;
@@ -23,6 +22,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -38,8 +38,6 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     private Project project;
     private ZonedDateTime startTime = ZonedDateTime.now();
     private ZonedDateTime endTime = startTime;
-    private String throwableClass;
-    private String throwable;
 
     private final Collection<ProjectMetrics> modules = new ArrayList<>();
     private final Collection<ArtifactMetrics> artifacts = new ArrayList<>();
@@ -48,6 +46,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     private final Collection<PluginMetrics> plugins = new ArrayList<>();
     private final Collection<TestMetrics> tests = new ArrayList<>();
     private final Collection<LifecycleMetrics> lifecycles = new ArrayList<>();
+    private final Collection<FailureMetrics> extensionFailures = new ArrayList<>();
 
     private final Collection<String> profiles = new ArrayList<>();
     private final Collection<String> goals = new ArrayList<>();
@@ -58,6 +57,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     private Collection<URI> remoteRepositories;
 
     private transient Map<String, ProjectMetrics> modulesById;
+    private transient Map<String, MojoMetrics> mojosById;
 
     private SeriesStore jvm = SeriesStore.memory();
     private SeriesStore server = SeriesStore.memory();
@@ -157,22 +157,6 @@ public class SessionMetrics extends NamedIdentityAware<String> {
         this.remoteRepositories = remoteRepositories;
     }
 
-    public String getThrowableClass() {
-        return throwableClass;
-    }
-
-    public String getThrowable() {
-        return throwable;
-    }
-
-    public SessionMetrics setThrowable(Throwable throwable) {
-        if (throwable != null) {
-            this.throwableClass = ClassUtils.getName(throwable);
-            this.throwable = ExceptionUtils.getStackTrace(throwable);
-        }
-        return this;
-    }
-
     public Collection<ProjectMetrics> getModules() {
         return unmodifiableCollection(modules);
     }
@@ -189,6 +173,19 @@ public class SessionMetrics extends NamedIdentityAware<String> {
 
     public Collection<MojoMetrics> getMojos() {
         return unmodifiableCollection(mojos);
+    }
+
+    public MojoMetrics getMojo(String id) {
+        requireNonNull(id);
+        if (mojosById == null) {
+            mojosById = new HashMap<>();
+            for (MojoMetrics mojo : mojos) {
+                mojosById.put(mojo.getId(), mojo);
+            }
+        }
+        MojoMetrics mojoMetrics = mojosById.get(id);
+        if (mojoMetrics == null) throw new IllegalArgumentException("A Mojo with id " + id + " does not exist");
+        return mojoMetrics;
     }
 
     public void setMojos(Collection<MojoMetrics> mojos) {
@@ -241,6 +238,29 @@ public class SessionMetrics extends NamedIdentityAware<String> {
         this.lifecycles.addAll(lifecycles);
     }
 
+    public Collection<FailureMetrics> getProjectFailures() {
+        Collection<FailureMetrics> projectFailures = new ArrayList<>();
+        projectFailures.addAll(modules.stream().map(ProjectMetrics::getFailureMetrics).filter(Objects::nonNull).collect(Collectors.toList()));
+        projectFailures.addAll(mojos.stream().map(MojoMetrics::getFailureMetrics).filter(Objects::nonNull).collect(Collectors.toList()));
+        projectFailures.forEach(this::updateFailureMetrics);
+        return unmodifiableCollection(projectFailures);
+    }
+
+    public Collection<FailureMetrics> getExtensionFailures() {
+        extensionFailures.forEach(this::updateFailureMetrics);
+        return unmodifiableCollection(extensionFailures);
+    }
+
+    public void setExtensionFailures(Collection<FailureMetrics> failures) {
+        requireNonNull(failures);
+        this.extensionFailures.addAll(failures);
+    }
+
+    public void addExtensionFailure(FailureMetrics failure) {
+        requireNonNull(failure);
+        this.extensionFailures.add(failure);
+    }
+
     public SeriesStore getJvm() {
         return jvm;
     }
@@ -268,6 +288,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
 
     public void store(OutputStream outputStream) throws IOException {
         Kryo kryo = createKryo();
+        outputStream = IOUtils.getCompressedOutputStream(outputStream);
         try (Output output = new Output(outputStream)) {
             kryo.writeObject(output, this);
         }
@@ -279,13 +300,12 @@ public class SessionMetrics extends NamedIdentityAware<String> {
                 .add("project=" + project)
                 .add("startTime=" + startTime)
                 .add("endTime=" + endTime)
-                .add("throwableClass='" + throwableClass + "'")
-                .add("throwable='" + throwable + "'")
                 .add("projects=" + modules.size())
                 .add("artifacts=" + artifacts.size())
                 .add("dependencies=" + dependencies.size())
                 .add("plugins=" + plugins.size())
                 .add("lifecycles=" + lifecycles.size())
+                .add("extensionFailures=" + extensionFailures.size())
                 .add("log='" + (logs != null ? logs.length() : NA_STRING) + "'")
                 .toString();
     }
@@ -297,9 +317,19 @@ public class SessionMetrics extends NamedIdentityAware<String> {
 
     public static SessionMetrics load(InputStream inputStream) throws IOException {
         requireNonNull(inputStream);
+        inputStream = IOUtils.getComporessedInputStream(inputStream);
         try (Input input = new Input(inputStream)) {
             Kryo kryo = createKryo();
             return kryo.readObject(input, SessionMetrics.class);
+        }
+    }
+
+    private void updateFailureMetrics(FailureMetrics failure) {
+        if (failure.getModuleId() != null && failure.getModule() == null) {
+            failure.module = getModule(failure.getModuleId());
+        }
+        if (failure.getMojoId() != null && failure.getMojo() == null) {
+            failure.mojo = getMojo(failure.getMojoId());
         }
     }
 
@@ -318,11 +348,12 @@ public class SessionMetrics extends NamedIdentityAware<String> {
         kryo.register(PluginMetrics.class, SERIALIZATION_ID + 24);
         kryo.register(TestMetrics.class, SERIALIZATION_ID + 25);
         kryo.register(LifecycleMetrics.class, SERIALIZATION_ID + 26);
+        kryo.register(FailureMetrics.class, SERIALIZATION_ID + 27);
 
-        kryo.register(Metric.class, SERIALIZATION_ID + 30);
-        kryo.register(Value.class, SERIALIZATION_ID + 31);
-        kryo.register(SeriesMemoryStore.class, SERIALIZATION_ID + 32);
-        kryo.register(DefaultSeries.class, SERIALIZATION_ID + 33);
+        kryo.register(Metric.class, SERIALIZATION_ID + 50);
+        kryo.register(Value.class, SERIALIZATION_ID + 51);
+        kryo.register(SeriesMemoryStore.class, SERIALIZATION_ID + 52);
+        kryo.register(DefaultSeries.class, SERIALIZATION_ID + 53);
 
         kryo.addDefaultSerializer(AtomicInteger.class, new DefaultSerializers.AtomicIntegerSerializer());
         kryo.addDefaultSerializer(AtomicLong.class, new DefaultSerializers.AtomicLongSerializer());

@@ -81,7 +81,6 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
             profilerMetrics.sessionMetrics = sessionMetrics;
             if (progressListener != null) progressListener.start();
         });
-
     }
 
     @Override
@@ -113,7 +112,9 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
                 MavenUtils.isMavenLoggerAvailable(), configuration.isVerbose(), configuration.isConsoleEnabled(),
                 configuration.isQuiet(), configuration.isProgress(), configuration.isPerformanceEnabled()
         );
-        registerListeners(session);
+        tracker.track("Register Listeners", t -> {
+            registerListeners(session);
+        });
         tracker.track("Start JVM Tracking", t -> {
             VirtualMachineMetrics.get().start();
         });

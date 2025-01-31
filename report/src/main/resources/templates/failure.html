@@ -3,14 +3,10 @@
 <body>
 
 <div th:fragment="failure">
-    <div th:if="${helper.hasFailures()}">
-        <div>
-            <span>Exception Class: </span><span th:text="${session.throwableClass}" class="text-primary-emphasis fw-bold"></span>
-            <span>, stack trace: </span>
-            <div th:text="${session.throwable}" class="bg-secondary-subtle" style="white-space: pre-wrap; font-family: monospace; font-size: smaller"></div>
-        </div>
+    <div th:if="${helper.hasProjectFailures()}">
+        <div th:replace="~{fragments/utils :: failures_details(${session.getProjectFailures()})}"></div>
     </div>
-    <div th:unless="${helper.hasFailures()}">
+    <div th:unless="${helper.hasProjectFailures()}">
         This build did not contain any failures.
     </div>
 </div>

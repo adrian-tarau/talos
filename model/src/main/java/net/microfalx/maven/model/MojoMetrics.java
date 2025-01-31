@@ -1,11 +1,11 @@
 package net.microfalx.maven.model;
 
 import net.microfalx.lang.ClassUtils;
-import net.microfalx.lang.ExceptionUtils;
-import net.microfalx.lang.Nameable;
+import net.microfalx.lang.NamedIdentityAware;
 import net.microfalx.maven.core.MavenUtils;
 import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.MojoExecution;
+import org.apache.maven.project.MavenProject;
 
 import java.time.Duration;
 import java.util.HashSet;
@@ -20,7 +20,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 /**
  * Holds metrics about Mojo execution.
  */
-public final class MojoMetrics implements Nameable {
+public final class MojoMetrics extends NamedIdentityAware<String> {
 
     private String name;
     private String className;
@@ -29,11 +29,12 @@ public final class MojoMetrics implements Nameable {
     private final AtomicInteger executionCount = new AtomicInteger(0);
     private final AtomicInteger failureCount = new AtomicInteger(0);
     private final AtomicLong durationNano = new AtomicLong(0);
-    private volatile String throwableClass;
-    private volatile String throwable;
+    private FailureMetrics failureMetrics;
 
     private static final ThreadLocal<Long> startTime = ThreadLocal.withInitial(System::nanoTime);
     private static final ThreadLocal<Long> endTime = new ThreadLocal<>();
+
+    private transient Mojo mojo;
 
     protected MojoMetrics() {
     }
@@ -41,12 +42,9 @@ public final class MojoMetrics implements Nameable {
     public MojoMetrics(Mojo mojo) {
         requireNonNull(mojo);
         this.className = ClassUtils.getName(mojo);
-        this.name = MavenUtils.getName(mojo);
-    }
-
-    @Override
-    public String getName() {
-        return name;
+        setId(MavenUtils.getId(mojo));
+        setName(MavenUtils.getName(mojo));
+        this.mojo = mojo;
     }
 
     public String getGoal() {
@@ -62,15 +60,18 @@ public final class MojoMetrics implements Nameable {
         goals.add(MavenUtils.getGoal(execution));
     }
 
-    public void stop(Throwable throwable) {
+    public void stop(MavenProject project, Throwable throwable) {
         endTime.set(System.nanoTime());
         if (throwable != null) {
-            this.throwable = ExceptionUtils.getStackTrace(throwable);
-            this.throwableClass = ClassUtils.getName(throwable);
+            this.failureMetrics = new FailureMetrics(project, mojo, null, throwable);
         }
         if (throwable != null) failureCount.incrementAndGet();
         durationNano.addAndGet(endTime.get() - startTime.get());
         executionCount.incrementAndGet();
+    }
+
+    public FailureMetrics getFailureMetrics() {
+        return failureMetrics;
     }
 
     public int getExecutionCount() {
