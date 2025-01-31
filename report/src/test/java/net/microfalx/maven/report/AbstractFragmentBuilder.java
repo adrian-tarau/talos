@@ -25,6 +25,13 @@ public abstract class AbstractFragmentBuilder {
         return session;
     }
 
+    protected final SessionMetrics createLargeMultiModuleProject() throws IOException {
+        Resource file = ClassPathResource.file("model/heimdall.metrics");
+        SessionMetrics session = SessionMetrics.load(file);
+        generateFailures("heimdall-infrastructure-core", session);
+        return session;
+    }
+
     private void generateFailures(String module, SessionMetrics session) {
         if (!GENERATE_FAILURES) return;
         session.getModule(module).setFailureMetrics(new FailureMetrics(null, null, null, new IOException("Problem")));

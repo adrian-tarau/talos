@@ -46,6 +46,23 @@ class ReportBuilderTest extends AbstractFragmentBuilder {
         open(resource);
     }
 
+    @Test
+    void largeMultiModule() throws IOException {
+        ReportBuilder builder = ReportBuilder.create(createLargeMultiModuleProject());
+        Resource resource = Resource.memory();
+        builder.build(resource);
+        Assertions.assertThat(resource.loadAsString()).contains("div");
+    }
+
+    @Test
+    void largeMultiModuleOpen() throws IOException {
+        ReportBuilder builder = ReportBuilder.create(createLargeMultiModuleProject());
+        File file = creaReportFile();
+        Resource resource = Resource.file(file);
+        builder.build(resource);
+        open(resource);
+    }
+
     private File creaReportFile() {
         return JvmUtils.getTemporaryFile("report_", ".html");
     }
