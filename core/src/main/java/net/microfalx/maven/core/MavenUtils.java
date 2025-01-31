@@ -13,7 +13,9 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 
 import java.time.Duration;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -372,11 +374,50 @@ public class MavenUtils {
         return prefix + ':' + execution.getGoal();
     }
 
+    /**
+     * Masks the value the name indicates a property which stores secrets.
+     * @param name the property name
+     * @param value the property value
+     * @return the original value or a masked one
+     */
+    public static String maskSecret(String name, String value) {
+        if (isSecret(name)) {
+            return SECRET_MASK;
+        } else {
+            return value;
+        }
+    }
+
+    /**
+     * Returns whether the name indicates a property which stores secrets.
+     *
+     * @param name the property name
+     * @return {@code true} if it stores a secret, {@code false} otherwise
+     */
+    public static boolean isSecret(String name) {
+        if (name == null) return false;
+        name = name.toLowerCase();
+        for (String secretName : secretNames) {
+            if (name.contains(secretName)) return true;
+        }
+        return false;
+    }
+
+    private static final Set<String> secretNames = new HashSet<>();
+    private static final String SECRET_MASK = "*********************";
 
     static {
         registerName("org.jacoco.maven.AgentMojo", "Jacoco Agent");
         registerName("org.jacoco.maven.ReportMojo", "Jacoco Report");
         registerName("org.apache.maven.plugin.resources.remote.ProcessRemoteResourcesMojo", "Remote Resources");
         registerName("org.apache.maven.plugin.surefire.SurefireMojo", "Unit Tests");
+    }
+
+    static {
+        secretNames.add("password");
+        secretNames.add("keypass");
+        secretNames.add("secret");
+        secretNames.add("login");
+        secretNames.add("gpg");
     }
 }

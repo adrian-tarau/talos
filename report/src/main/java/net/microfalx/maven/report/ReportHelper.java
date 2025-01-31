@@ -55,7 +55,7 @@ public class ReportHelper {
 
     public String toHtmlId(Object value) {
         if (value == null) return null;
-        return "#"+ObjectUtils.toString(value);
+        return "#" + ObjectUtils.toString(value);
     }
 
     public long getFailureCount() {
@@ -128,7 +128,7 @@ public class ReportHelper {
 
     public Collection<Property> getProperties() {
         List<Property> properties = session.getProject().getProperties().entrySet().stream()
-                .map(e -> new Property(e.getKey(), maskSecret(e.getKey(), e.getValue())))
+                .map(e -> new Property(e.getKey(), e.getValue()))
                 .collect(Collectors.toList());
         properties.sort(Comparator.comparing(Property::getName));
         return properties;
@@ -216,23 +216,6 @@ public class ReportHelper {
         } catch (IOException e) {
             return "#ERROR: " + ExceptionUtils.getRootCauseMessage(e);
         }
-    }
-
-    private static String maskSecret(String name, String value) {
-        if (isSecret(name)) {
-            return SECRET_MASK;
-        } else {
-            return value;
-        }
-    }
-
-    private static boolean isSecret(String name) {
-        if (name == null) return false;
-        name = name.toLowerCase();
-        for (String secretName : secretNames) {
-            if (name.contains(secretName)) return true;
-        }
-        return false;
     }
 
     public static class ProjectDetails {
@@ -371,9 +354,6 @@ public class ReportHelper {
         }
     }
 
-    private static final Set<String> secretNames = new HashSet<>();
-    private static final String SECRET_MASK = "*********************";
-
     static final long[] DURATION_BUCKETS = new long[]{
             1, 5, 10, 20, 50, 100, 200, 500, 1_000, 2_000, 5_000, 10_000, 20_000, 30_000, 60_000
     };
@@ -382,13 +362,5 @@ public class ReportHelper {
     static final String[] DURATION_BUCKET_NAMES = new String[]{
             "<1ms", "5ms", "10ms", "20ms", "50ms", "100ms", "200ms", "500ms", "1s", "2s", "5s", "10s", "20s", "30s", ">60s"
     };
-
-    static {
-        secretNames.add("password");
-        secretNames.add("keypass");
-        secretNames.add("secret");
-        secretNames.add("login");
-        secretNames.add("gpg");
-    }
 
 }

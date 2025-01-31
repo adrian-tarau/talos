@@ -2,6 +2,7 @@ package net.microfalx.maven.model;
 
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.UriUtils;
+import net.microfalx.maven.core.MavenUtils;
 import org.apache.maven.project.MavenProject;
 
 import java.net.URI;
@@ -46,6 +47,10 @@ public class Project extends Dependency {
         } catch (Exception e) {
             // ideally, the project home page should be valid, but if not, ignore any failure
         }
-        project.getProperties().forEach((k, v) -> properties.put(ObjectUtils.toString(k), ObjectUtils.toString(v)));
+        project.getProperties().forEach((k, v) -> {
+            String name = ObjectUtils.toString(k);
+            String value = ObjectUtils.toString(v);
+            properties.put(name, MavenUtils.maskSecret(name, value));
+        });
     }
 }
