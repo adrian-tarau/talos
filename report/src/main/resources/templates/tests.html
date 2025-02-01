@@ -4,14 +4,16 @@
 
 <div th:fragment="tests">
     <div class="container-fluid" th:if="${helper.hasTests()}">
-        <div class="row justify-content-start g-2">
-            <div class="col-6" id="tests_total"></div>
-            <div class="col-6" id="tests_failed"></div>
-        </div>
-        <div class="row justify-content-start g-2">
-            <div class="col-6" id="tests_error"></div>
-            <div class="col-6" id="tests_duration"></div>
-        </div>
+        <th:block th:if="${session.isMultiModule()}">
+            <div class="row justify-content-start g-2">
+                <div class="col-6" id="tests_total"></div>
+                <div class="col-6" id="tests_failed"></div>
+            </div>
+            <div class="row justify-content-start g-2">
+                <div class="col-6" id="tests_error"></div>
+                <div class="col-6" id="tests_duration"></div>
+            </div>
+        </th:block>
         <div class="row justify-content-start g-2">
             <div class="col-6" id="tests_failure_types"></div>
             <div class="col-6" id="tests_duration_distribution"></div>

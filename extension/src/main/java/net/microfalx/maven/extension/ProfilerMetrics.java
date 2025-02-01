@@ -10,7 +10,6 @@ import net.microfalx.maven.core.MavenLogger;
 import net.microfalx.maven.core.MavenTracker;
 import net.microfalx.maven.junit.SurefireTests;
 import net.microfalx.maven.model.*;
-import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.execution.MavenExecutionResult;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
@@ -23,6 +22,7 @@ import org.apache.maven.project.MavenProject;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.net.URI;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -362,7 +362,7 @@ public class ProfilerMetrics {
     }
 
     private void logNameValue(String name, String value) {
-        LOGGER.info(getIndentSpaces()+printNameValue(name, value));
+        LOGGER.info(getIndentSpaces() + printNameValue(name, value));
     }
 
     private void logNameValue(String name, String value, boolean highlight) {
@@ -426,8 +426,8 @@ public class ProfilerMetrics {
 
     private String getRepositoriesInfo() {
         return "Local: " + session.getLocalRepository().getBasedir() + ", Remote: " +
-               session.getRequest().getRemoteRepositories().stream().map(ArtifactRepository::getUrl)
-                       .collect(joining(", "));
+               net.microfalx.maven.core.MavenUtils.getRemoteRepositories(session).stream()
+                       .map(URI::toASCIIString).collect(joining(", "));
     }
 
     private String getData() {

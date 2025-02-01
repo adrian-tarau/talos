@@ -1,6 +1,7 @@
 package net.microfalx.maven.report;
 
 import net.microfalx.jvm.ServerMetrics;
+import net.microfalx.jvm.VirtualMachineMetrics;
 import net.microfalx.lang.*;
 import net.microfalx.maven.core.MavenUtils;
 import net.microfalx.maven.model.*;
@@ -32,8 +33,16 @@ public class ReportHelper {
         return FormatterUtils.formatBytes(value);
     }
 
+    public String formatPercent(Number value) {
+        return FormatterUtils.formatPercent(value);
+    }
+
     public String formatDuration(Duration duration) {
         return MavenUtils.formatDuration(duration, false, false);
+    }
+
+    public String formatNumber(Number number) {
+        return FormatterUtils.formatNumber(number);
     }
 
     public String toString(Object value) {
@@ -86,8 +95,28 @@ public class ReportHelper {
         return !session.getProjectFailures().isEmpty();
     }
 
-    public Long getAverageServerCpu() {
-        return (long) session.getServer().getAverage(ServerMetrics.CPU_TOTAL, Duration.ofDays(1)).orElse(0);
+    public double getAverageServerCpu() {
+        return session.getServerMetrics().getAverage(ServerMetrics.CPU_TOTAL, Duration.ofDays(1)).orElse(0);
+    }
+
+    public double getAverageServerMemory() {
+        return session.getServerMetrics().getAverage(ServerMetrics.MEMORY_USED, Duration.ofDays(1)).orElse(0);
+    }
+
+    public double getAverageServerLoad1() {
+        return session.getServerMetrics().getAverage(ServerMetrics.LOAD_1, Duration.ofDays(1)).orElse(0);
+    }
+
+    public double getAverageServerLoad5() {
+        return session.getServerMetrics().getAverage(ServerMetrics.LOAD_1, Duration.ofDays(1)).orElse(0);
+    }
+
+    public double getAverageServerLoad15() {
+        return session.getServerMetrics().getAverage(ServerMetrics.LOAD_1, Duration.ofDays(1)).orElse(0);
+    }
+
+    public double getAverageProcessCpu() {
+        return session.getVirtualMachineMetrics().getAverage(VirtualMachineMetrics.CPU_TOTAL, Duration.ofDays(1)).orElse(0);
     }
 
     public Collection<MojoMetrics> getMojos() {

@@ -61,7 +61,7 @@ public class Fragment implements Identifiable<String>, Nameable {
                 return "fa-solid fa-diagram-project";
             case TESTS:
                 return "fa-solid fa-clipboard-check";
-            case EXTENSION:
+            case EXTENSIONS:
                 return "fa-solid fa-plug";
             default:
                 return "fa-solid fa-notdef";
@@ -126,6 +126,11 @@ public class Fragment implements Identifiable<String>, Nameable {
         PLUGINS,
 
         /**
+         * Extension metrics (failures, timings, etc)
+         */
+        EXTENSIONS,
+
+        /**
          * Executed tests
          */
         TESTS,
@@ -134,11 +139,6 @@ public class Fragment implements Identifiable<String>, Nameable {
          * Performance metrics (CPU, Memory, etc)
          */
         PERFORMANCE,
-
-        /**
-         * Extension metrics (failures, timings, etc)
-         */
-        EXTENSION,
 
         /**
          * Information about environment (OS, Server, Processes)

@@ -5,10 +5,45 @@
 <div th:fragment="environment">
     <div class="container-fluid">
         <div class="row justify-content-start g-0">
-            <div class="col-4"></div>
-            <div class="col-8"></div>
+            <div class="col-4">Operating System</div>
+            <div class="col-8"><span th:text="${session.server.os.name}"></span><span class="ms-2" th:text="${session.server.os.version}"></span></div>
+        </div>
+        <div class="row justify-content-start g-0">
+            <div class="col-4">Hostname</div>
+            <div class="col-8"><span th:text="${session.server.hostName}"></span></div>
+        </div>
+        <div class="row justify-content-start g-0">
+            <div class="col-4">Java</div>
+            <div class="col-8"><span th:text="${session.virtualMachine.name}"></span></div>
+        </div>
+        <div class="row justify-content-start g-0">
+            <div class="col-4">Server</div>
+            <div class="col-8">
+                CPU: <span th:text="${helper.formatPercent(helper.getAverageServerCpu())}"></span>
+                (Cores: <span th:text="${session.server.cores}"></span>, Load: <span th:text="${helper.formatNumber(helper.getAverageServerLoad1())}"/> /
+                <span th:text="${helper.formatNumber(helper.getAverageServerLoad5())}"/> / <span th:text="${helper.formatNumber(helper.getAverageServerLoad15())}"/>)
+                , Memory: <span th:text="${helper.formatBytes(helper.getAverageServerMemory())}"/>
+            </div>
+        </div>
+        <div class="row justify-content-start g-0">
+            <div class="col-4">Process</div>
+            <div class="col-8">
+                CPU: <span th:text="${helper.formatPercent(helper.getAverageProcessCpu())}"></span>
+
+            </div>
         </div>
     </div>
+
+    <!--
+logNameValue("Operating System", os.getName() + " " + os.getVersion());
+        logNameValue("Java", virtualMachine.getName());
+        logNameValue("User Name", JvmUtils.getUserName() + "@" + server.getHostName());
+        logNameValue("Server", "CPU: " + formatPercent(serverMetrics.getAverageCpu()) + " (load: " +
+                               formatNumber(serverMetrics.getAverageLoad()) + ", cores " + server.getCores() + ")"
+                               + ", Memory: " + formatMemory(server.getMemoryActuallyUsed(), server.getMemoryTotal()));
+        logNameValue("Process", "CPU: " + formatPercent(virtualMachineMetrics.getAverageCpu())
+                                + ", Memory: " + formatMemory(virtualMachineMetrics.getMemoryAverage(), virtualMachineMetrics.getMemoryMaximum()));
+    -->
 </div>
 
 </body>

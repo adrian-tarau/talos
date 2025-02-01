@@ -2,11 +2,11 @@ package net.microfalx.maven.extension;
 
 import net.microfalx.jvm.ServerMetrics;
 import net.microfalx.jvm.VirtualMachineMetrics;
-import net.microfalx.lang.UriUtils;
 import net.microfalx.maven.core.MavenLogger;
 import net.microfalx.maven.core.MavenTracker;
 import net.microfalx.maven.core.MavenUtils;
 import net.microfalx.maven.junit.SurefireTests;
+import net.microfalx.maven.model.ExtensionMetrics;
 import net.microfalx.maven.model.SessionMetrics;
 import net.microfalx.maven.model.TestMetrics;
 import net.microfalx.maven.report.ReportBuilder;
@@ -15,7 +15,6 @@ import net.microfalx.resource.ResourceUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.AbstractMavenLifecycleParticipant;
 import org.apache.maven.MavenExecutionException;
-import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.execution.MavenExecutionRequest;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugins.surefire.report.ReportTestCase;
@@ -79,6 +78,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
         tracker.track("Project Read", t -> {
             sessionMetrics = new SessionMetrics(session).setStartTime(startTime);
             profilerMetrics.sessionMetrics = sessionMetrics;
+            loadProjectSettings(session);
             if (progressListener != null) progressListener.start();
         });
     }
@@ -121,6 +121,18 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
         tracker.track("Start Server Tracking", t -> {
             ServerMetrics.get().start();
         });
+    }
+
+    private void loadProjectSettings(MavenSession session) {
+        MavenProject project = session.getTopLevelProject();
+        if (project != null) {
+            loadProjectExtensions(project);
+        }
+    }
+
+    private void loadProjectExtensions(MavenProject project) {
+        sessionMetrics.setExtensions(project.getBuildExtensions().stream()
+                .map(ExtensionMetrics::new).collect(Collectors.toList()));
     }
 
     private void registerListeners(MavenSession session) {
@@ -170,8 +182,10 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
     }
 
     private void updateJvm(MavenSession session) {
-        sessionMetrics.setJvm(VirtualMachineMetrics.get().getStore());
-        sessionMetrics.setServer(ServerMetrics.get().getStore());
+        sessionMetrics.setVirtualMachineMetrics(VirtualMachineMetrics.get().getStore());
+        sessionMetrics.setVirtualMachine(VirtualMachineMetrics.get().getLast());
+        sessionMetrics.setServerMetrics(ServerMetrics.get().getStore());
+        sessionMetrics.setServer(ServerMetrics.get().getLast());
     }
 
     private void updateTests(MavenSession session) {
@@ -190,8 +204,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
 
     private void updateRepositories(MavenSession session) {
         sessionMetrics.setLocalRepository(parseUri(session.getLocalRepository().getBasedir()));
-        sessionMetrics.setRemoteRepositories(session.getRequest().getRemoteRepositories().stream().map(ArtifactRepository::getUrl)
-                .map(UriUtils::parseUri).collect(Collectors.toList()));
+        sessionMetrics.setRemoteRepositories(MavenUtils.getRemoteRepositories(session));
     }
 
     private TestMetrics getTestMetrics(MavenProject project, ReportTestCase testCase) {
@@ -223,9 +236,9 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
             LOGGER.error("Failed to generate build report", e);
         }
         this.report = configuration.getTargetFile("build.report.html", true);
-        if (configuration.isConsoleEnabled()) {
+        if (configuration.isConsoleEnabled() && configuration.isVerbose()) {
             mavenLogger.info("");
-            mavenLogger.info("HTML report available at " + ResourceUtils.toFile(this.report).getAbsolutePath());
+            mavenLogger.info("The HTML report available is at " + ResourceUtils.toFile(this.report).getAbsolutePath());
         }
     }
 

@@ -27,4 +27,10 @@ class MavenUtilsTest {
         assertEquals("abcdef", MavenUtils.leftPad("abcdef", 5));
     }
 
+    @Test
+    void maskSecret() {
+         assertEquals("*********************", MavenUtils.maskSecret("password", "p1"));
+         assertEquals("http://secret.domain/path?q1=1#a", MavenUtils.maskSecret("url", "http://maven.apache.org/path?q1=1#a"));
+    }
+
 }

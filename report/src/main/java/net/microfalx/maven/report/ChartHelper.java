@@ -125,10 +125,10 @@ public class ChartHelper {
 
     public AreaChart<Long, Float> getServerCpu(String id, Integer width) {
         AreaChart<Long, Float> chart = new AreaChart<>(id, "Server / CPU");
-        chart.add(convert("System", session.getServer().get(ServerMetrics.CPU_SYSTEM)));
-        chart.add(convert("User", session.getServer().get(ServerMetrics.CPU_USER)));
-        chart.add(convert("Nice", session.getServer().get(ServerMetrics.CPU_NICE)));
-        chart.add(convert("I/O Wait", session.getServer().get(ServerMetrics.CPU_IO_WAIT)));
+        chart.add(convert("System", session.getServerMetrics().get(ServerMetrics.CPU_SYSTEM)));
+        chart.add(convert("User", session.getServerMetrics().get(ServerMetrics.CPU_USER)));
+        chart.add(convert("Nice", session.getServerMetrics().get(ServerMetrics.CPU_NICE)));
+        chart.add(convert("I/O Wait", session.getServerMetrics().get(ServerMetrics.CPU_IO_WAIT)));
         chart.setStacked(true);
         chart.getYaxis().setUnit(Unit.PERCENT);
         return chart;
@@ -136,16 +136,16 @@ public class ChartHelper {
 
     public AreaChart<Long, Float> getServerMemory(String id, Integer width) {
         AreaChart<Long, Float> chart = new AreaChart<>(id, "Server / Memory");
-        chart.add(convert("Maximum", session.getServer().get(ServerMetrics.MEMORY_MAX)));
-        chart.add(convert("Used", session.getServer().get(ServerMetrics.MEMORY_USED)));
+        chart.add(convert("Maximum", session.getServerMetrics().get(ServerMetrics.MEMORY_MAX)));
+        chart.add(convert("Used", session.getServerMetrics().get(ServerMetrics.MEMORY_USED)));
         chart.getYaxis().setUnit(Unit.BYTE);
         return chart;
     }
 
     public AreaChart<Long, Float> getProcessCpu(String id, Integer width) {
         AreaChart<Long, Float> chart = new AreaChart<>(id, "Process / CPU");
-        chart.add(convert("System", session.getJvm().get(VirtualMachineMetrics.CPU_SYSTEM)));
-        chart.add(convert("User", session.getJvm().get(VirtualMachineMetrics.CPU_USER)));
+        chart.add(convert("System", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.CPU_SYSTEM)));
+        chart.add(convert("User", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.CPU_USER)));
         chart.setStacked(true);
         chart.getYaxis().setUnit(Unit.PERCENT);
         return chart;
@@ -153,8 +153,8 @@ public class ChartHelper {
 
     public AreaChart<Long, Float> getProcessMemory(String id, Integer width) {
         AreaChart<Long, Float> chart = new AreaChart<>(id, "Process / Memory");
-        chart.add(convert("Heap", session.getJvm().get(VirtualMachineMetrics.MEMORY_HEAP_USED)));
-        chart.add(convert("Non-Heap", session.getJvm().get(VirtualMachineMetrics.MEMORY_NON_HEAP_USED)));
+        chart.add(convert("Heap", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.MEMORY_HEAP_USED)));
+        chart.add(convert("Non-Heap", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.MEMORY_NON_HEAP_USED)));
         chart.setStacked(true);
         chart.getYaxis().setUnit(Unit.BYTE);
         return chart;

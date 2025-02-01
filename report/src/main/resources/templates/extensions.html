@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="extensions">
+    <table class="table">
+        <thead class="table-light">
+        <tr>
+            <th scope="col">Group Id</th>
+            <th scope="col">Artifact Id</th>
+            <th scope="col">Version</th>
+        </tr>
+        </thead>
+        <tbody>
+            <tr th:each="projectDetails : ${session.getExtensions()}">
+                <td th:text="${projectDetails.project.groupId}"></td>
+                <td th:text="${projectDetails.project.artifactId}"></td>
+                <td th:text="${projectDetails.project.version}"></td>
+            </tr>
+        </tbody>
+    </table>
+    <div th:if="${helper.hasExtensionFailures()}">
+        <h4 class="pt-2">Failures</h4>
+        <div th:replace="~{fragments/utils :: failures_details(${session.getExtensionFailures()})}"></div>
+    </div>
+</div>
+
+</body>
+</html>

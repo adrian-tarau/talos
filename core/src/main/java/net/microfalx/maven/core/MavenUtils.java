@@ -12,10 +12,9 @@ import org.apache.maven.project.MavenProject;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 
+import java.net.URI;
 import java.time.Duration;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -365,6 +364,7 @@ public class MavenUtils {
      * @return a non-null string
      */
     public static String getGoal(MojoExecution execution) {
+        requireNonNull(execution);
         MojoDescriptor descriptor = execution.getMojoDescriptor();
         String prefix = descriptor.getPluginDescriptor().getGoalPrefix();
         if (StringUtils.isEmpty(prefix)) {
@@ -375,13 +375,30 @@ public class MavenUtils {
     }
 
     /**
+     * Returns the remote repositories.
+     *
+     * @param session the session
+     * @return a non-null collection
+     */
+    public static Collection<URI> getRemoteRepositories(MavenSession session) {
+        requireNonNull(session);
+        /*return session.getRequest().getRemoteRepositories().stream().map(ArtifactRepository::getUrl)
+                .map(UriUtils::parseUri).collect(Collectors.toList());*/
+        return new ArrayList<>(Arrays.asList(UriUtils.parseUri("https://repo.maven.apache.org/maven2")));
+    }
+
+    /**
      * Masks the value the name indicates a property which stores secrets.
-     * @param name the property name
+     *
+     * @param name  the property name
      * @param value the property value
      * @return the original value or a masked one
      */
     public static String maskSecret(String name, String value) {
-        if (isSecret(name)) {
+        if (name == null || value == null) return null;
+        if (hasHost(value)) {
+            return maskUri(value);
+        } else if (isSecret(name)) {
             return SECRET_MASK;
         } else {
             return value;
@@ -401,6 +418,23 @@ public class MavenUtils {
             if (name.contains(secretName)) return true;
         }
         return false;
+    }
+
+    private static String maskUri(String uri) {
+        if (hasHost(uri)) {
+            try {
+                URI parsedUri = UriUtils.parseUri(uri);
+                return new URI(parsedUri.getScheme(), "secret.domain", parsedUri.getPath(), parsedUri.getQuery(), parsedUri.getFragment()).toASCIIString();
+            } catch (Exception e) {
+                return "Error: Invalid URI";
+            }
+        } else {
+            return uri;
+        }
+    }
+
+    private static boolean hasHost(String uri) {
+        return uri.contains("://");
     }
 
     private static final Set<String> secretNames = new HashSet<>();

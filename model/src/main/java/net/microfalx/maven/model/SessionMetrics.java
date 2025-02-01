@@ -5,6 +5,8 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.serializers.DefaultSerializers;
 import com.esotericsoftware.kryo.serializers.OptionalSerializers;
+import net.microfalx.jvm.model.Process;
+import net.microfalx.jvm.model.*;
 import net.microfalx.lang.IOUtils;
 import net.microfalx.lang.NamedIdentityAware;
 import net.microfalx.metrics.*;
@@ -44,6 +46,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     private final Collection<DependencyMetrics> dependencies = new ArrayList<>();
     private final Collection<MojoMetrics> mojos = new ArrayList<>();
     private final Collection<PluginMetrics> plugins = new ArrayList<>();
+    private final Collection<ExtensionMetrics> extensions = new ArrayList<>();
     private final Collection<TestMetrics> tests = new ArrayList<>();
     private final Collection<LifecycleMetrics> lifecycles = new ArrayList<>();
     private final Collection<FailureMetrics> extensionFailures = new ArrayList<>();
@@ -59,8 +62,10 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     private transient Map<String, ProjectMetrics> modulesById;
     private transient Map<String, MojoMetrics> mojosById;
 
-    private SeriesStore jvm = SeriesStore.memory();
-    private SeriesStore server = SeriesStore.memory();
+    private SeriesStore virtualMachineMetrics = SeriesStore.memory();
+    private SeriesStore serverMetrics = SeriesStore.memory();
+    private VirtualMachine virtualMachine;
+    private Server server;
 
     private String logs;
 
@@ -220,6 +225,16 @@ public class SessionMetrics extends NamedIdentityAware<String> {
         this.plugins.addAll(plugins);
     }
 
+
+    public Collection<ExtensionMetrics> getExtensions() {
+        return unmodifiableCollection(extensions);
+    }
+
+    public void setExtensions(Collection<ExtensionMetrics> extensions) {
+        requireNonNull(extensions);
+        this.extensions.addAll(extensions);
+    }
+
     public Collection<TestMetrics> getTests() {
         return unmodifiableCollection(tests);
     }
@@ -261,19 +276,35 @@ public class SessionMetrics extends NamedIdentityAware<String> {
         this.extensionFailures.add(failure);
     }
 
-    public SeriesStore getJvm() {
-        return jvm;
+    public SeriesStore getVirtualMachineMetrics() {
+        return virtualMachineMetrics;
     }
 
-    public void setJvm(SeriesStore jvm) {
-        this.jvm = jvm;
+    public void setVirtualMachineMetrics(SeriesStore virtualMachineMetrics) {
+        this.virtualMachineMetrics = virtualMachineMetrics;
     }
 
-    public SeriesStore getServer() {
+    public SeriesStore getServerMetrics() {
+        return serverMetrics;
+    }
+
+    public void setServerMetrics(SeriesStore serverMetrics) {
+        this.serverMetrics = serverMetrics;
+    }
+
+    public VirtualMachine getVirtualMachine() {
+        return virtualMachine;
+    }
+
+    public void setVirtualMachine(VirtualMachine virtualMachine) {
+        this.virtualMachine = virtualMachine;
+    }
+
+    public Server getServer() {
         return server;
     }
 
-    public void setServer(SeriesStore server) {
+    public void setServer(Server server) {
         this.server = server;
     }
 
@@ -346,14 +377,34 @@ public class SessionMetrics extends NamedIdentityAware<String> {
         kryo.register(DependencyMetrics.class, SERIALIZATION_ID + 22);
         kryo.register(MojoMetrics.class, SERIALIZATION_ID + 23);
         kryo.register(PluginMetrics.class, SERIALIZATION_ID + 24);
-        kryo.register(TestMetrics.class, SERIALIZATION_ID + 25);
-        kryo.register(LifecycleMetrics.class, SERIALIZATION_ID + 26);
-        kryo.register(FailureMetrics.class, SERIALIZATION_ID + 27);
+        kryo.register(ExtensionMetrics.class, SERIALIZATION_ID + 25);
+        kryo.register(TestMetrics.class, SERIALIZATION_ID + 26);
+        kryo.register(LifecycleMetrics.class, SERIALIZATION_ID + 27);
+        kryo.register(FailureMetrics.class, SERIALIZATION_ID + 28);
 
         kryo.register(Metric.class, SERIALIZATION_ID + 50);
         kryo.register(Value.class, SERIALIZATION_ID + 51);
         kryo.register(SeriesMemoryStore.class, SERIALIZATION_ID + 52);
         kryo.register(DefaultSeries.class, SERIALIZATION_ID + 53);
+
+        kryo.register(Process.class, SERIALIZATION_ID + 60);
+        kryo.register(VirtualMachine.class, SERIALIZATION_ID + 61);
+        kryo.register(MemoryPool.class, SERIALIZATION_ID + 62);
+        kryo.register(MemoryPool.Type.class, SERIALIZATION_ID + 63);
+        kryo.register(BufferPool.class, SERIALIZATION_ID + 64);
+        kryo.register(BufferPool.Type.class, SERIALIZATION_ID + 65);
+        kryo.register(GarbageCollection.class, SERIALIZATION_ID + 66);
+        kryo.register(GarbageCollection.Type.class, SERIALIZATION_ID + 67);
+        kryo.register(RuntimeInformation.class, SERIALIZATION_ID + 68);
+        kryo.register(ThreadInformation.class, SERIALIZATION_ID + 69);
+        kryo.register(Thread.State.class, SERIALIZATION_ID + 70);
+        kryo.register(ThreadDump.class, SERIALIZATION_ID + 71);
+        kryo.register(ThreadInformation.class, SERIALIZATION_ID + 72);
+
+        kryo.register(Server.class, SERIALIZATION_ID + 80);
+        kryo.register(Os.class, SERIALIZATION_ID + 81);
+        kryo.register(FileSystem.class, SERIALIZATION_ID + 82);
+        kryo.register(FileSystem.Type.class, SERIALIZATION_ID + 83);
 
         kryo.addDefaultSerializer(AtomicInteger.class, new DefaultSerializers.AtomicIntegerSerializer());
         kryo.addDefaultSerializer(AtomicLong.class, new DefaultSerializers.AtomicLongSerializer());

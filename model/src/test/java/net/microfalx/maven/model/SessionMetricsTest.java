@@ -1,5 +1,7 @@
 package net.microfalx.maven.model;
 
+import net.microfalx.jvm.model.Server;
+import net.microfalx.jvm.model.VirtualMachine;
 import net.microfalx.lang.StringUtils;
 import org.apache.maven.execution.DefaultMavenExecutionRequest;
 import org.apache.maven.execution.DefaultMavenExecutionResult;
@@ -39,6 +41,8 @@ class SessionMetricsTest {
     protected final SessionMetrics create() {
         SessionMetrics session = new SessionMetrics(createSession("Single"));
         session.setArtifacts(List.of(createArtifact()));
+        session.setVirtualMachine(VirtualMachine.get());
+        session.setServer(Server.get());
         return session;
     }
 
