@@ -26,8 +26,8 @@ public class FailureMetrics extends NamedIdentityAware<String> {
     private String rootCauseMessage;
     private final ZonedDateTime timestamp = ZonedDateTime.now();
 
-    ProjectMetrics module;
-    MojoMetrics mojo;
+    transient ProjectMetrics module;
+    transient MojoMetrics mojo;
 
     protected FailureMetrics() {
     }

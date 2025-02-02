@@ -2,6 +2,29 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 
+<div th:fragment="tests_table(tests)">
+    <table class="table table-hover datatable">
+        <thead class="table-light">
+        <tr>
+            <th scope="col">Module</th>
+            <th scope="col">Class</th>
+            <th scope="col">Test</th>
+            <th scope="col" class="text-center">Failed</th>
+            <th scope="col">Duration</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="test : ${tests}">
+            <td><span th:text="${test.module.name}"></span></td>
+            <td><span th:text="${test.className}"></span></td>
+            <td><span th:text="${test.name}"></span></td>
+            <td class="text-center"><span th:replace="~{fragments/utils :: check(${test.failureOrError})}"></span></td>
+            <td><span th:text="${helper.formatDuration(test.duration)}"></span></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
 <div th:fragment="tests">
     <div class="container-fluid" th:if="${helper.hasTests()}">
         <th:block th:if="${session.isMultiModule()}">
@@ -19,6 +42,8 @@
             <div class="col-6" id="tests_duration_distribution"></div>
         </div>
     </div>
+    <div th:unless="${session.verbose}" th:replace="~{fragments/utils :: alert_info('Only the tests that have failed will be displayed. Enable <i>verbose</i> option to see all the tests', null)}"></div>
+    <div th:replace="~{ :: tests_table(${helper.getTests(!session.verbose)})}"></div>
     <span th:unless="${helper.hasTests()}">This build did not contain any tests information.</span>
 </div>
 

@@ -123,6 +123,14 @@ public class ReportHelper {
         return session.getVirtualMachineMetrics().getAverage(VirtualMachineMetrics.CPU_TOTAL, Duration.ofDays(1)).orElse(0);
     }
 
+    public Collection<TestMetrics> getTests(boolean onlyFailing) {
+        return session.getTests().stream()
+                .filter(testMetrics -> filter(testMetrics, onlyFailing))
+                .sorted(Comparator.comparing(TestMetrics::getModuleId).thenComparing(TestMetrics::getClassName)
+                        .thenComparing(TestMetrics::getName))
+                .collect(Collectors.toList());
+    }
+
     public Collection<MojoMetrics> getMojos() {
         List<MojoMetrics> mojos = new ArrayList<>(session.getMojos());
         mojos.sort(Comparator.comparing(MojoMetrics::getDuration).reversed());
@@ -213,7 +221,7 @@ public class ReportHelper {
         if (testDetails != null) return testDetails;
         Map<String, TestDetails> testDetails = new HashMap<>();
         for (TestMetrics testMetrics : session.getTests()) {
-            TestDetails tests = testDetails.computeIfAbsent(testMetrics.getModule(), s -> new TestDetails(s, session.getModule(s).getName()));
+            TestDetails tests = testDetails.computeIfAbsent(testMetrics.getModuleId(), s -> new TestDetails(s, session.getModule(s).getName()));
             tests.total++;
             tests.duration = tests.duration.plus(Duration.ofMillis((long) (testMetrics.getTime() * 1000L)));
             if (testMetrics.isFailure()) tests.failed++;
@@ -270,6 +278,10 @@ public class ReportHelper {
 
     private boolean filter(DependencyMetrics dependencyMetrics, boolean transitive) {
         return transitive || !dependencyMetrics.isTransitive();
+    }
+
+    private boolean filter(TestMetrics testMetrics, boolean onlyFailing) {
+        return !onlyFailing || testMetrics.isFailureOrError();
     }
 
     private static String getDomain(String groupId) {

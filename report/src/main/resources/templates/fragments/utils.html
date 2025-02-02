@@ -51,5 +51,17 @@
     </table>
 </div>
 
+<div th:fragment="alert_info(message, title)" class="alert alert-info" role="alert">
+    <div class="d-flex">
+        <div class="pe-2">
+            <i class="fa-solid fa-circle-info"></i>
+        </div>
+        <div>
+            <h4 class="alert-title" th:if="${!#strings.isEmpty(title)}" th:text="${title}"></h4>
+            <div class="text-secondary" th:utext="${message}"></div>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

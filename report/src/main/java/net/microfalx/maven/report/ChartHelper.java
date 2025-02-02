@@ -161,7 +161,7 @@ public class ChartHelper {
     }
 
     public TreeMapChart<Integer> getDependenciesCountTreeMapChart(String id, Integer width) {
-        TreeMapChart<Integer> chart = new TreeMapChart<>(id, "Count");
+        TreeMapChart<Integer> chart = new TreeMapChart<>(id, "Dependency Count By Group");
         chart.setWidth(width);
         chart.setHeight(500);
         chart.getLegend().setShow(false);
@@ -170,7 +170,7 @@ public class ChartHelper {
     }
 
     public TreeMapChart<Long> getDependenciesSizeTreeMapChart(String id, Integer width) {
-        TreeMapChart<Long> chart = new TreeMapChart<>(id, "Size");
+        TreeMapChart<Long> chart = new TreeMapChart<>(id, "Dependencies Size By Group");
         chart.setWidth(width);
         chart.setHeight(500);
         chart.getLegend().setShow(false);

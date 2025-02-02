@@ -8,19 +8,9 @@
         <span th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
     </h3>
 
-    <div class="alert alert-info" role="alert" th:unless="${session.verbose}">
-        <div class="d-flex">
-            <div class="pe-2">
-                <i class="fa-solid fa-circle-info"></i>
-            </div>
-            <div>
-                <!--h4 class="alert-title">Did you know?</h4-->
-                <div class="text-secondary">Artifacts will only be displayed if they have spent a significant amount of time in the repository. Enable <i>verbose</i> option to see all the artifacts</div>
-            </div>
-        </div>
-    </div>
+    <div th:unless="${session.verbose}" th:replace="~{fragments/utils :: alert_info('Artifacts will only be shown if they take significant time to resolve. Enable <i>verbose</i> option to see all the artifacts', null)}"></div>
 
-    <table class="table table-hover">
+    <table class="table table-hover datatable">
         <thead class="table-light">
         <tr>
             <th scope="col" rowspan="2">Group Id</th>

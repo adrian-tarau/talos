@@ -44,7 +44,7 @@
     <div class="container-fluid">
         <div class="row justify-content-start g-0">
             <div class="col-8">
-                <table class="table table-hover">
+                <table class="table table-hover datatable">
                     <thead class="table-light">
                     <tr>
                         <th scope="col">Name</th>
@@ -69,7 +69,7 @@
         <span class="text-primary-emphasis fw-bold"
               th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> Modules</span>
     </h3>
-    <table class="table table-hover">
+    <table class="table table-hover datatable">
         <thead class="table-light">
         <tr>
             <th scope="col">Name</th>
@@ -104,7 +104,7 @@
     <div class="container-fluid" th:if="${helper.hasTests()}">
         <div class="row justify-content-start g-0">
             <div class="col-6">
-                <table class="table table-hover">
+                <table class="table table-hover datatable">
                     <thead class="table-light">
                     <tr>
                         <th scope="col">Module</th>
@@ -142,7 +142,7 @@
         <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(mojos.size(),0)}"></span><span> Tasks executed in </span>
         <span class="text-primary-emphasis fw-bold" th:text="${helper.getBuildTime()}"></span>
     </h3>
-    <table class="table table-hover">
+    <table class="table table-hover datatable">
         <thead class="table-light">
         <tr>
             <th scope="col" rowspan="2" class="align-top">Name</th>
@@ -179,7 +179,7 @@
         <span class="text-primary-emphasis fw-bold"
               th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
     </h3>
-    <table class="table table-hover">
+    <table class="table table-hover datatable">
         <thead class="table-light">
         <tr>
             <th scope="col">Group Id</th>
@@ -206,7 +206,7 @@
         <span class="text-primary-emphasis fw-bold"
               th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
     </h3>
-    <table class="table table-hover">
+    <table class="table table-hover datatable">
         <thead class="table-light">
         <tr>
             <th scope="col">Group Id</th>

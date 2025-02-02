@@ -3,47 +3,46 @@ package net.microfalx.maven.model;
 import net.microfalx.lang.Hashing;
 import net.microfalx.lang.NamedIdentityAware;
 
+import java.time.Duration;
 import java.util.StringJoiner;
 
+import static java.time.Duration.ofMillis;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 public class TestMetrics extends NamedIdentityAware<String> {
 
+    private String moduleId;
     private String className;
-
     private float time;
-
     private String failureMessage;
-
     private String failureType;
-
     private String failureErrorLine;
-
     private String failureDetail;
-
-    private String module;
-
     private boolean failure;
-
     private boolean error;
-
     private boolean skipped;
+
+    transient ProjectMetrics module;
 
     protected TestMetrics() {
     }
 
-    public TestMetrics(String module, String className, String name) {
-        requireNonNull(module);
+    public TestMetrics(String moduleId, String className, String name) {
+        requireNonNull(moduleId);
         requireNonNull(className);
         requireNonNull(name);
-        this.module = module;
+        this.moduleId = moduleId;
         this.className = className;
         setName(name);
         Hashing hashing = Hashing.create();
-        hashing.update(module);
+        hashing.update(moduleId);
         hashing.update(className);
         hashing.update(name);
         setId(hashing.asString());
+    }
+
+    public ProjectMetrics getModule() {
+        return module;
     }
 
     public String getClassName() {
@@ -57,6 +56,10 @@ public class TestMetrics extends NamedIdentityAware<String> {
 
     public float getTime() {
         return time;
+    }
+
+    public Duration getDuration() {
+        return ofMillis((long) (time * 1000L));
     }
 
     public TestMetrics setTime(float time) {
@@ -100,8 +103,8 @@ public class TestMetrics extends NamedIdentityAware<String> {
         return this;
     }
 
-    public String getModule() {
-        return module;
+    public String getModuleId() {
+        return moduleId;
     }
 
     public boolean isFailureOrError() {
@@ -145,7 +148,7 @@ public class TestMetrics extends NamedIdentityAware<String> {
                 .add("failureType='" + failureType + "'")
                 .add("failureErrorLine='" + failureErrorLine + "'")
                 .add("failureDetail='" + failureDetail + "'")
-                .add("module='" + module + "'")
+                .add("module='" + moduleId + "'")
                 .add("failure=" + failure)
                 .add("error=" + error)
                 .add("skipped=" + skipped)

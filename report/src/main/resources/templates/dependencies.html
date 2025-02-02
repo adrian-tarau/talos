@@ -4,7 +4,7 @@
 
 <div th:fragment="dependencies">
     <h3 class="border-top  mt-3">
-        <span th:text="${#numbers.formatInteger(helper.getDependencies(true).size(),0)}"></span><span> dependencies (including transitive) resolved in </span>
+        <span th:text="${#numbers.formatInteger(helper.getDependencies(true).size(),0)}"></span><span> dependencies (including transitive dependencies) resolved in </span>
         <span th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
     </h3>
     <div class="container-fluid">
@@ -13,8 +13,7 @@
             <div class="col-6" id="dependencies_size"></div>
         </div>
     </div>
-    <div id="dependencies_by_domain" style="max-height: 400px"></div>
-    <table class="table table-hover">
+    <table class="table table-hover datatable">
         <thead class="table-light">
         <tr>
             <th scope="col">Group Id</th>

@@ -69,6 +69,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     private Server server;
 
     private String logs;
+    private boolean testsUpdated;
 
     protected SessionMetrics() {
     }
@@ -246,6 +247,10 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     }
 
     public Collection<TestMetrics> getTests() {
+        if (!testsUpdated) {
+            tests.forEach(this::updateTestMetrics);
+            testsUpdated = true;
+        }
         return unmodifiableCollection(tests);
     }
 
@@ -371,6 +376,12 @@ public class SessionMetrics extends NamedIdentityAware<String> {
         }
         if (failure.getMojoId() != null && failure.getMojo() == null) {
             failure.mojo = getMojo(failure.getMojoId());
+        }
+    }
+
+    private void updateTestMetrics(TestMetrics test) {
+        if (test.getModuleId() != null && test.getModule() == null) {
+            test.module = getModule(test.getModuleId());
         }
     }
 
