@@ -1,5 +1,6 @@
 package net.microfalx.maven.model;
 
+import net.microfalx.lang.TimeUtils;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 
@@ -142,6 +143,11 @@ public final class ArtifactMetrics extends Dependency {
     public void metadataDownloadStop(Throwable throwable) {
         metadataDownloadEndTime.set(nanoTime());
         metadataDownloadDurationSum.addAndGet(metadataDownloadStartTime.get() - metadataDownloadStartTime.get());
+    }
+
+    public Duration getDuration() {
+        return TimeUtils.sum(getArtifactResolveDuration(), getArtifactInstallDuration(), getArtifactDeployDuration(),
+                getMetadataResolveDuration(), getMetadataDownloadDuration());
     }
 
     public Duration getArtifactResolveDuration() {

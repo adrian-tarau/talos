@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="dependencies">
+    <h3 class="border-top  mt-3">
+        <span th:text="${#numbers.formatInteger(helper.getDependencies(true).size(),0)}"></span><span> dependencies (including transitive) resolved in </span>
+        <span th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
+    </h3>
+    <div class="container-fluid">
+        <div class="row justify-content-start g-2">
+            <div class="col-6" id="dependencies_count"></div>
+            <div class="col-6" id="dependencies_size"></div>
+        </div>
+    </div>
+    <div id="dependencies_by_domain" style="max-height: 400px"></div>
+    <table class="table table-hover">
+        <thead class="table-light">
+        <tr>
+            <th scope="col">Group Id</th>
+            <th scope="col">Artifact Id</th>
+            <th scope="col">Version</th>
+            <th scope="col">Type</th>
+            <th scope="col">Size</th>
+            <th scope="col">Scope</th>
+            <th scope="col" class="text-center">Optional</th>
+            <th scope="col" class="text-center">Transitive</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="dependency : ${helper.getDependencies(true)}">
+            <td><span th:text="${dependency.groupId}"></span></td>
+            <td><span th:text="${dependency.artifactId}"></span></td>
+            <td><span th:text="${dependency.version}"></span></td>
+            <td><span th:text="${dependency.type}"></span></td>
+            <td><span th:text="${helper.formatBytes(dependency.size)}"></span></td>
+            <td><span th:text="${dependency.scope}"></span></td>
+            <td class="text-center"><span th:replace="~{fragments/utils :: check(${dependency.optional})}"></span></td>
+            <td class="text-center"><span th:replace="~{fragments/utils :: check(${dependency.transitive})}"></span></td>
+        </tr>
+        </tbody>
+    </table>
+    
+</div>
+
+</body>
+</html>

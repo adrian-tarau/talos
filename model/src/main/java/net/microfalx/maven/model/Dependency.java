@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.StringJoiner;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.StringUtils.defaultIfEmpty;
 import static net.microfalx.lang.StringUtils.toIdentifier;
 
 /**
@@ -16,6 +17,11 @@ public class Dependency extends NamedIdentityAware<String> {
     private String groupId;
     private String artifactId;
     private String version;
+    private String type = "jar";
+    private String scope = "compile";
+    private boolean optional;
+
+    private boolean transitive;
 
     protected Dependency() {
     }
@@ -40,6 +46,42 @@ public class Dependency extends NamedIdentityAware<String> {
 
     public final String getVersion() {
         return version;
+    }
+
+    public boolean isTransitive() {
+        return transitive;
+    }
+
+    public Dependency setTransitive(boolean transitive) {
+        this.transitive = transitive;
+        return this;
+    }
+
+    public String getScope() {
+        return scope;
+    }
+
+    public Dependency setScope(String scope) {
+        this.scope = defaultIfEmpty(scope, "compile");
+        return this;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public Dependency setType(String type) {
+        this.type = defaultIfEmpty(type, "jar");
+        return this;
+    }
+
+    public boolean isOptional() {
+        return optional;
+    }
+
+    public Dependency setOptional(boolean optional) {
+        this.optional = optional;
+        return this;
     }
 
     @Override

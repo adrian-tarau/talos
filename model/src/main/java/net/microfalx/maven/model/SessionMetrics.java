@@ -54,6 +54,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     private final Collection<String> profiles = new ArrayList<>();
     private final Collection<String> goals = new ArrayList<>();
     private boolean offline = false;
+    private boolean verbose;
     private int dop;
 
     private URI localRepository;
@@ -74,7 +75,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
 
     public SessionMetrics(MavenSession session) {
         requireNonNull(session);
-        this.project = new Project(session.getTopLevelProject());
+        this.project = new Project(session.getTopLevelProject(), true);
         setName(project.getName());
         setDescription(project.getDescription());
         MavenExecutionRequest request = session.getRequest();
@@ -144,6 +145,15 @@ public class SessionMetrics extends NamedIdentityAware<String> {
 
     public int getDop() {
         return dop;
+    }
+
+    public boolean isVerbose() {
+        return verbose;
+    }
+
+    public SessionMetrics setVerbose(boolean verbose) {
+        this.verbose = verbose;
+        return this;
     }
 
     public URI getLocalRepository() {

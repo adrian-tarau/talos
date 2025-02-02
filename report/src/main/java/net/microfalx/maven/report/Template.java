@@ -114,7 +114,7 @@ public class Template implements Nameable {
             context.setVariable("tests", session.getTests());
             context.setVariable("modules", helper.getModules());
             context.setVariable("artifacts", helper.getArtifacts());
-            context.setVariable("dependencies", helper.getDependencies());
+            context.setVariable("dependencies", helper.getDependencies(true));
             context.setVariable("plugins", helper.getPlugins());
             context.setVariable("helper", helper);
             context.setVariable("chartHelper", new ChartHelper(session, helper));

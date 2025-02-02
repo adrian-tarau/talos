@@ -47,6 +47,6 @@ public final class PluginMetrics extends Dependency {
         requireNonNull(project);
         requireNonNull(plugin);
         this.versions.add(plugin.getVersion());
-        this.projects.add(new Project(project));
+        this.projects.add(new Project(project, false));
     }
 }

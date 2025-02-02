@@ -1,0 +1,12 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="trends">
+    <p th:unless="${helper.hasTrends()}">
+        This build did not contain any historical data.
+    </p>
+</div>
+
+</body>
+</html>

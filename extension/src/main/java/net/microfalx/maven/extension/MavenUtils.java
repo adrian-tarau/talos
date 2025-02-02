@@ -2,10 +2,13 @@ package net.microfalx.maven.extension;
 
 import net.microfalx.lang.StringUtils;
 import net.microfalx.maven.core.MavenConfiguration;
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.Dependency;
 
 import java.time.Duration;
 
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.StringUtils.COMMA_WITH_SPACE;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 import static net.microfalx.lang.TimeUtils.NANOSECONDS_IN_MILLISECONDS;
@@ -74,6 +77,31 @@ public class MavenUtils {
         }
         if (session.getRequest().isOffline()) StringUtils.append(builder, "Offline");
         return builder.toString();
+    }
+
+    /**
+     * Converts an artifact to a dependency.
+     * @param artifact the project
+     * @return a non-null instance
+     */
+    public static Dependency fromArtifact(Artifact artifact) {
+        requireNonNull(artifact);
+        Dependency dependency = new Dependency();
+        dependency.setGroupId(artifact.getGroupId());
+        dependency.setArtifactId(artifact.getArtifactId());
+        dependency.setVersion(artifact.getVersion());
+        return dependency;
+    }
+
+    /**
+     * Returns the identifier of a dependency.
+     *
+     * @param dependency the artifact
+     * @return a non-null instance
+     */
+    public static String getId(net.microfalx.maven.model.Dependency dependency) {
+        requireNonNull(dependency);
+        return StringUtils.toIdentifier(dependency.getGroupId() + ":" + dependency.getArtifactId());
     }
 
     private static String getGoals(MavenSession session) {

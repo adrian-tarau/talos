@@ -76,7 +76,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
     public void afterProjectsRead(MavenSession session) throws MavenExecutionException {
         super.afterProjectsRead(session);
         tracker.track("Project Read", t -> {
-            sessionMetrics = new SessionMetrics(session).setStartTime(startTime);
+            sessionMetrics = new SessionMetrics(session).setStartTime(startTime).setVerbose(configuration.isVerbose());
             profilerMetrics.sessionMetrics = sessionMetrics;
             loadProjectSettings(session);
             if (progressListener != null) progressListener.start();

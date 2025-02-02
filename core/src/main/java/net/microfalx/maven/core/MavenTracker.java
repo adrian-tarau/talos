@@ -81,7 +81,7 @@ public class MavenTracker {
         return ofNanos(METRICS.getTimers().stream().map(Timer::getDuration).mapToLong(Duration::toNanos).sum());
     }
 
-    private void logFailure(String name, Throwable throwable) {
+    public void logFailure(String name, Throwable throwable) {
         String stackTrace = StringUtils.EMPTY_STRING;
         if (throwable != null) stackTrace = ", stack trace\n" + getStackTrace(throwable);
         logger.error("Failed action '{}' in '{}'{}", name, ClassUtils.getName(clazz), stackTrace);

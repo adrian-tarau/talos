@@ -10,6 +10,7 @@ import net.microfalx.maven.core.MavenLogger;
 import net.microfalx.maven.core.MavenTracker;
 import net.microfalx.maven.junit.SurefireTests;
 import net.microfalx.maven.model.*;
+import org.apache.maven.artifact.resolver.filter.ArtifactFilter;
 import org.apache.maven.execution.MavenExecutionResult;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
@@ -17,7 +18,15 @@ import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugins.surefire.report.ReportTestSuite;
+import org.apache.maven.project.DefaultProjectBuildingRequest;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.ProjectBuildingRequest;
+import org.apache.maven.project.ProjectDependenciesResolver;
+import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
+import org.apache.maven.shared.dependency.graph.DependencyGraphBuilderException;
+import org.apache.maven.shared.dependency.graph.DependencyNode;
+import org.apache.maven.shared.dependency.graph.internal.DefaultDependencyGraphBuilder;
+import org.eclipse.aether.RepositorySystem;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -64,6 +73,12 @@ public class ProfilerMetrics {
     protected MavenSession session;
 
     @Inject
+    protected RepositorySystem repositorySystem;
+
+    @Inject
+    protected ProjectDependenciesResolver dependenciesResolver;
+
+    @Inject
     protected MavenLogger logger;
 
     @Inject
@@ -90,10 +105,11 @@ public class ProfilerMetrics {
     void sessionsEnd(SessionMetrics sessionMetrics) {
         updateLifeCycle(sessionMetrics);
         sessionMetrics.setEndTime(ZonedDateTime.now());
-        sessionMetrics.setArtifacts(repositoryMetrics.getMetrics());
+        sessionMetrics.setArtifacts(getTrimmedArtifacts());
         sessionMetrics.setDependencies(dependencyMetrics.values());
         sessionMetrics.setMojos(mojoMetrics.values());
         sessionMetrics.setPlugins(pluginMetrics.values());
+        tracker.track("Update Dependencies", t -> updateDependencies());
         tracker.track("Record Failures", t -> {
             sessionMetrics.setExtensionFailures(MavenTracker.getFailures().stream()
                     .map(f -> new FailureMetrics(f.getProject(), f.getMojo(), f.getName(), f.getThrowable()))
@@ -483,10 +499,41 @@ public class ProfilerMetrics {
 
     private void registerDependencies(MavenProject project) {
         for (Dependency dependency : project.getDependencies()) {
-            getMetrics(dependency).register(project, dependency);
+            getMetrics(dependency).register(project, dependency).setScope(dependency.getScope()).setType(dependency.getType())
+                    .setOptional(dependency.isOptional());
         }
         for (Plugin plugin : project.getBuildPlugins()) {
             getMetrics(plugin).register(project, plugin);
+        }
+        DependencyGraphBuilder dependencyGraphBuilder = new DefaultDependencyGraphBuilder(dependenciesResolver);
+        DependencyNode node = resolveProject(dependencyGraphBuilder, project);
+        if (node != null) {
+            walkDependencyGraph(node, project, false);
+        }
+    }
+
+    private void walkDependencyGraph(DependencyNode node, MavenProject project, boolean transitive) {
+        for (DependencyNode child : node.getChildren()) {
+            Dependency dependency = MavenUtils.fromArtifact(child.getArtifact());
+            DependencyMetrics dependencyMetrics = getMetrics(dependency).register(project, dependency);
+            dependencyMetrics.setScope(dependency.getScope()).setType(dependency.getType())
+                    .setOptional(dependency.isOptional()).setTransitive(transitive);
+            if (child.getArtifact().getFile() != null) {
+                dependencyMetrics.setSize(child.getArtifact().getFile().length());
+            }
+            walkDependencyGraph(child, project, true);
+        }
+    }
+
+    private DependencyNode resolveProject(DependencyGraphBuilder dependencyGraphBuilder, MavenProject project) {
+        try {
+            ArtifactFilter artifactFilter = artifact -> true;
+            ProjectBuildingRequest buildingRequest = new DefaultProjectBuildingRequest(session.getProjectBuildingRequest());
+            buildingRequest.setProject(project);
+            return dependencyGraphBuilder.buildDependencyGraph(buildingRequest, artifactFilter);
+        } catch (DependencyGraphBuilderException e) {
+            tracker.logFailure("Resolve Dependency Graph", e);
+            return null;
         }
     }
 
@@ -501,6 +548,26 @@ public class ProfilerMetrics {
         lifecycles.add(new LifecycleMetrics("Local Repository").addDuration(getRepositoryDuration(repositoryMetrics)));
         lifecycles.add(new LifecycleMetrics("Remote Repository").addDuration(getRepositoryDuration(transferMetrics)));
         sessionMetrics.setLifeCycles(lifecycles);
+    }
+
+    private Collection<ArtifactMetrics> getTrimmedArtifacts() {
+        if (configuration.isVerbose()) {
+            return repositoryMetrics.getMetrics();
+        } else {
+            return repositoryMetrics.getMetrics().stream()
+                    .filter(a -> a.getDuration().toMillis() > 0)
+                    .collect(Collectors.toList());
+        }
+    }
+
+    private void updateDependencies() {
+        for (DependencyMetrics dependencyMetrics : dependencyMetrics.values()) {
+            ArtifactMetrics artifactMetrics = repositoryMetrics.get(MavenUtils.getId(dependencyMetrics));
+            if (artifactMetrics != null) {
+                dependencyMetrics.setSize(artifactMetrics.getSize());
+                dependencyMetrics.setDuration(artifactMetrics.getDuration());
+            }
+        }
     }
 
     private DependencyMetrics getMetrics(Dependency dependency) {

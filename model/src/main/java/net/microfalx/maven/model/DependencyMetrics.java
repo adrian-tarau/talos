@@ -3,6 +3,7 @@ package net.microfalx.maven.model;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.project.MavenProject;
 
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -17,12 +18,33 @@ public final class DependencyMetrics extends net.microfalx.maven.model.Dependenc
     private final Set<String> versions = new HashSet<>();
     private final Set<Project> projects = new HashSet<>();
 
+    private long size = -1;
+    private Duration duration;
+
     protected DependencyMetrics() {
     }
 
     public DependencyMetrics(Dependency dependency) {
         super(dependency.getGroupId(), dependency.getArtifactId(), dependency.getVersion());
         versions.add(dependency.getVersion());
+    }
+
+    public long getSize() {
+        return size;
+    }
+
+    public DependencyMetrics setSize(long size) {
+        this.size = size;
+        return this;
+    }
+
+    public Duration getDuration() {
+        return duration;
+    }
+
+    public DependencyMetrics setDuration(Duration duration) {
+        this.duration = duration;
+        return this;
     }
 
     public Set<String> getVersions() {
@@ -33,10 +55,11 @@ public final class DependencyMetrics extends net.microfalx.maven.model.Dependenc
         return unmodifiableSet(projects);
     }
 
-    public void register(MavenProject project, Dependency dependency) {
+    public DependencyMetrics register(MavenProject project, Dependency dependency) {
         requireNonNull(project);
         requireNonNull(dependency);
         this.versions.add(dependency.getVersion());
-        this.projects.add(new Project(project));
+        this.projects.add(new Project(project, false));
+        return this;
     }
 }

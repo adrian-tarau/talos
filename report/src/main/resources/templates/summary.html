@@ -175,7 +175,7 @@
 
     <h3 class="border-top mt-3 pt-2">
         <span class="text-primary-emphasis fw-bold"
-              th:text="${#numbers.formatInteger(dependencies.size(),0)}"></span><span> Dependencies in </span>
+              th:text="${#numbers.formatInteger(helper.getDependencies(false).size(),0)}"></span><span> Dependencies (direct) in </span>
         <span class="text-primary-emphasis fw-bold"
               th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
     </h3>
@@ -185,13 +185,19 @@
             <th scope="col">Group Id</th>
             <th scope="col">Artifact Id</th>
             <th scope="col">Version</th>
+            <th scope="col">Type</th>
+            <th scope="col">Scope</th>
+            <th scope="col" class="text-center">Optional</th>
         </tr>
         </thead>
         <tbody>
-        <tr th:each="dependency : ${dependencies}">
+        <tr th:each="dependency : ${helper.getDependencies(false)}">
             <td><span th:text="${dependency.groupId}"></span></td>
             <td><span th:text="${dependency.artifactId}"></span></td>
             <td><span th:text="${dependency.version}"></span></td>
+            <td><span th:text="${dependency.type}"></span></td>
+            <td><span th:text="${dependency.scope}"></span></td>
+            <td class="text-center"><span th:replace="~{fragments/utils :: check(${dependency.optional})}"></span></td>
         </tr>
         </tbody>
     </table>

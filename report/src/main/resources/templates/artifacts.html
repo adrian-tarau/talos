@@ -7,13 +7,36 @@
         <span th:text="${#numbers.formatInteger(artifacts.size(),0)}"></span><span> artifacts resolved in </span>
         <span th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
     </h3>
+
+    <div class="alert alert-info" role="alert" th:unless="${session.verbose}">
+        <div class="d-flex">
+            <div class="pe-2">
+                <i class="fa-solid fa-circle-info"></i>
+            </div>
+            <div>
+                <!--h4 class="alert-title">Did you know?</h4-->
+                <div class="text-secondary">Artifacts will only be displayed if they have spent a significant amount of time in the repository. Enable <i>verbose</i> option to see all the artifacts</div>
+            </div>
+        </div>
+    </div>
+
     <table class="table table-hover">
         <thead class="table-light">
         <tr>
-            <th scope="col">Group Id</th>
-            <th scope="col">Artifact Id</th>
-            <th scope="col">Version</th>
-            <th scope="col">Size</th>
+            <th scope="col" rowspan="2">Group Id</th>
+            <th scope="col" rowspan="2">Artifact Id</th>
+            <th scope="col" rowspan="2">Version</th>
+            <th scope="col" rowspan="2">Size</th>
+            <th scope="col" rowspan="2">Duration</th>
+            <th scope="col" colspan="3" class="text-center">Artifact</th>
+            <th scope="col" colspan="2" class="text-center">Metadata</th>
+        </tr>
+        <tr>
+            <th scope="col" class="text-end">Resolve</th>
+            <th scope="col" class="text-end">Install</th>
+            <th scope="col" class="text-end">Deploy</th>
+            <th scope="col" class="text-end">Resolve</th>
+            <th scope="col" class="text-end">Download</th>
         </tr>
         </thead>
         <tbody>
@@ -22,6 +45,12 @@
             <td><span th:text="${artifact.artifactId}"></span></td>
             <td><span th:text="${artifact.version}"></span></td>
             <td><span th:text="${helper.formatBytes(artifact.size)}"></span></td>
+            <td><span th:text="${helper.formatDuration(artifact.duration)}"></span></td>
+            <td><span th:text="${helper.formatDuration(artifact.artifactResolveDuration)}"></span></td>
+            <td><span th:text="${helper.formatDuration(artifact.artifactInstallDuration)}"></span></td>
+            <td><span th:text="${helper.formatDuration(artifact.artifactDeployDuration)}"></span></td>
+            <td><span th:text="${helper.formatDuration(artifact.metadataResolveDuration)}"></span></td>
+            <td><span th:text="${helper.formatDuration(artifact.metadataDownloadDuration)}"></span></td>
         </tr>
         </tbody>
     </table>

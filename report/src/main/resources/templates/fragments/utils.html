@@ -2,6 +2,11 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 
+<span th:fragment="check(value)">
+    <i class="fa-regular fa-square-check" th:if="${value}"></i>
+    <i class="fa-regular fa-square" th:unless="${value}"></i>
+</span>
+
 <div th:fragment="failures_summary(failures)" class="bt-1">
     <div th:each="failure : ${failures}">
         <span>Exception Class: </span><span th:text="${failure.throwableClass}" class="text-primary-emphasis fw-bold"></span>

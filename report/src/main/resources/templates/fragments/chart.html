@@ -355,6 +355,12 @@
                 height: [[${chart.height}]],
                 animations: {
                     enabled: false
+                },
+                toolbar: {
+                    show: false
+                },
+                zoom: {
+                    enabled: false,
                 }
             }
         };
@@ -385,6 +391,10 @@
     <div th:replace="~{fragments/chart :: area(${chartHelper.getServerMemory('server_memory',null)})}"></div>
     <div th:replace="~{fragments/chart :: area(${chartHelper.getProcessCpu('process_cpu',null)})}"></div>
     <div th:replace="~{fragments/chart :: area(${chartHelper.getProcessMemory('process_memory',null)})}"></div>
+
+    <div th:replace="~{fragments/chart :: treemap(${chartHelper.getDependenciesCountTreeMapChart('dependencies_count', null)})}"></div>
+    <div th:replace="~{fragments/chart :: treemap(${chartHelper.getDependenciesSizeTreeMapChart('dependencies_size', null)})}"></div>
+
 </div>
 </body>
 </html>

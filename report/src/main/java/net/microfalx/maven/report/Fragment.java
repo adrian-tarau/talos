@@ -47,6 +47,8 @@ public class Fragment implements Identifiable<String>, Nameable {
                 return "fa-solid fa-list-check";
             case ARTIFACTS:
                 return "fa-solid fa-circle-nodes";
+            case DEPENDENCIES:
+                return "fa-solid fa-hexagon-nodes";
             case ENVIRONMENT:
                 return "fa-solid fa-gauge";
             case LOGS:
@@ -62,7 +64,9 @@ public class Fragment implements Identifiable<String>, Nameable {
             case TESTS:
                 return "fa-solid fa-clipboard-check";
             case EXTENSIONS:
-                return "fa-solid fa-plug";
+                return "fa-solid fa-plug-circle-bolt";
+            case TRENDS:
+                return "fa-solid fa-arrow-trend-up";
             default:
                 return "fa-solid fa-notdef";
         }
@@ -101,9 +105,9 @@ public class Fragment implements Identifiable<String>, Nameable {
         SUMMARY,
 
         /**
-         * The log produced by the build
+         * How things changed over time
          */
-        LOGS,
+        TRENDS,
 
         /**
          * The failure, if any
@@ -111,9 +115,19 @@ public class Fragment implements Identifiable<String>, Nameable {
         FAILURE,
 
         /**
+         * The log produced by the build
+         */
+        LOGS,
+
+        /**
          * The project information.
          */
         PROJECT,
+
+        /**
+         * The dependencies of the project
+         */
+        DEPENDENCIES,
 
         /**
          * The artifacts of the project

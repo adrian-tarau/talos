@@ -160,6 +160,25 @@ public class ChartHelper {
         return chart;
     }
 
+    public TreeMapChart<Integer> getDependenciesCountTreeMapChart(String id, Integer width) {
+        TreeMapChart<Integer> chart = new TreeMapChart<>(id, "Count");
+        chart.setWidth(width);
+        chart.setHeight(500);
+        chart.getLegend().setShow(false);
+        reportHelper.getDependencyDetails(true, true).forEach(d -> chart.add(d.getGroupId(), d.getCount()));
+        return chart;
+    }
+
+    public TreeMapChart<Long> getDependenciesSizeTreeMapChart(String id, Integer width) {
+        TreeMapChart<Long> chart = new TreeMapChart<>(id, "Size");
+        chart.setWidth(width);
+        chart.setHeight(500);
+        chart.getLegend().setShow(false);
+        chart.getYaxis().setUnit(Unit.BYTE);
+        reportHelper.getDependencyDetails(true, false).forEach(d -> chart.add(d.getGroupId(), d.getSize()));
+        return chart;
+    }
+
     private static Series<Long, Float> convert(String name, net.microfalx.metrics.Series metricsSeries) {
         Series<Long, Float> series = new Series<>(name);
         for (Value value : metricsSeries.getValues()) {

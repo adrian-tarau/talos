@@ -18,7 +18,7 @@ public class ProjectMetrics extends Project {
     }
 
     public ProjectMetrics(MavenProject project) {
-        super(project);
+        super(project, true);
     }
 
     public ZonedDateTime getStartTime() {

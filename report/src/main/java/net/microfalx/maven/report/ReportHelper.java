@@ -87,6 +87,10 @@ public class ReportHelper {
         return hasProjectFailures() || hasExtensionFailures();
     }
 
+    public boolean hasTrends() {
+        return false;
+    }
+
     public boolean hasProjectFailures() {
         return !session.getProjectFailures().isEmpty();
     }
@@ -131,10 +135,27 @@ public class ReportHelper {
         return plugins;
     }
 
-    public Collection<DependencyMetrics> getDependencies() {
-        List<DependencyMetrics> dependencies = new ArrayList<>(session.getDependencies());
-        dependencies.sort(Comparator.comparing(Dependency::getGroupId).thenComparing(Dependency::getArtifactId));
-        return dependencies;
+    public Collection<DependencyMetrics> getDependencies(boolean transitive) {
+        return session.getDependencies().stream()
+                .filter(dependencyMetrics -> filter(dependencyMetrics, transitive))
+                .sorted(Comparator.comparing(Dependency::getGroupId).thenComparing(Dependency::getArtifactId))
+                .collect(Collectors.toList());
+    }
+
+    public Collection<DependencyDetails> getDependencyDetails(boolean transitive, boolean sortByCount) {
+        Map<String, ReportHelper.DependencyDetails> dependencies = new HashMap<>();
+        for (DependencyMetrics dependencyMetrics : getDependencies(transitive)) {
+            DependencyDetails dependencyDetails = dependencies.computeIfAbsent(dependencyMetrics.getGroupId(), DependencyDetails::new);
+            dependencyDetails.count++;
+            dependencyDetails.size += Math.max(0, dependencyMetrics.getSize());
+        }
+        List<DependencyDetails> dependencyDetails = new ArrayList<>(dependencies.values());
+        if (sortByCount) {
+            dependencyDetails.sort(Comparator.comparing(DependencyDetails::getCount).reversed());
+        } else {
+            dependencyDetails.sort(Comparator.comparing(DependencyDetails::getSize).reversed());
+        }
+        return dependencyDetails;
     }
 
     public Collection<ArtifactMetrics> getArtifacts() {
@@ -247,6 +268,16 @@ public class ReportHelper {
         }
     }
 
+    private boolean filter(DependencyMetrics dependencyMetrics, boolean transitive) {
+        return transitive || !dependencyMetrics.isTransitive();
+    }
+
+    private static String getDomain(String groupId) {
+        String[] parts = StringUtils.split(groupId, ".");
+        if (parts.length < 2) return groupId;
+        return parts[0] + "." + parts[1];
+    }
+
     public static class ProjectDetails {
 
         private final Project project;
@@ -263,6 +294,29 @@ public class ReportHelper {
 
         public Collection<PluginMetrics> getPlugins() {
             return plugins;
+        }
+    }
+
+    public static class DependencyDetails {
+
+        private final String groupId;
+        private int count;
+        private long size;
+
+        public DependencyDetails(String groupId) {
+            this.groupId = groupId;
+        }
+
+        public String getGroupId() {
+            return groupId;
+        }
+
+        public int getCount() {
+            return count;
+        }
+
+        public long getSize() {
+            return size;
         }
     }
 
