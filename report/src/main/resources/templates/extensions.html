@@ -20,7 +20,7 @@
         </tbody>
     </table>
     <div th:if="${helper.hasExtensionFailures()}">
-        <h4 class="pt-2">Failures</h4>
+        <h3 class="pt-2">Failures</h3>
         <div th:replace="~{fragments/utils :: failures_details(${session.getExtensionFailures()})}"></div>
     </div>
 </div>

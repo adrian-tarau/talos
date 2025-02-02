@@ -12,13 +12,13 @@
 </nav>
 <div class="container-fluid">
     <div class="row">
-        <div class="sidebar-fixed position-fixed border border-right col-md-3 col-lg-2 p-0 bg-body-tertiary">
+        <div class="sidebar-fixed position-fixed border border-right col-md-3 col-lg-2 p-0 h-100 bg-body-tertiary">
             <div class="offcanvas-md offcanvas-end bg-body-tertiary" tabindex="-1" id="sidebarMenu">
                 <div class="offcanvas-header">
-                    <h5 class="offcanvas-title" id="sidebarMenuLabel">Company name</h5>
+                    <h3 class="offcanvas-title" id="sidebarMenuLabel">Company name</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebarMenu" aria-label="Close"></button>
                 </div>
-                <div class="offcanvas-body d-md-flex flex-column p-0 pt-lg-3 overflow-y-auto">
+                <div class="offcanvas-body d-md-flex flex-column p-0 overflow-y-auto">
                     <ul class="nav flex-column">
                         <li class="nav-item" th:each="fragment : ${fragments}">
                             <a class="nav-link d-flex align-items-center gap-2 active" aria-current="page" th:href="|#${fragment.id}|">
@@ -41,6 +41,7 @@
         </main>
     </div>
 </div>
+<button type="button" class="btn btn-secondary btn-floating" id="btn-back-to-top"><i class="fas fa-arrow-up"></i></button>
 <div th:replace="~{fragments/page :: code}"></div>
 <div th:replace="~{fragments/chart :: render}"></div>
 </body>

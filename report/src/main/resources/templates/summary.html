@@ -24,10 +24,10 @@
         <span th:if="${session.offline}" class="text-primary-emphasis fw-bold"><span>, </span><span
                 class="text-primary-emphasis fw-bold">Offline</span></span>
     </p>
-    <h4 class="border-top mt-3 pt-2">
+    <h3 class="border-top mt-3 pt-2">
         <span class="text-primary-emphasis fw-bold"
               th:text="${#numbers.formatInteger(helper.getFailureCount(), 0)}"></span><span> Failures</span>
-    </h4>
+    </h3>
     <div th:if="${helper.hasProjectFailures()}" th:remove="tag">
         <div th:replace="~{fragments/utils :: failures_summary(${session.getProjectFailures()})}"></div>
     </div>
@@ -37,10 +37,10 @@
 
     <!-- LifeCycles -->
 
-    <h4 class="border-top mt-3 pt-2">
+    <h3 class="border-top mt-3 pt-2">
         <span class="text-primary-emphasis fw-bold"
               th:text="${#numbers.formatInteger(session.getLifecycles().size(),0)}"></span><span> Build events</span>
-    </h4>
+    </h3>
     <div class="container-fluid">
         <div class="row justify-content-start g-0">
             <div class="col-8">
@@ -65,10 +65,10 @@
 
     <!-- Modules -->
 
-    <h4 class="border-top mt-3 pt-2">
+    <h3 class="border-top mt-3 pt-2">
         <span class="text-primary-emphasis fw-bold"
               th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> Modules</span>
-    </h4>
+    </h3>
     <table class="table table-hover">
         <thead class="table-light">
         <tr>
@@ -92,14 +92,14 @@
 
     <!-- Tests -->
 
-    <h4 class="border-top mt-3 pt-2" th:if="${helper.hasTests()}">
+    <h3 class="border-top mt-3 pt-2" th:if="${helper.hasTests()}">
         <span class="text-primary-emphasis fw-bold"
               th:text="${#numbers.formatInteger(helper.getTestSummary().total,0)}"></span><span> Tests, failed: </span>
         <span class="fw-bold" th:classappend="${helper.getTestSummary().failedAndError!=0}? text-danger : text-success"
               th:text="${#numbers.formatInteger(helper.getTestSummary().failedAndError, 0)}"></span>
         <span>, skipped: </span><span class="text-secondary"
                                       th:text="${#numbers.formatInteger(helper.getTestSummary().skipped, 0)}"></span>
-    </h4>
+    </h3>
 
     <div class="container-fluid" th:if="${helper.hasTests()}">
         <div class="row justify-content-start g-0">
@@ -138,10 +138,10 @@
 
     <!-- Tasks -->
 
-    <h4 class="border-top mt-3 pt-2">
+    <h3 class="border-top mt-3 pt-2">
         <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(mojos.size(),0)}"></span><span> Tasks executed in </span>
         <span class="text-primary-emphasis fw-bold" th:text="${helper.getBuildTime()}"></span>
-    </h4>
+    </h3>
     <table class="table table-hover">
         <thead class="table-light">
         <tr>
@@ -173,12 +173,12 @@
 
     <!-- Dependencies -->
 
-    <h4 class="border-top mt-3 pt-2">
+    <h3 class="border-top mt-3 pt-2">
         <span class="text-primary-emphasis fw-bold"
               th:text="${#numbers.formatInteger(dependencies.size(),0)}"></span><span> Dependencies in </span>
         <span class="text-primary-emphasis fw-bold"
               th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
-    </h4>
+    </h3>
     <table class="table table-hover">
         <thead class="table-light">
         <tr>
@@ -195,11 +195,11 @@
         </tr>
         </tbody>
     </table>
-    <h4 class="border-top mt-3 pt-2">
+    <h3 class="border-top mt-3 pt-2">
         <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(plugins.size(),0)}"></span><span> Plugins in </span>
         <span class="text-primary-emphasis fw-bold"
               th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
-    </h4>
+    </h3>
     <table class="table table-hover">
         <thead class="table-light">
         <tr>

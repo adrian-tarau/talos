@@ -3,10 +3,10 @@
 <body>
 
 <div th:fragment="artifacts">
-    <h5 class="border-top  mt-3">
+    <h3 class="border-top  mt-3">
         <span th:text="${#numbers.formatInteger(artifacts.size(),0)}"></span><span> artifacts resolved in </span>
         <span th:text="${#numbers.formatInteger(helper.getProjectCount(),0)}"></span><span> modules</span>
-    </h5>
+    </h3>
     <table class="table table-hover">
         <thead class="table-light">
         <tr>
