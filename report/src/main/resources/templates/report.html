@@ -4,11 +4,11 @@
 <body>
 <div class="page">
     <!-- Sidebar -->
-    <aside class="navbar navbar-vertical navbar-expand-sm" data-bs-theme="dark">
+    <aside class="navbar navbar-vertical navbar-expand-sm" data-bs-theme="dark" style="width: 18rem">
         <div class="container-fluid">
             <h1 class="navbar-brand navbar-brand-autodark">
-                <a href="#">
-                    <i class="fa-solid fa-cube fs-8"></i>
+                <i class="fa-solid fa-cube fs-8"></i>
+                <a th:href="${project.uri}">
                     <span class="me-0 px-3 fs-8" th:text="${session.name}" ></span>
                 </a>
             </h1>
@@ -24,7 +24,7 @@
             </div>
         </div>
     </aside>
-    <div class="page-wrapper">
+    <div class="page-wrapper" style="margin-left: 18rem">
         <div class="page-body">
             <div class="container-fluid">
                 <div class="row row-deck row-cards">
