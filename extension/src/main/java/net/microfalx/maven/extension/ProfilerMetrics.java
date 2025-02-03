@@ -555,7 +555,7 @@ public class ProfilerMetrics {
             return repositoryMetrics.getMetrics();
         } else {
             return repositoryMetrics.getMetrics().stream()
-                    .filter(a -> a.getDuration().toMillis() > 0)
+                    .filter(a -> a.getDuration().toMillis() > 5)
                     .collect(Collectors.toList());
         }
     }

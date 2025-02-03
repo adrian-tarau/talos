@@ -453,5 +453,8 @@ public class MavenUtils {
         secretNames.add("secret");
         secretNames.add("login");
         secretNames.add("gpg");
+        secretNames.add("apikey");
+        secretNames.add("bearer");
+        secretNames.add("api_key");
     }
 }

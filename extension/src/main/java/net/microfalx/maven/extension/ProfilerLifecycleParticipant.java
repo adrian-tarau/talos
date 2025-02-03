@@ -36,6 +36,8 @@ import java.io.OutputStream;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
@@ -186,6 +188,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
         sessionMetrics.setVirtualMachine(VirtualMachineMetrics.get().getLast());
         sessionMetrics.setServerMetrics(ServerMetrics.get().getStore());
         sessionMetrics.setServer(ServerMetrics.get().getLast());
+        updateSystemProperties();
     }
 
     private void updateTests(MavenSession session) {
@@ -200,6 +203,16 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
             }
         }
         sessionMetrics.setTests(testMetrics);
+    }
+
+    private void updateSystemProperties() {
+        Map<String, String> systemProperties = new HashMap<>();
+        System.getProperties().forEach((k, v) -> {
+            String key = k.toString();
+            String value = v.toString();
+            systemProperties.put(key, MavenUtils.maskSecret(key, value));
+        });
+        sessionMetrics.setSystemProperties(systemProperties);
     }
 
     private void updateRepositories(MavenSession session) {

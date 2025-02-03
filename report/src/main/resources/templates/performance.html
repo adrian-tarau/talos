@@ -3,14 +3,31 @@
 <body>
 
 <div th:fragment="performance">
+    <h3 class="pt-2">Server</h3>
     <div class="container-fluid">
         <div class="row justify-content-start g-2">
             <div class="col-6" id="server_cpu"></div>
             <div class="col-6" id="server_memory"></div>
         </div>
         <div class="row justify-content-start g-2">
+            <div class="col-6" id="server_load"></div>
+            <div class="col-6" id="server_kernel"></div>
+        </div>
+        <div class="row justify-content-start g-2">
+            <div class="col-6" id="server_io_counts"></div>
+            <div class="col-6" id="server_io_bytes"></div>
+        </div>
+    </div>
+
+    <h3 class="pt-2">Process</h3>
+    <div class="container-fluid">
+        <div class="row justify-content-start g-2">
             <div class="col-6" id="process_cpu"></div>
             <div class="col-6" id="process_memory"></div>
+        </div>
+        <div class="row justify-content-start g-2">
+            <div class="col-6" id="process_threads"></div>
+            <div class="col-6" id="process_io"></div>
         </div>
     </div>
 </div>

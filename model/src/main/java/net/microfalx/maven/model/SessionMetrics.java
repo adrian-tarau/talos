@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static java.util.Collections.unmodifiableCollection;
+import static java.util.Collections.unmodifiableMap;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.StringUtils.NA_STRING;
 
@@ -66,6 +67,7 @@ public class SessionMetrics extends NamedIdentityAware<String> {
     private SeriesStore virtualMachineMetrics = SeriesStore.memory();
     private SeriesStore serverMetrics = SeriesStore.memory();
     private VirtualMachine virtualMachine;
+    private final Map<String, String> systemProperties = new HashMap<>();
     private Server server;
 
     private String logs;
@@ -323,6 +325,15 @@ public class SessionMetrics extends NamedIdentityAware<String> {
         this.server = server;
     }
 
+    public Map<String, String> getSystemProperties() {
+        return unmodifiableMap(systemProperties);
+    }
+
+    public void setSystemProperties(Map<String, String> systemProperties) {
+        requireNonNull(systemProperties);
+        this.systemProperties.putAll(systemProperties);
+    }
+
     public String getLogs() {
         return logs;
     }
@@ -404,9 +415,10 @@ public class SessionMetrics extends NamedIdentityAware<String> {
         kryo.register(FailureMetrics.class, SERIALIZATION_ID + 28);
 
         kryo.register(Metric.class, SERIALIZATION_ID + 50);
-        kryo.register(Value.class, SERIALIZATION_ID + 51);
-        kryo.register(SeriesMemoryStore.class, SERIALIZATION_ID + 52);
-        kryo.register(DefaultSeries.class, SERIALIZATION_ID + 53);
+        kryo.register(Metric.Type.class, SERIALIZATION_ID + 51);
+        kryo.register(Value.class, SERIALIZATION_ID + 52);
+        kryo.register(SeriesMemoryStore.class, SERIALIZATION_ID + 53);
+        kryo.register(DefaultSeries.class, SERIALIZATION_ID + 54);
 
         kryo.register(Process.class, SERIALIZATION_ID + 60);
         kryo.register(VirtualMachine.class, SERIALIZATION_ID + 61);

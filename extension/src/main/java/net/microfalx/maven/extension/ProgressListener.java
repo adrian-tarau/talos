@@ -51,7 +51,7 @@ public class ProgressListener extends AbstractExecutionListener {
 
     public void projectEnded(ExecutionEvent event) {
         if (!configuration.isProgress()) return;
-        print(buffer().success("Done").toString());
+        print(buffer().success("Done").toString()+".");
     }
 
     void start() {

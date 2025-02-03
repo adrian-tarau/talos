@@ -3,6 +3,7 @@
 <body>
 
 <div th:fragment="environment">
+
     <div class="container-fluid">
         <div class="row justify-content-start g-0">
             <div class="col-4">Operating System</div>
@@ -20,8 +21,7 @@
             <div class="col-4">Server</div>
             <div class="col-8">
                 CPU: <span th:text="${helper.formatPercent(helper.getAverageServerCpu())}"></span>
-                (Cores: <span th:text="${session.server.cores}"></span>, Load: <span th:text="${helper.formatNumber(helper.getAverageServerLoad1())}"/> /
-                <span th:text="${helper.formatNumber(helper.getAverageServerLoad5())}"/> / <span th:text="${helper.formatNumber(helper.getAverageServerLoad15())}"/>)
+                (Cores: <span th:text="${session.server.cores}"></span>, Load: <span th:text="${helper.formatNumber(helper.getAverageServerLoad1())}"/>)
                 , Memory: <span th:text="${helper.formatBytes(helper.getAverageServerMemory())}"/>
             </div>
         </div>
@@ -34,16 +34,23 @@
         </div>
     </div>
 
-    <!--
-logNameValue("Operating System", os.getName() + " " + os.getVersion());
-        logNameValue("Java", virtualMachine.getName());
-        logNameValue("User Name", JvmUtils.getUserName() + "@" + server.getHostName());
-        logNameValue("Server", "CPU: " + formatPercent(serverMetrics.getAverageCpu()) + " (load: " +
-                               formatNumber(serverMetrics.getAverageLoad()) + ", cores " + server.getCores() + ")"
-                               + ", Memory: " + formatMemory(server.getMemoryActuallyUsed(), server.getMemoryTotal()));
-        logNameValue("Process", "CPU: " + formatPercent(virtualMachineMetrics.getAverageCpu())
-                                + ", Memory: " + formatMemory(virtualMachineMetrics.getMemoryAverage(), virtualMachineMetrics.getMemoryMaximum()));
-    -->
+    <h3 class="pt-2">System Properties</h3>
+
+    <table class="table table-hover datatable">
+        <thead class="table-light">
+        <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Value</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="plugin : ${helper.getSystemProperties()}">
+            <td><span th:text="${plugin.name}"></span></td>
+            <td><span th:text="${plugin.value}"></span></td>
+        </tr>
+        </tbody>
+    </table>
+
 </div>
 
 </body>

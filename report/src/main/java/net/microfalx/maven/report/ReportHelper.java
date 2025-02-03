@@ -111,14 +111,6 @@ public class ReportHelper {
         return session.getServerMetrics().getAverage(ServerMetrics.LOAD_1, Duration.ofDays(1)).orElse(0);
     }
 
-    public double getAverageServerLoad5() {
-        return session.getServerMetrics().getAverage(ServerMetrics.LOAD_1, Duration.ofDays(1)).orElse(0);
-    }
-
-    public double getAverageServerLoad15() {
-        return session.getServerMetrics().getAverage(ServerMetrics.LOAD_1, Duration.ofDays(1)).orElse(0);
-    }
-
     public double getAverageProcessCpu() {
         return session.getVirtualMachineMetrics().getAverage(VirtualMachineMetrics.CPU_TOTAL, Duration.ofDays(1)).orElse(0);
     }
@@ -184,12 +176,16 @@ public class ReportHelper {
         return lifeCycle;
     }
 
-    public Collection<Property> getProperties() {
-        List<Property> properties = session.getProject().getProperties().entrySet().stream()
-                .map(e -> new Property(e.getKey(), e.getValue()))
+    public Collection<Property> getSystemProperties() {
+        return session.getSystemProperties().entrySet().stream()
+                .map(e -> new Property(e.getKey(), e.getValue())).sorted(Comparator.comparing(Property::getName))
                 .collect(Collectors.toList());
-        properties.sort(Comparator.comparing(Property::getName));
-        return properties;
+    }
+
+    public Collection<Property> getProperties() {
+        return session.getProject().getProperties().entrySet().stream()
+                .map(e -> new Property(e.getKey(), e.getValue())).sorted(Comparator.comparing(Property::getName))
+                .collect(Collectors.toList());
     }
 
     public Collection<ProjectDetails> getProjectDetails() {
@@ -432,6 +428,7 @@ public class ReportHelper {
     }
 
     public static class Property {
+
         private final String name;
         private final String value;
 

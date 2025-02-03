@@ -11,6 +11,7 @@
             <th scope="col">Test</th>
             <th scope="col" class="text-center">Failed</th>
             <th scope="col">Duration</th>
+            <th scope="col">Failure Message</th>
         </tr>
         </thead>
         <tbody>
@@ -20,6 +21,7 @@
             <td><span th:text="${test.name}"></span></td>
             <td class="text-center"><span th:replace="~{fragments/utils :: check(${test.failureOrError})}"></span></td>
             <td><span th:text="${helper.formatDuration(test.duration)}"></span></td>
+            <td><span th:text="${test.failureMessage}"></span></td>
         </tr>
         </tbody>
     </table>

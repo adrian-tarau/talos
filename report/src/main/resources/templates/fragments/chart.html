@@ -389,8 +389,15 @@
 
     <div th:replace="~{fragments/chart :: area(${chartHelper.getServerCpu('server_cpu',null)})}"></div>
     <div th:replace="~{fragments/chart :: area(${chartHelper.getServerMemory('server_memory',null)})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getServerLoad('server_load',null)})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getServerKernel('server_kernel',null)})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getServerIOCounts('server_io_counts',null)})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getServerIOBytes('server_io_bytes',null)})}"></div>
+
     <div th:replace="~{fragments/chart :: area(${chartHelper.getProcessCpu('process_cpu',null)})}"></div>
     <div th:replace="~{fragments/chart :: area(${chartHelper.getProcessMemory('process_memory',null)})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getProcessThreads('process_threads',null)})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getProcessIO('process_io',null)})}"></div>
 
     <div th:replace="~{fragments/chart :: treemap(${chartHelper.getDependenciesCountTreeMapChart('dependencies_count', null)})}"></div>
     <div th:replace="~{fragments/chart :: treemap(${chartHelper.getDependenciesSizeTreeMapChart('dependencies_size', null)})}"></div>

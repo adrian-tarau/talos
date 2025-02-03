@@ -124,7 +124,7 @@ public class ChartHelper {
     }
 
     public AreaChart<Long, Float> getServerCpu(String id, Integer width) {
-        AreaChart<Long, Float> chart = new AreaChart<>(id, "Server / CPU");
+        AreaChart<Long, Float> chart = new AreaChart<>(id, "CPU");
         chart.add(convert("System", session.getServerMetrics().get(ServerMetrics.CPU_SYSTEM)));
         chart.add(convert("User", session.getServerMetrics().get(ServerMetrics.CPU_USER)));
         chart.add(convert("Nice", session.getServerMetrics().get(ServerMetrics.CPU_NICE)));
@@ -134,8 +134,37 @@ public class ChartHelper {
         return chart;
     }
 
+    public AreaChart<Long, Float> getServerLoad(String id, Integer width) {
+        AreaChart<Long, Float> chart = new AreaChart<>(id, "Load");
+        chart.add(convert("Load", session.getServerMetrics().get(ServerMetrics.LOAD_1)));
+        chart.setStacked(true);
+        return chart;
+    }
+
+    public AreaChart<Long, Float> getServerKernel(String id, Integer width) {
+        AreaChart<Long, Float> chart = new AreaChart<>(id, "Kernel");
+        chart.add(convert("Context Switches", session.getServerMetrics().get(ServerMetrics.CONTEXT_SWITCHES)));
+        chart.add(convert("Interrupts", session.getServerMetrics().get(ServerMetrics.INTERRUPTS)));
+        return chart;
+    }
+
+    public AreaChart<Long, Float> getServerIOCounts(String id, Integer width) {
+        AreaChart<Long, Float> chart = new AreaChart<>(id, "IO / Activity");
+        chart.add(convert("Reads", session.getServerMetrics().get(ServerMetrics.IO_READS)));
+        chart.add(convert("Writes", session.getServerMetrics().get(ServerMetrics.IO_WRITES)));
+        return chart;
+    }
+
+    public AreaChart<Long, Float> getServerIOBytes(String id, Integer width) {
+        AreaChart<Long, Float> chart = new AreaChart<>(id, "IO / Bytes");
+        chart.add(convert("Read Bytes", session.getServerMetrics().get(ServerMetrics.IO_READ_BYTES)));
+        chart.add(convert("Write Bytes", session.getServerMetrics().get(ServerMetrics.IO_WRITE_BYTES)));
+        chart.getYaxis().setUnit(Unit.BYTE);
+        return chart;
+    }
+
     public AreaChart<Long, Float> getServerMemory(String id, Integer width) {
-        AreaChart<Long, Float> chart = new AreaChart<>(id, "Server / Memory");
+        AreaChart<Long, Float> chart = new AreaChart<>(id, "Memory");
         chart.add(convert("Maximum", session.getServerMetrics().get(ServerMetrics.MEMORY_MAX)));
         chart.add(convert("Used", session.getServerMetrics().get(ServerMetrics.MEMORY_USED)));
         chart.getYaxis().setUnit(Unit.BYTE);
@@ -143,7 +172,7 @@ public class ChartHelper {
     }
 
     public AreaChart<Long, Float> getProcessCpu(String id, Integer width) {
-        AreaChart<Long, Float> chart = new AreaChart<>(id, "Process / CPU");
+        AreaChart<Long, Float> chart = new AreaChart<>(id, "CPU");
         chart.add(convert("System", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.CPU_SYSTEM)));
         chart.add(convert("User", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.CPU_USER)));
         chart.setStacked(true);
@@ -152,9 +181,26 @@ public class ChartHelper {
     }
 
     public AreaChart<Long, Float> getProcessMemory(String id, Integer width) {
-        AreaChart<Long, Float> chart = new AreaChart<>(id, "Process / Memory");
+        AreaChart<Long, Float> chart = new AreaChart<>(id, "Memory");
         chart.add(convert("Heap", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.MEMORY_HEAP_USED)));
         chart.add(convert("Non-Heap", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.MEMORY_NON_HEAP_USED)));
+        chart.setStacked(true);
+        chart.getYaxis().setUnit(Unit.BYTE);
+        return chart;
+    }
+
+    public AreaChart<Long, Float> getProcessThreads(String id, Integer width) {
+        AreaChart<Long, Float> chart = new AreaChart<>(id, "Threads");
+        chart.add(convert("Daemon", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.THREAD_DAEMON)));
+        chart.add(convert("Non-Daemon", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.THREAD_NON_DAEMON)));
+        chart.setStacked(true);
+        return chart;
+    }
+
+    public AreaChart<Long, Float> getProcessIO(String id, Integer width) {
+        AreaChart<Long, Float> chart = new AreaChart<>(id, "IO");
+        chart.add(convert("Read Bytes", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.IO_READ_BYTES)));
+        chart.add(convert("Write Bytes", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.IO_WRITE_BYTES)));
         chart.setStacked(true);
         chart.getYaxis().setUnit(Unit.BYTE);
         return chart;
