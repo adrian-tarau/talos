@@ -8,7 +8,7 @@
                          th:text="${helper.formatDateTime(session.startTime)}"></span>,
         finished at <span class="text-primary-emphasis fw-bold"
                           th:text="${helper.formatDateTime(session.endTime)}"></span>,
-        build time: <span class="text-primary-emphasis fw-bold" th:text="${helper.getBuildTime()}"></span>
+        build time: <span class="text-primary-emphasis fw-bold" th:text="${helper.formatDuration(session.duration)}"></span>
     </p>
     <p>
         Local Repository <span class="text-primary-emphasis fw-bold" th:text="${session.localRepository}"></span>,
@@ -140,7 +140,7 @@
 
     <h3 class="border-top mt-3 pt-2">
         <span class="text-primary-emphasis fw-bold" th:text="${#numbers.formatInteger(mojos.size(),0)}"></span><span> Tasks executed in </span>
-        <span class="text-primary-emphasis fw-bold" th:text="${helper.getBuildTime()}"></span>
+        <span class="text-primary-emphasis fw-bold" th:text="${helper.formatDuration(helper.getTasksDuration())}"></span>
     </h3>
     <table class="table table-hover datatable">
         <thead class="table-light">

@@ -71,8 +71,8 @@ public class ReportHelper {
         return session.getProjectFailures().size() + session.getExtensionFailures().size();
     }
 
-    public String getBuildTime() {
-        return TimeUtils.toString(session.getMojos().stream().map(MojoMetrics::getDuration).reduce(Duration.ZERO, Duration::plus));
+    public Duration getTasksDuration() {
+        return session.getMojos().stream().map(MojoMetrics::getDuration).reduce(Duration.ZERO, Duration::plus);
     }
 
     public long getProjectCount() {
