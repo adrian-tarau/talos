@@ -82,6 +82,7 @@ public class MavenUtils {
         return builder.toString();
     }
 
+
     /**
      * Converts an artifact to a dependency.
      *

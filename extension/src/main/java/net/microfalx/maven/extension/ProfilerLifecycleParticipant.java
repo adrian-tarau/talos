@@ -112,9 +112,10 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
 
     private void initialize(MavenSession session) {
         configuration = new MavenConfiguration(session);
-        LOGGER.info("Initialize performance extension, logger: {}, verbose: {}, quiet: {}, console: {}, progress: {}, performance: {}",
-                MavenUtils.isMavenLoggerAvailable(), configuration.isVerbose(), configuration.isConsoleEnabled(),
-                configuration.isQuiet(), configuration.isProgress(), configuration.isPerformanceEnabled()
+        LOGGER.info("Initialize performance extension, logger: {}, verbose: {}, quiet: {}, console report: {}, HTML report: {}, progress: {}, performance: {}",
+                MavenUtils.isMavenLoggerAvailable(), configuration.isVerbose(), configuration.isQuiet(),
+                configuration.isReportConsoleEnabled(), configuration.isReportHtmlEnabled(),
+                configuration.isProgress(), configuration.isPerformanceEnabled()
         );
         tracker.track("Register Listeners", t -> {
             registerListeners(session);
@@ -231,7 +232,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
     }
 
     private void openHtmlReport() {
-        if (configuration.isOpenReportEnabled()) {
+        if (configuration.isReportHtmlEnabled() && configuration.isOpenReportEnabled()) {
             File file = ResourceUtils.toFile(this.report);
             try {
                 Desktop.getDesktop().open(file);
@@ -244,6 +245,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
     }
 
     private void generateHtmlReports(MavenSession session) {
+        if (!configuration.isReportHtmlEnabled()) return;
         Resource resource = MavenStorage.getStagingDirectory(session).resolve("build.report.html");
         try {
             ReportBuilder.create(sessionMetrics).build(resource);
@@ -251,7 +253,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
             LOGGER.error("Failed to generate build report", e);
         }
         this.report = configuration.getTargetFile("build.report.html", true);
-        if (configuration.isConsoleEnabled() && configuration.isVerbose()) {
+        if (configuration.isReportConsoleEnabled() && configuration.isVerbose()) {
             mavenLogger.info("");
             mavenLogger.info("The HTML report available is at " + ResourceUtils.toFile(this.report).getAbsolutePath());
         }

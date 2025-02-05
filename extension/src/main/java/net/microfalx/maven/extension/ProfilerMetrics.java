@@ -41,9 +41,11 @@ import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.joining;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ExceptionUtils.*;
 import static net.microfalx.lang.FormatterUtils.formatNumber;
 import static net.microfalx.lang.FormatterUtils.formatPercent;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
+import static net.microfalx.lang.TextUtils.insertSpaces;
 import static net.microfalx.maven.core.MavenUtils.*;
 import static net.microfalx.maven.extension.MavenUtils.*;
 import static org.apache.maven.shared.utils.logging.MessageUtils.buffer;
@@ -153,7 +155,10 @@ public class ProfilerMetrics {
     }
 
     void print() {
-        if (!configuration.isConsoleEnabled()) return;
+        if (!configuration.isReportConsoleEnabled()) {
+            logger.getSystemOutputPrintStream().println();
+            return;
+        }
         LOGGER.info("");
         if (shouldShowLineSeparator()) infoLine('-');
         if (configuration.isQuiet()) LOGGER.info("");
@@ -169,7 +174,7 @@ public class ProfilerMetrics {
         if (configuration.isEnvironmentEnabled() || configuration.isVerbose()) printEnvironmentSummary();
         printFailureSummary();
         if (shouldShowLineSeparator()) infoLine('-');
-        if (configuration.isQuiet()) {
+        if (configuration.isQuiet() && net.microfalx.maven.core.MavenUtils.isMavenLoggerAvailable()) {
             logger.getSystemOutputPrintStream().println(LOGGER.getReport());
         }
     }
@@ -300,11 +305,14 @@ public class ProfilerMetrics {
         MavenExecutionResult result = session.getResult();
         if (!result.hasExceptions()) return;
         LOGGER.info("");
-        infoMain(buffer().failure("Failure") + " (" + result.getExceptions().size() + ")");
+        infoMain(buffer().failure("Failures") + " (" + result.getExceptions().size() + ")");
         LOGGER.info("");
         for (Throwable exception : result.getExceptions()) {
-            logNameValue("Exception Type", ClassUtils.getName(ExceptionUtils.getRootCause(exception)));
-            logNameValue("Exception Message", ExceptionUtils.getRootCauseMessage(exception));
+            logNameValue("Exception Type", ClassUtils.getName(getRootCause(exception)));
+            logNameValue("Exception Message", getRootCauseMessage(exception));
+            if (session.getRequest().isShowErrors()) {
+                logNameValue("Stack Trace", "\n" + insertSpaces(getStackTrace(exception), 5));
+            }
         }
     }
 

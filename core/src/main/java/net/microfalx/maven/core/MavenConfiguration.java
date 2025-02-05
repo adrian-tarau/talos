@@ -12,6 +12,7 @@ import static net.microfalx.lang.FileUtils.validateDirectoryExists;
 import static net.microfalx.lang.FileUtils.validateFileExists;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 import static net.microfalx.maven.core.MavenUtils.getProperty;
+import static net.microfalx.maven.core.MavenUtils.isMavenLoggerAvailable;
 
 /**
  * Resolves various Maven related configuration.
@@ -51,7 +52,17 @@ public class MavenConfiguration {
      */
     public final boolean isQuiet() {
         if (quiet == null) quiet = getProperty(session, "quiet", true);
-        return quiet;
+        return quiet || isMavenQuiet();
+    }
+
+
+    /**
+     * Returns whether Maven was asked to build without any output.
+     *
+     * @return {@code true} if no output, {@code false} otherwise
+     */
+    public boolean isMavenQuiet() {
+        return session.getRequest().getLoggingLevel() >= 3;
     }
 
     /**
@@ -71,7 +82,7 @@ public class MavenConfiguration {
      */
     public final boolean isProgress() {
         if (progress == null) progress = getProperty(session, "progress", true);
-        return progress && isQuiet();
+        return progress && isQuiet() && isMavenLoggerAvailable() && !isMavenQuiet();
     }
 
     /**
@@ -100,7 +111,6 @@ public class MavenConfiguration {
     public int getDop() {
         return session.getRequest().getDegreeOfConcurrency();
     }
-
 
 
     /**
@@ -187,7 +197,6 @@ public class MavenConfiguration {
         verbosityLevel = getProperty(session, "verboseLevel", VERBOSE_NONE);
         if (verbose) verbosityLevel = VERBOSE_ALL;
     }
-
 
 
     private void initProgress() {

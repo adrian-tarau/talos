@@ -33,12 +33,21 @@ public class MavenConfiguration extends net.microfalx.maven.core.MavenConfigurat
     }
 
     /**
-     * Returns whether the console is enabled and should display reports and summaries.
+     * Returns whether the console report is enabled and should display reports and summaries.
      *
      * @return {@code true} if enabled, {@code false} otherwise
      */
-    public Boolean isConsoleEnabled() {
-        return getProperty(getSession(), "console.enabled", true);
+    public Boolean isReportConsoleEnabled() {
+        return getProperty(getSession(), "report.console.enabled", true) && !isMavenQuiet();
+    }
+
+    /**
+     * Returns whether the HTML report is enabled.
+     *
+     * @return {@code true} if enabled, {@code false} otherwise
+     */
+    public Boolean isReportHtmlEnabled() {
+        return getProperty(getSession(), "report.html.enabled", true) && !isMavenQuiet();
     }
 
     /**

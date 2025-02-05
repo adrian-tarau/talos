@@ -46,7 +46,8 @@ public class ProgressListener extends AbstractExecutionListener {
 
     @Override
     public void projectFailed(ExecutionEvent event) {
-        projectEnded(event);
+        if (!configuration.isProgress()) return;
+        print(buffer().failure("Failed").toString() + ".");
     }
 
     public void projectEnded(ExecutionEvent event) {

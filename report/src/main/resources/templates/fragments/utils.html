@@ -9,6 +9,7 @@
 
 <div th:fragment="failures_summary(failures)" class="bt-1">
     <div th:each="failure : ${failures}">
+        <span>Module: </span><span th:text="${failure.module.name}" class="text-primary-emphasis fw-bold"></span>
         <span>Exception Class: </span><span th:text="${failure.throwableClass}" class="text-primary-emphasis fw-bold"></span>
         <span>Root Cause: </span><span th:text="${failure.rootCauseMessage}" class="text-primary-emphasis fw-bold"></span>
     </div>
@@ -28,7 +29,7 @@
         <tbody>
             <th:block th:each="failure : ${failures}">
             <tr>
-                <td><span th:text="${helper.toDisplay(failure.module)}"></span></td>
+                <td><span th:text="${helper.toDisplay(failure.module.name)}"></span></td>
                 <td><span th:text="${helper.toDisplay(failure.mojo)}"></span></td>
                 <td><span th:text="${helper.toDisplay(failure.throwableClass)}"></span></td>
                 <td><span th:text="${helper.toDisplay(failure.rootCauseMessage)}"></span></td>
