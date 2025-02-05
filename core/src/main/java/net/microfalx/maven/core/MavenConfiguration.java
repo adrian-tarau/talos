@@ -23,8 +23,6 @@ public class MavenConfiguration {
     private static final int VERBOSE_MORE = 2;
     private static final int VERBOSE_ALL = 3;
 
-    private static final String STORAGE_DIRECTORY = ".microfalx";
-
     private Boolean verbose;
     private Boolean quiet;
     private Boolean progress;
@@ -103,15 +101,7 @@ public class MavenConfiguration {
         return session.getRequest().getDegreeOfConcurrency();
     }
 
-    /**
-     * Returns a director used to store files for any maven plugins.
-     *
-     * @return a non-null instance
-     */
-    public Resource getStorageDirectory() {
-        File baseDirectory = new File(session.getRequest().getBaseDirectory());
-        return Resource.directory(validateDirectoryExists(new File(baseDirectory, STORAGE_DIRECTORY)));
-    }
+
 
     /**
      * Returns a director inside the target directory.
@@ -198,8 +188,9 @@ public class MavenConfiguration {
         if (verbose) verbosityLevel = VERBOSE_ALL;
     }
 
+
+
     private void initProgress() {
-        ;
     }
 
 }

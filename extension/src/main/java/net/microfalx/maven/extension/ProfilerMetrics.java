@@ -45,8 +45,7 @@ import static net.microfalx.lang.FormatterUtils.formatNumber;
 import static net.microfalx.lang.FormatterUtils.formatPercent;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 import static net.microfalx.maven.core.MavenUtils.*;
-import static net.microfalx.maven.extension.MavenUtils.LONG_NAME_LENGTH;
-import static net.microfalx.maven.extension.MavenUtils.SHORT_NAME_LENGTH;
+import static net.microfalx.maven.extension.MavenUtils.*;
 import static org.apache.maven.shared.utils.logging.MessageUtils.buffer;
 
 /**
@@ -59,7 +58,6 @@ public class ProfilerMetrics {
     private static final MavenLogger LOGGER = MavenLogger.create(ProfilerMetrics.class);
 
     private static final int LINE_LENGTH = 110;
-    private static final int INDENT_STEP = 4;
 
     private final Map<Class<?>, MojoMetrics> mojoMetrics = new ConcurrentHashMap<>();
     private final Map<String, DependencyMetrics> dependencyMetrics = new ConcurrentHashMap<>();
@@ -92,7 +90,6 @@ public class ProfilerMetrics {
 
     private final MavenTracker tracker = new MavenTracker(ProfilerMetrics.class);
     private MavenConfiguration configuration;
-    private int indent;
     SessionMetrics sessionMetrics;
 
     void sessionStart() {
@@ -607,19 +604,6 @@ public class ProfilerMetrics {
         return map;
     }
 
-    private String getIndentSpaces() {
-        return INDENTS[Math.min(INDENTS.length - 1, indent)];
-    }
-
-    private void increaseIndent() {
-        indent++;
-    }
-
-    private void decreaseIndent() {
-        indent--;
-        if (indent < 0) indent = 0;
-    }
-
     private boolean shouldShowLineSeparator() {
         return !configuration.isQuietAndWithProgress();
     }
@@ -630,5 +614,5 @@ public class ProfilerMetrics {
     private static final String[] INSTALL_GOALS = {"install:install"};
     private static final String[] DEPLOY_GOALS = {"install:deploy"};
 
-    private static final String[] INDENTS = {"", "  ", "    "};
+
 }

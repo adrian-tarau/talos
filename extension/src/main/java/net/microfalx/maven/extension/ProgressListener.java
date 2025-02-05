@@ -35,7 +35,7 @@ public class ProgressListener extends AbstractExecutionListener {
             buffer.append(buffer().strong(project.getName()));
             buffer.append(' ');
             MavenUtils.appendDots(buffer);
-            print(buffer.toString());
+            print(MavenUtils.getIndentSpaces(1) + buffer);
         }
     }
 
@@ -51,7 +51,7 @@ public class ProgressListener extends AbstractExecutionListener {
 
     public void projectEnded(ExecutionEvent event) {
         if (!configuration.isProgress()) return;
-        print(buffer().success("Done").toString()+".");
+        print(buffer().success("Done").toString() + ".");
     }
 
     void start() {

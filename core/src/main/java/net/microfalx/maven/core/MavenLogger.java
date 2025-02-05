@@ -143,8 +143,9 @@ public class MavenLogger extends AbstractMavenLifecycleParticipant {
     }
 
     private void initSystemStreams() {
-        systemOutputResource = configuration.getStorageDirectory().resolve(LOGGER_PREFIX + "output.log", Resource.Type.FILE);
-        systemErrorResource = configuration.getStorageDirectory().resolve(LOGGER_PREFIX + "error.log", Resource.Type.FILE);
+        Resource stagingDirectory = MavenStorage.getStagingDirectory(configuration.getSession());
+        systemOutputResource = stagingDirectory.resolve(LOGGER_PREFIX + "output.log", Resource.Type.FILE);
+        systemErrorResource = stagingDirectory.resolve(LOGGER_PREFIX + "error.log", Resource.Type.FILE);
         debug("Initialize loggers to " + systemOutputResource.toURI());
         try {
             OutputStream systemOutputResourceStream = systemOutputResource.getOutputStream();

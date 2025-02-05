@@ -3,6 +3,7 @@ package net.microfalx.maven.extension;
 import net.microfalx.jvm.ServerMetrics;
 import net.microfalx.jvm.VirtualMachineMetrics;
 import net.microfalx.maven.core.MavenLogger;
+import net.microfalx.maven.core.MavenStorage;
 import net.microfalx.maven.core.MavenTracker;
 import net.microfalx.maven.core.MavenUtils;
 import net.microfalx.maven.junit.SurefireTests;
@@ -99,11 +100,12 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
         tracker.track("Session End", t -> {
             profilerMetrics.sessionsEnd(sessionMetrics);
             METRICS.time("Update Metrics", t2 -> updateMetrics(session));
-            METRICS.time("Store Metrics", t2 -> storeMetrics());
-            METRICS.time("Generate Report", t2 -> generateHtmlReports());
+            METRICS.time("Store Metrics", t2 -> storeMetrics(session));
+            METRICS.time("Generate Report", t2 -> generateHtmlReports(session));
             profilerMetrics.print();
             printConsoleReport();
-            METRICS.time("Move Results", t2 -> moveResults());
+            METRICS.time("Move Results", t2 -> copyResults(session));
+            METRICS.time("Cleanup", t2 -> cleanup(session));
             openHtmlReport();
         });
     }
@@ -160,14 +162,14 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
         }
     }
 
-    private void storeMetrics() {
+    private void storeMetrics(MavenSession session) {
         sessionMetrics.setEndTime(ZonedDateTime.now());
         try {
             sessionMetrics.setLogs(mavenLogger.getSystemOutput().loadAsString());
         } catch (IOException e) {
             LOGGER.error("Failed to attach log", e);
         }
-        Resource resource = configuration.getStorageDirectory().resolve("build.data", Resource.Type.FILE);
+        Resource resource = MavenStorage.getStagingDirectory(session).resolve("build.data", Resource.Type.FILE);
         try {
             try (OutputStream outputStream = resource.getOutputStream()) {
                 sessionMetrics.store(outputStream);
@@ -241,8 +243,8 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
         }
     }
 
-    private void generateHtmlReports() {
-        Resource resource = configuration.getStorageDirectory().resolve("build.report.html");
+    private void generateHtmlReports(MavenSession session) {
+        Resource resource = MavenStorage.getStagingDirectory(session).resolve("build.report.html");
         try {
             ReportBuilder.create(sessionMetrics).build(resource);
         } catch (Exception e) {
@@ -255,19 +257,31 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
         }
     }
 
-    private void moveResults() {
-        File target = ResourceUtils.toFile(configuration.getTargetDirectory(null, true));
-        File source = ResourceUtils.toFile(configuration.getStorageDirectory());
+    private void copyResults(MavenSession session) {
+        File target = ResourceUtils.toFile(MavenStorage.getWorkspaceDirectory(session));
+        copyResults(session, target, false);
+        target = ResourceUtils.toFile(configuration.getTargetDirectory(null, true));
+        copyResults(session, target, true);
+    }
+
+    private void copyResults(MavenSession session, File target, boolean remove) {
+        File source = ResourceUtils.toFile(MavenStorage.getStagingDirectory(session));
         try {
             FileUtils.copyDirectory(source, target);
         } catch (IOException e) {
-            LOGGER.error("Failed to move results, root cause: {}", getRootCauseMessage(e));
+            LOGGER.error("Failed to copy results to {}, root cause: {}", target, getRootCauseMessage(e));
         }
-        try {
-            FileUtils.deleteDirectory(source);
-        } catch (IOException e) {
-            LOGGER.error("Failed to remove temporary directory {}, root cause: {}", source, getRootCauseMessage(e));
+        if (remove) {
+            try {
+                FileUtils.deleteDirectory(source);
+            } catch (IOException e) {
+                LOGGER.error("Failed to remove source {}, root cause: {}", source, getRootCauseMessage(e));
+            }
         }
+    }
+
+    private void cleanup(MavenSession session) {
+        MavenStorage.cleanupWorkspace(session);
     }
 
 

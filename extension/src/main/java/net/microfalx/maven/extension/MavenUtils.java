@@ -22,6 +22,8 @@ public class MavenUtils {
     static final int MEDIUM_NAME_LENGTH = 50;
     static final int SHORT_NAME_LENGTH = 40;
 
+    private static int indent;
+
     /**
      * Returns the duration between two relative points in time.
      *
@@ -62,6 +64,7 @@ public class MavenUtils {
 
     /**
      * Returns a string describing the most important request parameters for a session.
+     *
      * @param session the session
      * @return the info
      */
@@ -81,6 +84,7 @@ public class MavenUtils {
 
     /**
      * Converts an artifact to a dependency.
+     *
      * @param artifact the project
      * @return a non-null instance
      */
@@ -104,6 +108,34 @@ public class MavenUtils {
         return StringUtils.toIdentifier(dependency.getGroupId() + ":" + dependency.getArtifactId());
     }
 
+    /**
+     * Returns the number of spaces to be used in console.
+     *
+     * @return a non-null instance
+     */
+    public static String getIndentSpaces() {
+        return getIndentSpaces(indent);
+    }
+
+    /**
+     * Returns the number of spaces to be used in console.
+     *
+     * @param indent the level of indentation
+     * @return a non-null instance
+     */
+    public static String getIndentSpaces(int indent) {
+        return INDENTS[Math.min(INDENTS.length - 1, indent)];
+    }
+
+    public static void increaseIndent() {
+        indent++;
+    }
+
+    public static void decreaseIndent() {
+        indent--;
+        if (indent < 0) indent = 0;
+    }
+
     private static String getGoals(MavenSession session) {
         return String.join(" ", session.getRequest().getGoals());
     }
@@ -111,6 +143,8 @@ public class MavenUtils {
     private static String getProfiles(MavenSession session) {
         return String.join(" ", session.getRequest().getActiveProfiles());
     }
+
+    private static final String[] INDENTS = {"", "  ", "    "};
 
 
 }
