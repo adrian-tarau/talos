@@ -206,6 +206,22 @@ public class ChartHelper {
         return chart;
     }
 
+    public AreaChart<Long, Float> getProcessGcCounts(String id, Integer width) {
+        AreaChart<Long, Float> chart = new AreaChart<>(id, "GC / Collections");
+        chart.add(convert("Eden", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.GC_EDEN_COUNT)));
+        chart.add(convert("Tenured", session.getServerMetrics().get(VirtualMachineMetrics.GC_TENURED_COUNT)));
+        chart.setStacked(true);
+        return chart;
+    }
+
+    public AreaChart<Long, Float> getProcessGcDuration(String id, Integer width) {
+        AreaChart<Long, Float> chart = new AreaChart<>(id, "GC / Durations");
+        chart.add(convert("Eden", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.GC_EDEN_DURATION)));
+        chart.add(convert("Tenured", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.GC_TENURED_DURATION)));
+        chart.getYaxis().setUnit(Unit.DURATION);
+        return chart;
+    }
+
     public TreeMapChart<Integer> getDependenciesCountTreeMapChart(String id, Integer width) {
         TreeMapChart<Integer> chart = new TreeMapChart<>(id, "Dependency Count By Group");
         chart.setWidth(width);

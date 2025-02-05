@@ -398,6 +398,8 @@
     <div th:replace="~{fragments/chart :: area(${chartHelper.getProcessMemory('process_memory',null)})}"></div>
     <div th:replace="~{fragments/chart :: area(${chartHelper.getProcessThreads('process_threads',null)})}"></div>
     <div th:replace="~{fragments/chart :: area(${chartHelper.getProcessIO('process_io',null)})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getProcessGcCounts('process_gc_counts',null)})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getProcessGcDuration('process_gc_durations',null)})}"></div>
 
     <div th:replace="~{fragments/chart :: treemap(${chartHelper.getDependenciesCountTreeMapChart('dependencies_count', null)})}"></div>
     <div th:replace="~{fragments/chart :: treemap(${chartHelper.getDependenciesSizeTreeMapChart('dependencies_size', null)})}"></div>
