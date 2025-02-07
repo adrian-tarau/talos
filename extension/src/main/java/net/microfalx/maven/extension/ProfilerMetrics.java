@@ -104,7 +104,7 @@ public class ProfilerMetrics {
     void sessionsEnd(SessionMetrics sessionMetrics) {
         updateLifeCycle(sessionMetrics);
         sessionMetrics.setEndTime(ZonedDateTime.now());
-        sessionMetrics.setArtifacts(getTrimmedArtifacts());
+        sessionMetrics.setArtifacts(repositoryMetrics.getMetrics());
         sessionMetrics.setDependencies(dependencyMetrics.values());
         sessionMetrics.setMojos(mojoMetrics.values());
         sessionMetrics.setPlugins(pluginMetrics.values());
@@ -555,15 +555,6 @@ public class ProfilerMetrics {
         sessionMetrics.setLifeCycles(lifecycles);
     }
 
-    private Collection<ArtifactMetrics> getTrimmedArtifacts() {
-        if (configuration.isVerbose()) {
-            return repositoryMetrics.getMetrics();
-        } else {
-            return repositoryMetrics.getMetrics().stream()
-                    .filter(a -> a.getDuration().toMillis() > 5)
-                    .collect(Collectors.toList());
-        }
-    }
 
     private void updateDependencies() {
         for (DependencyMetrics dependencyMetrics : dependencyMetrics.values()) {

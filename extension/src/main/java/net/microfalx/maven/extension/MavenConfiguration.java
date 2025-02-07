@@ -1,11 +1,13 @@
 package net.microfalx.maven.extension;
 
+import net.microfalx.lang.TimeUtils;
 import org.apache.maven.execution.MavenSession;
 
 import java.time.Duration;
 
 import static java.time.Duration.ofMillis;
 import static net.microfalx.maven.core.MavenUtils.getProperty;
+import static net.microfalx.maven.core.MavenUtils.isMavenLoggerAvailable;
 
 /**
  * Resolves various Maven related configuration.
@@ -48,6 +50,34 @@ public class MavenConfiguration extends net.microfalx.maven.core.MavenConfigurat
      */
     public Boolean isReportHtmlEnabled() {
         return getProperty(getSession(), "report.html.enabled", true) && !isMavenQuiet();
+    }
+
+    /**
+     * Returns whether the logs should be included.
+     *
+     * @return {@code true} if enabled, {@code false} otherwise
+     */
+    public Boolean isReportLogsEnabled() {
+        return getProperty(getSession(), "report.logs.enabled", true) && isMavenLoggerAvailable();
+    }
+
+    /**
+     * Returns whether the HTML report is enabled.
+     *
+     * @return {@code true} if enabled, {@code false} otherwise
+     */
+    public Duration getTrendRetention() {
+        String property = getProperty(getSession(), "report.trend.retention", "30d");
+        return TimeUtils.parseDuration(property);
+    }
+
+    /**
+     * Returns whether the trend report will only contain one entry for each day.
+     *
+     * @return {@code true} to include one per day, {@code false} to include all
+     */
+    public boolean isTrendReportingDaily() {
+        return getProperty(getSession(), "report.trend.daily", true);
     }
 
     /**

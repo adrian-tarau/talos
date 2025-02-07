@@ -9,13 +9,13 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class SessionMetricsTest extends AbstractMetricsTest {
+class TrendMetricsTest extends AbstractMetricsTest {
 
     @Test
     void store() throws IOException {
         SessionMetrics session = create();
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        session.store(outputStream);
+        TrendMetrics.from(session).store(outputStream);
         assertTrue(outputStream.toByteArray().length > 0);
     }
 
@@ -23,11 +23,9 @@ class SessionMetricsTest extends AbstractMetricsTest {
     void load() throws IOException {
         SessionMetrics session = create();
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        session.store(outputStream);
-        SessionMetrics restoredSession = SessionMetrics.load(new ByteArrayInputStream(outputStream.toByteArray()));
+        TrendMetrics.from(session).store(outputStream);
+        TrendMetrics restoredSession = TrendMetrics.load(new ByteArrayInputStream(outputStream.toByteArray()));
         assertEquals(session.getName(), restoredSession.getName());
     }
-
-
 
 }

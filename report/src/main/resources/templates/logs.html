@@ -3,8 +3,12 @@
 <body>
 
 <div th:fragment="logs">
-    <div class="font-monospace" style="white-space: pre-wrap; font-size: smaller" th:utext="${helper.getLogAsHtml()}">
+    <div class="font-monospace" style="white-space: pre-wrap; font-size: smaller" th:unless="${#strings.isEmpty(session.logs)}"
+         th:utext="${helper.getLogAsHtml()}">
     </div>
+    <p th:if="${#strings.isEmpty(session.logs)}">
+        This build did not contain any historical data.
+    </p>
 </div>
 
 </body>

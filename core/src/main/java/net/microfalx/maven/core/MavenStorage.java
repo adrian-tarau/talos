@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collection;
 
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofMillis;
@@ -73,7 +74,7 @@ public class MavenStorage {
     /**
      * Returns a staging directory used to collect data related to a build.
      *
-     * @param session the
+     * @param session the session
      * @return the staging directory for a session
      */
     public static synchronized Resource getStagingDirectory(MavenSession session) {
@@ -87,6 +88,7 @@ public class MavenStorage {
     /**
      * Returns the directory to store data for a given session (mostly temporary data).
      *
+     * @param session the session
      * @return a non-null instance
      */
     public static synchronized Resource getWorkspaceDirectory(MavenSession session) {
@@ -101,15 +103,41 @@ public class MavenStorage {
     /**
      * Returns the directory to store data for trends a given project.
      *
+     * @param session the session
      * @return a non-null instance
      */
-    public static synchronized Resource getTrendWorkspaceDirectory(MavenSession session) {
+    public static synchronized Resource getTrendsDirectory(MavenSession session) {
         requireNonNull(session);
-        if (workspaceDirectory == null) {
-            workspaceDirectory = getStorageDirectory().resolve("trends", DIRECTORY)
-                    .resolve(getProjectId(session), DIRECTORY).resolve(getTimestampedName(), DIRECTORY);
+        if (trendDirectory == null) {
+            trendDirectory = getStorageDirectory().resolve("trends", DIRECTORY)
+                    .resolve(getProjectId(session), DIRECTORY);
         }
-        return workspaceDirectory;
+        return trendDirectory;
+    }
+
+    /**
+     * Stores trend metrics.
+     *
+     * @param session the session
+     * @param trend   the trend resource
+     * @throws IOException if an I/O error occurs
+     */
+    public static void storeTrend(MavenSession session, Resource trend) throws IOException {
+        requireNonNull(session);
+        requireNonNull(trend);
+        String fileName = "trend_" + getTimestampedName() + ".data";
+        getTrendsDirectory(session).resolve(fileName).copyFrom(trend);
+    }
+
+    /**
+     * Returns a list of resources containing trends information.
+     *
+     * @param session the session
+     * @return a non-null instance
+     * @throws IOException if an I/O error occurs
+     */
+    public static Collection<Resource> getTrends(MavenSession session) throws IOException {
+        return getTrendsDirectory(session).list();
     }
 
     /**

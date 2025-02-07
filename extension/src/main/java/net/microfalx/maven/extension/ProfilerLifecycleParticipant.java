@@ -2,6 +2,7 @@ package net.microfalx.maven.extension;
 
 import net.microfalx.jvm.ServerMetrics;
 import net.microfalx.jvm.VirtualMachineMetrics;
+import net.microfalx.lang.TimeUtils;
 import net.microfalx.maven.core.MavenLogger;
 import net.microfalx.maven.core.MavenStorage;
 import net.microfalx.maven.core.MavenTracker;
@@ -10,6 +11,7 @@ import net.microfalx.maven.junit.SurefireTests;
 import net.microfalx.maven.model.ExtensionMetrics;
 import net.microfalx.maven.model.SessionMetrics;
 import net.microfalx.maven.model.TestMetrics;
+import net.microfalx.maven.model.TrendMetrics;
 import net.microfalx.maven.report.ReportBuilder;
 import net.microfalx.resource.Resource;
 import net.microfalx.resource.ResourceUtils;
@@ -34,6 +36,8 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -79,7 +83,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
     public void afterProjectsRead(MavenSession session) throws MavenExecutionException {
         super.afterProjectsRead(session);
         tracker.track("Project Read", t -> {
-            sessionMetrics = new SessionMetrics(session).setStartTime(startTime).setVerbose(configuration.isVerbose());
+            sessionMetrics = (SessionMetrics) new SessionMetrics(session).setStartTime(startTime).setVerbose(configuration.isVerbose());
             profilerMetrics.sessionMetrics = sessionMetrics;
             loadProjectSettings(session);
             if (progressListener != null) progressListener.start();
@@ -166,15 +170,29 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
     private void storeMetrics(MavenSession session) {
         sessionMetrics.setEndTime(ZonedDateTime.now());
         try {
-            sessionMetrics.setLogs(mavenLogger.getSystemOutput().loadAsString());
+            if (configuration.isReportLogsEnabled()) {
+                sessionMetrics.setLogs(mavenLogger.getSystemOutput().loadAsString());
+            }
         } catch (IOException e) {
             LOGGER.error("Failed to attach log", e);
         }
-        Resource resource = MavenStorage.getStagingDirectory(session).resolve("build.data", Resource.Type.FILE);
+        Collection<TrendMetrics> trends = getTrends(session);
+        if (trends != null) sessionMetrics.setTrends(trends);
         try {
+            Resource resource = MavenStorage.getStagingDirectory(session).resolve("build.data", Resource.Type.FILE);
             try (OutputStream outputStream = resource.getOutputStream()) {
                 sessionMetrics.store(outputStream);
             }
+        } catch (Exception e) {
+            LOGGER.error("Failed to store metrics on disk", e);
+        }
+        try {
+            Resource resource = MavenStorage.getStagingDirectory(session).resolve("trend.data", Resource.Type.FILE);
+            try (OutputStream outputStream = resource.getOutputStream()) {
+                TrendMetrics trendMetrics = TrendMetrics.from(sessionMetrics);
+                trendMetrics.store(outputStream);
+            }
+            MavenStorage.storeTrend(session, resource);
         } catch (Exception e) {
             LOGGER.error("Failed to store metrics on disk", e);
         }
@@ -280,6 +298,37 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
                 LOGGER.error("Failed to remove source {}, root cause: {}", source, getRootCauseMessage(e));
             }
         }
+    }
+
+    private Collection<TrendMetrics> getTrends(MavenSession session) {
+        return tracker.trackCallable("Load Trends", () -> {
+            boolean trendReportingDaily = configuration.isTrendReportingDaily();
+            LocalDateTime oldestTrend = LocalDateTime.now().minus(configuration.getTrendRetention());
+            Collection<TrendMetrics> metrics = new ArrayList<>();
+            Collection<Resource> resources = MavenStorage.getTrends(session);
+            LocalDate prevDate = null;
+            for (Resource resource : resources) {
+                LocalDateTime lastModified = TimeUtils.toLocalDateTime(resource.lastModified());
+                LocalDate date = lastModified.toLocalDate();
+                if (lastModified.isAfter(oldestTrend)) {
+                    if (!trendReportingDaily || (prevDate == null || !prevDate.equals(date))) {
+                        metrics.add(loadTrend(resource));
+                    }
+                    prevDate = date;
+                } else {
+                    try {
+                        resource.delete();
+                    } catch (IOException e) {
+                        // it does not matter, after some time it will be successful
+                    }
+                }
+            }
+            return metrics;
+        });
+    }
+
+    private TrendMetrics loadTrend(Resource resource) {
+        return tracker.trackCallable("Load Trends", () -> TrendMetrics.load(resource));
     }
 
     private void cleanup(MavenSession session) {

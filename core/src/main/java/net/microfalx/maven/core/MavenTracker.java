@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.Collection;
+import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -56,23 +57,38 @@ public class MavenTracker {
         track(name, consumer, null);
     }
 
-    public <T> void track(String name, Consumer<T> consumer, MavenProject project) {
-        track(name, consumer, project, null);
+    public <T> T trackCallable(String name, Callable<T> callable) {
+        return track(name, callable, null, null);
     }
 
-    public <T> void track(String name, Consumer<T> consumer, MavenProject project, Mojo mojo) {
-        try {
-            METRICS.time(name, (t) -> consumer.accept(null));
-        } catch (Exception e) {
-            failures.add(new Failure(name, project, mojo, e));
-            logFailure(name, e);
-        }
+    public <T> void track(String name, Consumer<T> consumer, MavenProject project) {
+        track(name, consumer, project, null);
     }
 
     public <T> void track(String name, Supplier<T> supplier) {
         try {
             METRICS.time(name, supplier);
         } catch (Exception e) {
+            failures.add(new Failure(name, null, null, e));
+            logFailure(name, e);
+        }
+    }
+
+    public <T> T track(String name, Callable<T> consumer, MavenProject project, Mojo mojo) {
+        try {
+            return METRICS.timeCallable(name, consumer);
+        } catch (Exception e) {
+            failures.add(new Failure(name, project, mojo, e));
+            logFailure(name, e);
+            return null;
+        }
+    }
+
+    public <T> void track(String name, Consumer<T> consumer, MavenProject project, Mojo mojo) {
+        try {
+            METRICS.time(name, t -> consumer.accept(null));
+        } catch (Exception e) {
+            failures.add(new Failure(name, project, mojo, e));
             logFailure(name, e);
         }
     }

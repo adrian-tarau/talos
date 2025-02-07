@@ -2,6 +2,7 @@ package net.microfalx.maven.model;
 
 import org.apache.maven.project.MavenProject;
 
+import java.time.Duration;
 import java.time.ZonedDateTime;
 
 /**
@@ -45,5 +46,10 @@ public class ProjectMetrics extends Project {
 
     public void setFailureMetrics(FailureMetrics failureMetrics) {
         this.failureMetrics = failureMetrics;
+    }
+
+    public Duration getDuration() {
+        if (endTime == null) endTime = ZonedDateTime.now();
+        return Duration.between(startTime, endTime);
     }
 }
