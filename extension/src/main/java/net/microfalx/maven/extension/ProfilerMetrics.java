@@ -544,17 +544,16 @@ public class ProfilerMetrics {
 
     private void updateLifeCycle(SessionMetrics sessionMetrics) {
         Collection<LifecycleMetrics> lifecycles = new ArrayList<>();
-        lifecycles.add(new LifecycleMetrics("Configuration").addDuration(getConfigurationDuration()));
-        lifecycles.add(new LifecycleMetrics("Compile").addDuration(getGoalsDuration(COMPILE_GOALS)));
-        lifecycles.add(new LifecycleMetrics("Tests").addDuration(getGoalsDuration(TESTS_GOALS)));
-        lifecycles.add(new LifecycleMetrics("Package").addDuration(getGoalsDuration(PACKAGE_GOALS)));
-        lifecycles.add(new LifecycleMetrics("Install").addDuration(getGoalsDuration(INSTALL_GOALS)));
-        lifecycles.add(new LifecycleMetrics("Deploy").addDuration(getGoalsDuration(DEPLOY_GOALS)));
-        lifecycles.add(new LifecycleMetrics("Local Repository").addDuration(getRepositoryDuration(repositoryMetrics)));
-        lifecycles.add(new LifecycleMetrics("Remote Repository").addDuration(getRepositoryDuration(transferMetrics)));
+        lifecycles.add(new LifecycleMetrics("Configuration").addActiveDuration(getConfigurationDuration()));
+        lifecycles.add(new LifecycleMetrics("Compile").addActiveDuration(getGoalsDuration(COMPILE_GOALS)));
+        lifecycles.add(new LifecycleMetrics("Tests").addActiveDuration(getGoalsDuration(TESTS_GOALS)));
+        lifecycles.add(new LifecycleMetrics("Package").addActiveDuration(getGoalsDuration(PACKAGE_GOALS)));
+        lifecycles.add(new LifecycleMetrics("Install").addActiveDuration(getGoalsDuration(INSTALL_GOALS)));
+        lifecycles.add(new LifecycleMetrics("Deploy").addActiveDuration(getGoalsDuration(DEPLOY_GOALS)));
+        lifecycles.add(new LifecycleMetrics("Local Repository").addActiveDuration(getRepositoryDuration(repositoryMetrics)));
+        lifecycles.add(new LifecycleMetrics("Remote Repository").addActiveDuration(getRepositoryDuration(transferMetrics)));
         sessionMetrics.setLifeCycles(lifecycles);
     }
-
 
     private void updateDependencies() {
         for (DependencyMetrics dependencyMetrics : dependencyMetrics.values()) {

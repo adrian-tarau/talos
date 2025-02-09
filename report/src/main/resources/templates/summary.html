@@ -160,8 +160,8 @@
         <tr th:each="mojo : ${mojos}">
             <td th:text="${mojo.name}"></td>
             <td th:text="${mojo.className}"></td>
-            <td class="text-end" th:text="${helper.formatDuration(mojo.duration)}"></td>
-            <td class="text-end" th:text="${helper.formatDuration(mojo.averageDuration)}"></td>
+            <td class="text-end" th:text="${helper.formatDuration(mojo.activeDuration)}"></td>
+            <td class="text-end" th:text="${helper.formatDuration(mojo.averageActiveDuration)}"></td>
             <td>
                 <span th:if="${mojo.failureCount==0}">Success</span>
                 <span th:if="${mojo.failureCount>0}">Failure</span>

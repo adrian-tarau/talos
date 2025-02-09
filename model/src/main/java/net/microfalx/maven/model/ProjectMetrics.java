@@ -10,8 +10,8 @@ import java.time.ZonedDateTime;
  */
 public class ProjectMetrics extends Project {
 
-    private ZonedDateTime startTime;
-    private ZonedDateTime endTime;
+    private ZonedDateTime startTime = ZonedDateTime.now();
+    private ZonedDateTime endTime = startTime;
 
     private FailureMetrics failureMetrics;
 

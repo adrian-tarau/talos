@@ -45,7 +45,7 @@
         </div>
     </div>
     <div th:unless="${session.verbose}" th:replace="~{fragments/utils :: alert_info('Only the tests that have failed will be displayed. Enable <i>verbose</i> option to see all the tests', null)}"></div>
-    <div th:replace="~{ :: tests_table(${helper.getTests(!session.verbose)})}"></div>
+    <div th:if="${helper.hasTests()}" th:replace="~{ :: tests_table(${helper.getTests(!session.verbose)})}"></div>
     <span th:unless="${helper.hasTests()}">This build did not contain any tests information.</span>
 </div>
 

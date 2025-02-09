@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="code_coverage">
+    <div th:if="${codeCoverageHelper.hasCoverage()}">
+    </div>
+    <p th:unless="${codeCoverageHelper.hasCoverage()}">
+        This build did not contain any code coverage data.
+    </p>
+</div>
+
+</body>
+</html>

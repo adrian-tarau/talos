@@ -169,6 +169,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
 
     private void storeMetrics(MavenSession session) {
         sessionMetrics.setEndTime(ZonedDateTime.now());
+        // attach logs
         try {
             if (configuration.isReportLogsEnabled()) {
                 sessionMetrics.setLogs(mavenLogger.getSystemOutput().loadAsString());
@@ -176,16 +177,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
         } catch (IOException e) {
             LOGGER.error("Failed to attach log", e);
         }
-        Collection<TrendMetrics> trends = getTrends(session);
-        if (trends != null) sessionMetrics.setTrends(trends);
-        try {
-            Resource resource = MavenStorage.getStagingDirectory(session).resolve("build.data", Resource.Type.FILE);
-            try (OutputStream outputStream = resource.getOutputStream()) {
-                sessionMetrics.store(outputStream);
-            }
-        } catch (Exception e) {
-            LOGGER.error("Failed to store metrics on disk", e);
-        }
+        // store trend metrics
         try {
             Resource resource = MavenStorage.getStagingDirectory(session).resolve("trend.data", Resource.Type.FILE);
             try (OutputStream outputStream = resource.getOutputStream()) {
@@ -193,6 +185,18 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
                 trendMetrics.store(outputStream);
             }
             MavenStorage.storeTrend(session, resource);
+        } catch (Exception e) {
+            LOGGER.error("Failed to store metrics on disk", e);
+        }
+        // attach all trend metrics to session
+        Collection<TrendMetrics> trends = getTrends(session);
+        if (trends != null) sessionMetrics.setTrends(trends);
+        // store session metrics
+        try {
+            Resource resource = MavenStorage.getStagingDirectory(session).resolve("build.data", Resource.Type.FILE);
+            try (OutputStream outputStream = resource.getOutputStream()) {
+                sessionMetrics.store(outputStream);
+            }
         } catch (Exception e) {
             LOGGER.error("Failed to store metrics on disk", e);
         }

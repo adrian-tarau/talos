@@ -3,9 +3,29 @@
 <body>
 
 <div th:fragment="trends">
-    <p th:unless="${helper.hasTrends()}">
+    <th:block th:if="${trendHelper.hasTrends()}">
+        <h3>Maven</h3>
+        <div class="container-fluid">
+            <div class="row justify-content-start g-2">
+                <div class="col-12" id="trend_sessions"></div>
+            </div>
+            <div class="row justify-content-start g-2">
+                <div class="col-6" id="trend_events"></div>
+                <div class="col-6" id="trend_tasks"></div>
+            </div>
+            <div class="row justify-content-start g-2">
+                <div class="col-6" id="trend_artifacts"></div>
+                <div class="col-6" id="trend_aaaa"></div>
+            </div>
+        </div>
+        <h3>Server</h3>
+
+        <h3>Process</h3>
+    </th:block>
+    <p th:unless="${trendHelper.hasTrends()}">
         This build did not contain any historical data.
     </p>
+
 </div>
 
 </body>

@@ -1,30 +1,35 @@
 package net.microfalx.maven.model;
 
+import net.microfalx.jvm.model.Server;
+import net.microfalx.jvm.model.VirtualMachine;
 import net.microfalx.metrics.SeriesStore;
 import net.microfalx.resource.Resource;
 import org.apache.maven.execution.MavenSession;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Collections.unmodifiableCollection;
+import static java.util.Collections.unmodifiableMap;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.StringUtils.NA_STRING;
 
 /**
  * Holds metrics about a Maven session.
  */
-public class SessionMetrics extends AbstractSessionMetrics {
+public class SessionMetrics extends AbstractSessionMetrics<SessionMetrics> {
 
     private final Collection<ArtifactMetrics> artifacts = new ArrayList<>();
     private final Collection<DependencyMetrics> dependencies = new ArrayList<>();
     private final Collection<PluginMetrics> plugins = new ArrayList<>();
     private final Collection<TestMetrics> tests = new ArrayList<>();
     private final Collection<TrendMetrics> trends = new ArrayList<>();
+
+    private VirtualMachine virtualMachine;
+    private final Map<String, String> systemProperties = new HashMap<>();
+    private Server server;
 
     private SeriesStore virtualMachineMetrics = SeriesStore.memory();
     private SeriesStore serverMetrics = SeriesStore.memory();
@@ -104,6 +109,31 @@ public class SessionMetrics extends AbstractSessionMetrics {
     public void setTests(Collection<TestMetrics> tests) {
         requireNonNull(tests);
         this.tests.addAll(tests);
+    }
+
+    public VirtualMachine getVirtualMachine() {
+        return virtualMachine;
+    }
+
+    public void setVirtualMachine(VirtualMachine virtualMachine) {
+        this.virtualMachine = virtualMachine;
+    }
+
+    public Server getServer() {
+        return server;
+    }
+
+    public void setServer(Server server) {
+        this.server = server;
+    }
+
+    public Map<String, String> getSystemProperties() {
+        return unmodifiableMap(systemProperties);
+    }
+
+    public void setSystemProperties(Map<String, String> systemProperties) {
+        requireNonNull(systemProperties);
+        this.systemProperties.putAll(systemProperties);
     }
 
     public SeriesStore getVirtualMachineMetrics() {

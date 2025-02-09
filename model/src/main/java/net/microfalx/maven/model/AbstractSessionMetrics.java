@@ -4,11 +4,12 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.serializers.DefaultSerializers;
+import com.esotericsoftware.kryo.serializers.ImmutableCollectionsSerializers;
 import com.esotericsoftware.kryo.serializers.OptionalSerializers;
+import com.esotericsoftware.kryo.serializers.VersionFieldSerializer;
 import net.microfalx.jvm.model.Process;
 import net.microfalx.jvm.model.*;
 import net.microfalx.lang.IOUtils;
-import net.microfalx.lang.NamedIdentityAware;
 import net.microfalx.metrics.DefaultSeries;
 import net.microfalx.metrics.Metric;
 import net.microfalx.metrics.SeriesMemoryStore;
@@ -25,21 +26,20 @@ import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static java.util.Collections.unmodifiableCollection;
-import static java.util.Collections.unmodifiableMap;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
-public abstract class AbstractSessionMetrics extends NamedIdentityAware<String> {
+public abstract class AbstractSessionMetrics<T extends AbstractSessionMetrics<T>> extends AbstractTimeAwareMetrics<T> {
 
     private static final int SERIALIZATION_ID = 1000;
 
     private Project project;
-    private ZonedDateTime startTime = ZonedDateTime.now();
-    private ZonedDateTime endTime = startTime;
 
     private final Collection<ProjectMetrics> modules = new ArrayList<>();
     private final Collection<MojoMetrics> mojos = new ArrayList<>();
@@ -56,12 +56,9 @@ public abstract class AbstractSessionMetrics extends NamedIdentityAware<String> 
     private URI localRepository;
     private final Collection<URI> remoteRepositories = new ArrayList<>();
 
-    private VirtualMachine virtualMachine;
-    private final Map<String, String> systemProperties = new HashMap<>();
-    private Server server;
-
     private transient Map<String, ProjectMetrics> modulesById;
     private transient Map<String, MojoMetrics> mojosById;
+    private transient Map<String, LifecycleMetrics> lifeCyclesById;
 
     protected AbstractSessionMetrics() {
     }
@@ -80,30 +77,6 @@ public abstract class AbstractSessionMetrics extends NamedIdentityAware<String> 
 
     public Project getProject() {
         return project;
-    }
-
-    public ZonedDateTime getStartTime() {
-        return startTime;
-    }
-
-    public AbstractSessionMetrics setStartTime(ZonedDateTime startTime) {
-        requireNonNull(startTime);
-        this.startTime = startTime;
-        return this;
-    }
-
-    public ZonedDateTime getEndTime() {
-        return endTime;
-    }
-
-    public AbstractSessionMetrics setEndTime(ZonedDateTime endTime) {
-        requireNonNull(endTime);
-        this.endTime = endTime;
-        return this;
-    }
-
-    public Duration getDuration() {
-        return Duration.between(startTime, endTime);
     }
 
     public Collection<String> getProfiles() {
@@ -126,9 +99,9 @@ public abstract class AbstractSessionMetrics extends NamedIdentityAware<String> 
         return verbose;
     }
 
-    public AbstractSessionMetrics setVerbose(boolean verbose) {
+    public T setVerbose(boolean verbose) {
         this.verbose = verbose;
-        return this;
+        return self();
     }
 
     public URI getLocalRepository() {
@@ -157,9 +130,9 @@ public abstract class AbstractSessionMetrics extends NamedIdentityAware<String> 
                 modulesById.put(module.getArtifactId(), module);
             }
         }
-        ProjectMetrics projectMetrics = modulesById.get(id);
-        if (projectMetrics == null) throw new IllegalArgumentException("A module with id " + id + " does not exist");
-        return projectMetrics;
+        ProjectMetrics metrics = modulesById.get(id);
+        if (metrics == null) throw new IllegalArgumentException("A module with id " + id + " does not exist");
+        return metrics;
     }
 
     public boolean isMultiModule() {
@@ -192,9 +165,9 @@ public abstract class AbstractSessionMetrics extends NamedIdentityAware<String> 
                 mojosById.put(mojo.getId(), mojo);
             }
         }
-        MojoMetrics mojoMetrics = mojosById.get(id);
-        if (mojoMetrics == null) throw new IllegalArgumentException("A Mojo with id " + id + " does not exist");
-        return mojoMetrics;
+        MojoMetrics metrics = mojosById.get(id);
+        if (metrics == null) throw new IllegalArgumentException("A Mojo with id " + id + " does not exist");
+        return metrics;
     }
 
     public void setMojos(Collection<MojoMetrics> mojos) {
@@ -204,6 +177,19 @@ public abstract class AbstractSessionMetrics extends NamedIdentityAware<String> 
 
     public Collection<LifecycleMetrics> getLifecycles() {
         return lifecycles;
+    }
+
+    public LifecycleMetrics getLifecycle(String id) {
+        requireNonNull(id);
+        if (lifeCyclesById == null) {
+            lifeCyclesById = new HashMap<>();
+            for (LifecycleMetrics lifecycle : lifecycles) {
+                lifeCyclesById.put(lifecycle.getId(), lifecycle);
+            }
+        }
+        LifecycleMetrics metrics = lifeCyclesById.get(id);
+        if (metrics == null) throw new IllegalArgumentException("A life cycle with id " + id + " does not exist");
+        return metrics;
     }
 
     public void setLifeCycles(Collection<LifecycleMetrics> lifecycles) {
@@ -243,31 +229,6 @@ public abstract class AbstractSessionMetrics extends NamedIdentityAware<String> 
         this.extensionFailures.add(failure);
     }
 
-    public VirtualMachine getVirtualMachine() {
-        return virtualMachine;
-    }
-
-    public void setVirtualMachine(VirtualMachine virtualMachine) {
-        this.virtualMachine = virtualMachine;
-    }
-
-    public Server getServer() {
-        return server;
-    }
-
-    public void setServer(Server server) {
-        this.server = server;
-    }
-
-    public Map<String, String> getSystemProperties() {
-        return unmodifiableMap(systemProperties);
-    }
-
-    public void setSystemProperties(Map<String, String> systemProperties) {
-        requireNonNull(systemProperties);
-        this.systemProperties.putAll(systemProperties);
-    }
-
     public void store(OutputStream outputStream) throws IOException {
         Kryo kryo = createKryo();
         outputStream = IOUtils.getCompressedOutputStream(outputStream);
@@ -299,15 +260,15 @@ public abstract class AbstractSessionMetrics extends NamedIdentityAware<String> 
         }
     }
 
-    protected static void copy(AbstractSessionMetrics source, AbstractSessionMetrics target) {
+    protected static void copy(AbstractSessionMetrics<?> source, AbstractSessionMetrics<?> target) {
         requireNonNull(source);
         requireNonNull(target);
         target.setId(source.getId());
         target.setName(source.getName());
         target.setDescription(source.getDescription());
         target.project = source.getProject();
-        target.startTime = source.startTime;
-        target.endTime = source.endTime;
+        target.setStartTime(source.getStartTime());
+        target.setEndTime(source.getEndTime());
         target.localRepository = source.localRepository;
         target.remoteRepositories.addAll(source.remoteRepositories);
 
@@ -322,16 +283,14 @@ public abstract class AbstractSessionMetrics extends NamedIdentityAware<String> 
         target.offline = source.offline;
         target.verbose = source.verbose;
         target.dop = source.dop;
-
-        target.systemProperties.putAll(source.systemProperties);
     }
 
     @Override
     public String toString() {
         return new StringJoiner(", ", getClass().getSimpleName() + "[", "]")
                 .add("project=" + project)
-                .add("startTime=" + startTime)
-                .add("endTime=" + endTime)
+                .add("startTime=" + getStartTime())
+                .add("endTime=" + getEndTime())
                 .add("modules=" + modules)
                 .add("mojos=" + mojos)
                 .add("lifecycles=" + lifecycles.size())
@@ -346,6 +305,7 @@ public abstract class AbstractSessionMetrics extends NamedIdentityAware<String> 
 
     protected static Kryo createKryo() {
         Kryo kryo = new Kryo();
+        kryo.setDefaultSerializer(VersionFieldSerializer.class);
         kryo.register(SessionMetrics.class, SERIALIZATION_ID);
         kryo.register(TrendMetrics.class, SERIALIZATION_ID + 1);
 
@@ -364,6 +324,8 @@ public abstract class AbstractSessionMetrics extends NamedIdentityAware<String> 
         kryo.register(TestSummaryMetrics.class, SERIALIZATION_ID + 28);
         kryo.register(LifecycleMetrics.class, SERIALIZATION_ID + 29);
         kryo.register(FailureMetrics.class, SERIALIZATION_ID + 30);
+
+        kryo.register(AbstractTimeAwareMetrics.ActiveIntervalImpl.class, SERIALIZATION_ID + 40);
 
         kryo.register(Metric.class, SERIALIZATION_ID + 50);
         kryo.register(Metric.Type.class, SERIALIZATION_ID + 51);
@@ -396,6 +358,8 @@ public abstract class AbstractSessionMetrics extends NamedIdentityAware<String> 
         kryo.addDefaultSerializer(Optional.class, new OptionalSerializers.OptionalSerializer());
         kryo.addDefaultSerializer(OptionalDouble.class, new OptionalSerializers.OptionalDoubleSerializer());
         kryo.addDefaultSerializer(ConcurrentSkipListMap.class, new DefaultSerializers.ConcurrentSkipListMapSerializer());
+        ImmutableCollectionsSerializers.addDefaultSerializers(kryo);
+        ImmutableCollectionsSerializers.addDefaultSerializers(kryo);
 
         kryo.register(Duration.class, SERIALIZATION_ID + 100);
         kryo.register(ZonedDateTime.class, SERIALIZATION_ID + 101);
@@ -407,6 +371,8 @@ public abstract class AbstractSessionMetrics extends NamedIdentityAware<String> 
         kryo.register(HashSet.class, SERIALIZATION_ID + 111);
         kryo.register(HashMap.class, SERIALIZATION_ID + 112);
         kryo.register(ConcurrentSkipListMap.class, SERIALIZATION_ID + 113);
+        kryo.register(CopyOnWriteArrayList.class, SERIALIZATION_ID + 114);
+        kryo.register(CopyOnWriteArraySet.class, SERIALIZATION_ID + 115);
 
         kryo.register(AtomicInteger.class, SERIALIZATION_ID + 120);
         kryo.register(AtomicLong.class, SERIALIZATION_ID + 121);

@@ -63,6 +63,8 @@ public class Fragment implements Identifiable<String>, Nameable {
                 return "fa-solid fa-diagram-project";
             case TESTS:
                 return "fa-solid fa-clipboard-check";
+            case CODE_COVERAGE:
+                return "fa-solid fa-shoe-prints";
             case EXTENSIONS:
                 return "fa-solid fa-plug-circle-bolt";
             case TRENDS:
@@ -148,6 +150,11 @@ public class Fragment implements Identifiable<String>, Nameable {
          * Executed tests
          */
         TESTS,
+
+        /**
+         * Code coverage
+         */
+        CODE_COVERAGE,
 
         /**
          * Performance metrics (CPU, Memory, etc)

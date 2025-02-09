@@ -4,6 +4,8 @@ import net.microfalx.jvm.ServerMetrics;
 import net.microfalx.jvm.VirtualMachineMetrics;
 import net.microfalx.lang.Nameable;
 import net.microfalx.lang.NamedIdentityAware;
+import net.microfalx.maven.model.LifecycleMetrics;
+import net.microfalx.maven.model.MojoMetrics;
 import net.microfalx.maven.model.SessionMetrics;
 import net.microfalx.metrics.Value;
 
@@ -12,23 +14,31 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.function.Function;
 
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.Collections.unmodifiableList;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.FormatterUtils.formatNumber;
 import static net.microfalx.lang.StringUtils.EMPTY_STRING;
+import static net.microfalx.lang.TimeUtils.toMillis;
 
 public class ChartHelper {
 
     private final SessionMetrics session;
     private final ReportHelper reportHelper;
+    private final TrendHelper trendHelper;
+    private final CodeCoverageHelper codeCoverageHelper;
 
-    public ChartHelper(SessionMetrics session, ReportHelper reportHelper) {
+    public ChartHelper(SessionMetrics session, ReportHelper reportHelper, TrendHelper trendHelper, CodeCoverageHelper codeCoverageHelper) {
         requireNonNull(session);
         requireNonNull(reportHelper);
+        requireNonNull(trendHelper);
+        requireNonNull(codeCoverageHelper);
         this.session = session;
         this.reportHelper = reportHelper;
+        this.trendHelper = trendHelper;
+        this.codeCoverageHelper = codeCoverageHelper;
     }
 
     public PieChart<Integer> getTotalTestsPieChart(String id, Integer width) {
@@ -59,7 +69,7 @@ public class ChartHelper {
         PieChart<Long> chart = new PieChart<>(id, "Build Events");
         chart.setWidth(width);
         chart.getLegend().setShow(false);
-        reportHelper.getLifeCycles().forEach(event -> chart.add(event.getName(), event.getDuration().toMillis()));
+        reportHelper.getLifeCycles().forEach(event -> chart.add(event.getName(), event.getActiveDuration().toMillis()));
         return chart;
     }
 
@@ -241,10 +251,51 @@ public class ChartHelper {
         return chart;
     }
 
+    public AreaChart<Long, Float> getTrendSessionDuration(String id, Integer width) {
+        AreaChart<Long, Float> chart = new AreaChart<>(id, "Sessions");
+        chart.add(convert("Duration", reportHelper.getTrends(), m -> toMillis(m.getStartTime()),
+                m -> (float) m.getDuration().toMillis()));
+        chart.setHeight(300);
+        chart.setStacked(true);
+        chart.getYaxis().setUnit(Unit.DURATION);
+        return chart;
+    }
+
+    public AreaChart<Long, Float> getTrendEventsDuration(String id, Integer width) {
+        AreaChart<Long, Float> chart = new AreaChart<>(id, "Events");
+        for (LifecycleMetrics metrics : trendHelper.getLifecycleMetricsTypes()) {
+            chart.add(convert(metrics.getName(), trendHelper.getLifecycleMetrics(metrics.getId()), m -> toMillis(m.getStartTime()),
+                    m -> (float) m.getActiveDuration().toMillis()));
+        }
+        chart.setStacked(true);
+        chart.getYaxis().setUnit(Unit.DURATION);
+        return chart;
+    }
+
+    public AreaChart<Long, Float> getTrendTasksDuration(String id, Integer width) {
+        AreaChart<Long, Float> chart = new AreaChart<>(id, "Tasks");
+        for (MojoMetrics metrics : trendHelper.getMojoMetricsTypes()) {
+            chart.add(convert(metrics.getName(), trendHelper.getMojoMetrics(metrics.getId()), m -> toMillis(m.getStartTime()),
+                    m -> (float) m.getActiveDuration().toMillis()));
+        }
+        chart.setStacked(true);
+        chart.getYaxis().setUnit(Unit.DURATION);
+        return chart;
+    }
+
     private static Series<Long, Float> convert(String name, net.microfalx.metrics.Series metricsSeries) {
         Series<Long, Float> series = new Series<>(name);
         for (Value value : metricsSeries.getValues()) {
             series.add(value.getTimestamp(), round(value.asFloat()));
+        }
+        return series;
+    }
+
+    private static <T> Series<Long, Float> convert(String name, Iterable<T> items, Function<T, Long> timestampFunction,
+                                                   Function<T, Float> valueFunction) {
+        Series<Long, Float> series = new Series<>(name);
+        for (T item : items) {
+            series.add(timestampFunction.apply(item), round(valueFunction.apply(item)));
         }
         return series;
     }
@@ -330,6 +381,14 @@ public class ChartHelper {
             requireNonNull(y);
             add(new Data<>(x, y));
             return this;
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", Series.class.getSimpleName() + "[", "]")
+                    .add("name='" + name + "'")
+                    .add("data=" + data)
+                    .toString();
         }
     }
 

@@ -108,6 +108,8 @@ public class Template implements Nameable {
         Context context = new Context();
         if (session != null) {
             ReportHelper helper = new ReportHelper(session);
+            TrendHelper trendHelper = new TrendHelper(session, helper);
+            CodeCoverageHelper codeCoverageHelper = new CodeCoverageHelper(session, helper);
             context.setVariable("session", session);
             context.setVariable("project", session.getProject());
             context.setVariable("mojos", helper.getMojos());
@@ -117,7 +119,9 @@ public class Template implements Nameable {
             context.setVariable("dependencies", helper.getDependencies(true));
             context.setVariable("plugins", helper.getPlugins());
             context.setVariable("helper", helper);
-            context.setVariable("chartHelper", new ChartHelper(session, helper));
+            context.setVariable("trendHelper", trendHelper);
+            context.setVariable("codeCoverageHelper", codeCoverageHelper);
+            context.setVariable("chartHelper", new ChartHelper(session, helper, trendHelper, codeCoverageHelper));
         }
         context.setVariables(variables);
         return context;

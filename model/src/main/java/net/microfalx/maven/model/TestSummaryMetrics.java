@@ -38,6 +38,10 @@ public class TestSummaryMetrics extends NamedIdentityAware<String> {
         return total;
     }
 
+    public int getPassed() {
+        return total - failure - error - skipped;
+    }
+
     public int getFailure() {
         return failure;
     }

@@ -404,6 +404,10 @@
     <div th:replace="~{fragments/chart :: treemap(${chartHelper.getDependenciesCountTreeMapChart('dependencies_count', null)})}"></div>
     <div th:replace="~{fragments/chart :: treemap(${chartHelper.getDependenciesSizeTreeMapChart('dependencies_size', null)})}"></div>
 
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendSessionDuration('trend_sessions',null)})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendEventsDuration('trend_events',null)})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendTasksDuration('trend_tasks',null)})}"></div>
+
 </div>
 </body>
 </html>

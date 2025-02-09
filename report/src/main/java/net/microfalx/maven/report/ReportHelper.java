@@ -87,10 +87,6 @@ public class ReportHelper {
         return hasProjectFailures() || hasExtensionFailures();
     }
 
-    public boolean hasTrends() {
-        return false;
-    }
-
     public boolean hasProjectFailures() {
         return !session.getProjectFailures().isEmpty();
     }
@@ -174,6 +170,12 @@ public class ReportHelper {
         List<LifecycleMetrics> lifeCycle = new ArrayList<>(session.getLifecycles());
         lifeCycle.sort(Comparator.comparing(LifecycleMetrics::getDuration).reversed());
         return lifeCycle;
+    }
+
+    public Collection<TrendMetrics> getTrends() {
+        List<TrendMetrics> trends = new ArrayList<>(session.getTrends());
+        trends.sort(Comparator.comparing(AbstractSessionMetrics::getStartTime));
+        return trends;
     }
 
     public Collection<Property> getSystemProperties() {
