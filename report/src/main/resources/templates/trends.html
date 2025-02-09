@@ -18,9 +18,38 @@
                 <div class="col-6" id="trend_aaaa"></div>
             </div>
         </div>
+
         <h3>Server</h3>
+        <div class="container-fluid">
+            <div class="row justify-content-start g-2">
+                <div class="col-6" id="trend_server_cpu"></div>
+                <div class="col-6" id="trend_server_memory"></div>
+            </div>
+            <div class="row justify-content-start g-2">
+                <div class="col-6" id="trend_server_load"></div>
+                <div class="col-6" id="trend_server_kernel"></div>
+            </div>
+            <div class="row justify-content-start g-2">
+                <div class="col-6" id="trend_server_io_counts"></div>
+                <div class="col-6" id="trend_server_io_bytes"></div>
+            </div>
+        </div>
 
         <h3>Process</h3>
+        <div class="container-fluid">
+            <div class="row justify-content-start g-2">
+                <div class="col-6" id="trend_process_cpu"></div>
+                <div class="col-6" id="trend_process_memory"></div>
+            </div>
+            <div class="row justify-content-start g-2">
+                <div class="col-6" id="trend_process_threads"></div>
+                <div class="col-6" id="trend_process_io"></div>
+            </div>
+            <div class="row justify-content-start g-2">
+                <div class="col-6" id="trend_process_gc_counts"></div>
+                <div class="col-6" id="trend_process_gc_durations"></div>
+            </div>
+        </div>
     </th:block>
     <p th:unless="${trendHelper.hasTrends()}">
         This build did not contain any historical data.

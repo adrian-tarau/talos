@@ -7,6 +7,7 @@ import net.microfalx.lang.NamedIdentityAware;
 import net.microfalx.maven.model.LifecycleMetrics;
 import net.microfalx.maven.model.MojoMetrics;
 import net.microfalx.maven.model.SessionMetrics;
+import net.microfalx.metrics.SeriesStore;
 import net.microfalx.metrics.Value;
 
 import java.time.temporal.Temporal;
@@ -41,90 +42,81 @@ public class ChartHelper {
         this.codeCoverageHelper = codeCoverageHelper;
     }
 
-    public PieChart<Integer> getTotalTestsPieChart(String id, Integer width) {
+    public PieChart<Integer> getTotalTestsPieChart(String id) {
         PieChart<Integer> chart = new PieChart<>(id, "Total");
-        chart.setWidth(width);
         chart.getLegend().setShow(false);
         reportHelper.getTestDetails().forEach(report -> chart.add(report.getName(), report.getTotal()));
         return chart;
     }
 
-    public PieChart<Integer> getFailedTestsPieChart(String id, Integer width) {
+    public PieChart<Integer> getFailedTestsPieChart(String id) {
         PieChart<Integer> chart = new PieChart<>(id, "Failed & Error");
-        chart.setWidth(width);
         chart.getLegend().setShow(false);
         reportHelper.getTestDetails().forEach(report -> chart.add(report.getName(), report.getFailed() + report.getError()));
         return chart;
     }
 
-    public PieChart<Long> getDurationTestsPieChart(String id, Integer width) {
+    public PieChart<Long> getDurationTestsPieChart(String id) {
         PieChart<Long> chart = new PieChart<>(id, "Durations");
-        chart.setWidth(width);
         chart.getLegend().setShow(false);
         reportHelper.getTestDetails().forEach(report -> chart.add(report.getName(), report.getDuration().toMillis()));
         return chart;
     }
 
-    public PieChart<Long> getBuildEventsPieChart(String id, Integer width) {
+    public PieChart<Long> getBuildEventsPieChart(String id) {
         PieChart<Long> chart = new PieChart<>(id, "Build Events");
-        chart.setWidth(width);
         chart.getLegend().setShow(false);
         reportHelper.getLifeCycles().forEach(event -> chart.add(event.getName(), event.getActiveDuration().toMillis()));
         return chart;
     }
 
-    public TreeMapChart<Integer> getTotalTestsTreeMapChart(String id, Integer width) {
+    public TreeMapChart<Integer> getTotalTestsTreeMapChart(String id) {
         TreeMapChart<Integer> chart = new TreeMapChart<>(id, "Total");
-        chart.setWidth(width);
         chart.getLegend().setShow(false);
         reportHelper.getTestDetails().forEach(report -> chart.add(report.getName(), report.getTotal()));
         return chart;
     }
 
-    public TreeMapChart<Integer> getFailedTestsTreeMapChart(String id, Integer width) {
+    public TreeMapChart<Integer> getFailedTestsTreeMapChart(String id) {
         TreeMapChart<Integer> chart = new TreeMapChart<>(id, "Failed");
-        chart.setWidth(width);
         chart.getLegend().setShow(false);
         reportHelper.getTestDetails().forEach(report -> chart.add(report.getName(), report.getFailed()));
         return chart;
     }
 
-    public TreeMapChart<Integer> getErrorTestsTreeMapChart(String id, Integer width) {
+    public TreeMapChart<Integer> getErrorTestsTreeMapChart(String id) {
         TreeMapChart<Integer> chart = new TreeMapChart<>(id, "Error");
-        chart.setWidth(width);
         chart.getLegend().setShow(false);
         reportHelper.getTestDetails().forEach(report -> chart.add(report.getName(), report.getError()));
         return chart;
     }
 
-    public TreeMapChart<Integer> getSkippedTestsTreeMapChart(String id, Integer width) {
+    public TreeMapChart<Integer> getSkippedTestsTreeMapChart(String id) {
         TreeMapChart<Integer> chart = new TreeMapChart<>(id, "Skipped");
-        chart.setWidth(width);
         chart.getLegend().setShow(false);
         reportHelper.getTestDetails().forEach(report -> chart.add(report.getName(), report.getSkipped()));
         return chart;
     }
 
-    public TreeMapChart<Long> getDurationTestsTreeMapChart(String id, Integer width) {
+    public TreeMapChart<Long> getDurationTestsTreeMapChart(String id) {
         TreeMapChart<Long> chart = new TreeMapChart<>(id, "Durations");
-        chart.setWidth(width);
         chart.getLegend().setShow(false);
         chart.getYaxis().setUnit(Unit.DURATION);
         reportHelper.getTestDetails().forEach(report -> chart.add(report.getName(), report.getDuration().toMillis()));
         return chart;
     }
 
-    public BarChart<Integer> getTestFailureTypesBarChart(String id, Integer width) {
+    public BarChart<Integer> getTestFailureTypesBarChart(String id) {
         BarChart<Integer> chart = new BarChart<>(id, "Failure Types");
-        chart.setSeriesName("Tests").setWidth(width);
+        chart.setSeriesName("Tests");
         chart.getLegend().setShow(false);
         reportHelper.getTestFailureTypes().forEach(report -> chart.add(report.getName(), report.getTotal()));
         return chart;
     }
 
-    public ColumnChart<Integer> getTestDurationDistributionColumnChart(String id, Integer width) {
+    public ColumnChart<Integer> getTestDurationDistributionColumnChart(String id) {
         ColumnChart<Integer> chart = new ColumnChart<>(id, "Duration Distribution");
-        chart.setSeriesName("Tests").setWidth(width);
+        chart.setSeriesName("Tests");
         chart.getLegend().setShow(false);
         List<Integer> values = reportHelper.getTestDurationDistribution();
         for (int index = 0; index < values.size(); index++) {
@@ -133,117 +125,211 @@ public class ChartHelper {
         return chart;
     }
 
-    public AreaChart<Long, Float> getServerCpu(String id, Integer width) {
+    public AreaChart<Long, Float> getSessionServerCpu(String id) {
+        return getServerCpu(id, session.getServerMetrics());
+    }
+
+    public AreaChart<Long, Float> getTrendServerCpu(String id) {
+        return getServerCpu(id, trendHelper.getServerMetrics());
+    }
+
+    public AreaChart<Long, Float> getServerCpu(String id, SeriesStore store) {
         AreaChart<Long, Float> chart = new AreaChart<>(id, "CPU");
-        chart.add(convert("System", session.getServerMetrics().get(ServerMetrics.CPU_SYSTEM)));
-        chart.add(convert("User", session.getServerMetrics().get(ServerMetrics.CPU_USER)));
-        chart.add(convert("Nice", session.getServerMetrics().get(ServerMetrics.CPU_NICE)));
-        chart.add(convert("I/O Wait", session.getServerMetrics().get(ServerMetrics.CPU_IO_WAIT)));
+        chart.add(convert("System", store.get(ServerMetrics.CPU_SYSTEM)));
+        chart.add(convert("User", store.get(ServerMetrics.CPU_USER)));
+        chart.add(convert("Nice", store.get(ServerMetrics.CPU_NICE)));
+        chart.add(convert("I/O Wait", store.get(ServerMetrics.CPU_IO_WAIT)));
         chart.setStacked(true);
         chart.getYaxis().setUnit(Unit.PERCENT);
         return chart;
     }
 
-    public AreaChart<Long, Float> getServerLoad(String id, Integer width) {
+    public AreaChart<Long, Float> getSessionServerLoad(String id) {
+        return getServerLoad(id, session.getServerMetrics());
+    }
+
+    public AreaChart<Long, Float> getTrendServerLoad(String id) {
+        return getServerLoad(id, trendHelper.getServerMetrics());
+    }
+
+    public AreaChart<Long, Float> getServerLoad(String id, SeriesStore store) {
         AreaChart<Long, Float> chart = new AreaChart<>(id, "Load");
-        chart.add(convert("Load", session.getServerMetrics().get(ServerMetrics.LOAD_1)));
+        chart.add(convert("Load", store.get(ServerMetrics.LOAD_1)));
         chart.setStacked(true);
         return chart;
     }
 
-    public AreaChart<Long, Float> getServerKernel(String id, Integer width) {
+    public AreaChart<Long, Float> getSessionServerKernel(String id) {
+        return getServerKernel(id, session.getServerMetrics());
+    }
+
+    public AreaChart<Long, Float> getTrendServerKernel(String id) {
+        return getServerKernel(id, trendHelper.getServerMetrics());
+    }
+
+    public AreaChart<Long, Float> getServerKernel(String id, SeriesStore store) {
         AreaChart<Long, Float> chart = new AreaChart<>(id, "Kernel");
-        chart.add(convert("Context Switches", session.getServerMetrics().get(ServerMetrics.CONTEXT_SWITCHES)));
-        chart.add(convert("Interrupts", session.getServerMetrics().get(ServerMetrics.INTERRUPTS)));
+        chart.add(convert("Context Switches", store.get(ServerMetrics.CONTEXT_SWITCHES)));
+        chart.add(convert("Interrupts", store.get(ServerMetrics.INTERRUPTS)));
         return chart;
     }
 
-    public AreaChart<Long, Float> getServerIOCounts(String id, Integer width) {
+    public AreaChart<Long, Float> getSessionServerIOCounts(String id) {
+        return getServerIOCounts(id, session.getServerMetrics());
+    }
+
+    public AreaChart<Long, Float> getTrendServerIOCounts(String id) {
+        return getServerIOCounts(id, trendHelper.getServerMetrics());
+    }
+
+    public AreaChart<Long, Float> getServerIOCounts(String id, SeriesStore store) {
         AreaChart<Long, Float> chart = new AreaChart<>(id, "IO / Activity");
-        chart.add(convert("Reads", session.getServerMetrics().get(ServerMetrics.IO_READS)));
-        chart.add(convert("Writes", session.getServerMetrics().get(ServerMetrics.IO_WRITES)));
+        chart.add(convert("Reads", store.get(ServerMetrics.IO_READS)));
+        chart.add(convert("Writes", store.get(ServerMetrics.IO_WRITES)));
         return chart;
     }
 
-    public AreaChart<Long, Float> getServerIOBytes(String id, Integer width) {
+    public AreaChart<Long, Float> getSessionServerIOBytes(String id) {
+        return getServerIOBytes(id, session.getServerMetrics());
+    }
+
+    public AreaChart<Long, Float> getTrendServerIOBytes(String id) {
+        return getServerIOBytes(id, trendHelper.getServerMetrics());
+    }
+
+    public AreaChart<Long, Float> getServerIOBytes(String id, SeriesStore store) {
         AreaChart<Long, Float> chart = new AreaChart<>(id, "IO / Bytes");
-        chart.add(convert("Read Bytes", session.getServerMetrics().get(ServerMetrics.IO_READ_BYTES)));
-        chart.add(convert("Write Bytes", session.getServerMetrics().get(ServerMetrics.IO_WRITE_BYTES)));
+        chart.add(convert("Read Bytes", store.get(ServerMetrics.IO_READ_BYTES)));
+        chart.add(convert("Write Bytes", store.get(ServerMetrics.IO_WRITE_BYTES)));
         chart.getYaxis().setUnit(Unit.BYTE);
         return chart;
     }
 
-    public AreaChart<Long, Float> getServerMemory(String id, Integer width) {
+    public AreaChart<Long, Float> getSessionServerMemory(String id) {
+        return getServerMemory(id, session.getServerMetrics());
+    }
+
+    public AreaChart<Long, Float> getTrendServerMemory(String id) {
+        return getServerMemory(id, trendHelper.getServerMetrics());
+    }
+
+    public AreaChart<Long, Float> getServerMemory(String id, SeriesStore store) {
         AreaChart<Long, Float> chart = new AreaChart<>(id, "Memory");
-        chart.add(convert("Maximum", session.getServerMetrics().get(ServerMetrics.MEMORY_MAX)));
-        chart.add(convert("Used", session.getServerMetrics().get(ServerMetrics.MEMORY_USED)));
+        chart.add(convert("Maximum", store.get(ServerMetrics.MEMORY_MAX)));
+        chart.add(convert("Used", store.get(ServerMetrics.MEMORY_USED)));
         chart.getYaxis().setUnit(Unit.BYTE);
         return chart;
     }
 
-    public AreaChart<Long, Float> getProcessCpu(String id, Integer width) {
+    public AreaChart<Long, Float> getSessionProcessCpu(String id) {
+        return getProcessCpu(id, session.getVirtualMachineMetrics());
+    }
+
+    public AreaChart<Long, Float> getTrendProcessCpu(String id) {
+        return getProcessCpu(id, trendHelper.getVirtualMachineMetrics());
+    }
+
+    public AreaChart<Long, Float> getProcessCpu(String id, SeriesStore store) {
         AreaChart<Long, Float> chart = new AreaChart<>(id, "CPU");
-        chart.add(convert("System", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.CPU_SYSTEM)));
-        chart.add(convert("User", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.CPU_USER)));
+        chart.add(convert("System", store.get(VirtualMachineMetrics.CPU_SYSTEM)));
+        chart.add(convert("User", store.get(VirtualMachineMetrics.CPU_USER)));
         chart.setStacked(true);
         chart.getYaxis().setUnit(Unit.PERCENT);
         return chart;
     }
 
-    public AreaChart<Long, Float> getProcessMemory(String id, Integer width) {
+    public AreaChart<Long, Float> getSessionProcessMemory(String id) {
+        return getProcessMemory(id, session.getVirtualMachineMetrics());
+    }
+
+    public AreaChart<Long, Float> getTrendProcessMemory(String id) {
+        return getProcessMemory(id, trendHelper.getVirtualMachineMetrics());
+    }
+
+    public AreaChart<Long, Float> getProcessMemory(String id, SeriesStore store) {
         AreaChart<Long, Float> chart = new AreaChart<>(id, "Memory");
-        chart.add(convert("Heap", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.MEMORY_HEAP_USED)));
-        chart.add(convert("Non-Heap", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.MEMORY_NON_HEAP_USED)));
+        chart.add(convert("Heap", store.get(VirtualMachineMetrics.MEMORY_HEAP_USED)));
+        chart.add(convert("Non-Heap", store.get(VirtualMachineMetrics.MEMORY_NON_HEAP_USED)));
         chart.setStacked(true);
         chart.getYaxis().setUnit(Unit.BYTE);
         return chart;
     }
 
-    public AreaChart<Long, Float> getProcessThreads(String id, Integer width) {
+    public AreaChart<Long, Float> getSessionProcessThreads(String id) {
+        return getProcessThreads(id, session.getVirtualMachineMetrics());
+    }
+
+    public AreaChart<Long, Float> getTrendProcessThreads(String id) {
+        return getProcessThreads(id, trendHelper.getVirtualMachineMetrics());
+    }
+
+    public AreaChart<Long, Float> getProcessThreads(String id, SeriesStore store) {
         AreaChart<Long, Float> chart = new AreaChart<>(id, "Threads");
-        chart.add(convert("Daemon", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.THREAD_DAEMON)));
-        chart.add(convert("Non-Daemon", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.THREAD_NON_DAEMON)));
+        chart.add(convert("Daemon", store.get(VirtualMachineMetrics.THREAD_DAEMON)));
+        chart.add(convert("Non-Daemon", store.get(VirtualMachineMetrics.THREAD_NON_DAEMON)));
         chart.setStacked(true);
         return chart;
     }
 
-    public AreaChart<Long, Float> getProcessIO(String id, Integer width) {
+    public AreaChart<Long, Float> getSessionProcessIO(String id) {
+        return getProcessIO(id, session.getVirtualMachineMetrics());
+    }
+
+    public AreaChart<Long, Float> getTrendProcessIO(String id) {
+        return getProcessIO(id, trendHelper.getVirtualMachineMetrics());
+    }
+
+    public AreaChart<Long, Float> getProcessIO(String id, SeriesStore store) {
         AreaChart<Long, Float> chart = new AreaChart<>(id, "IO");
-        chart.add(convert("Read Bytes", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.IO_READ_BYTES)));
-        chart.add(convert("Write Bytes", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.IO_WRITE_BYTES)));
+        chart.add(convert("Read Bytes", store.get(VirtualMachineMetrics.IO_READ_BYTES)));
+        chart.add(convert("Write Bytes", store.get(VirtualMachineMetrics.IO_WRITE_BYTES)));
         chart.setStacked(true);
         chart.getYaxis().setUnit(Unit.BYTE);
         return chart;
     }
 
-    public AreaChart<Long, Float> getProcessGcCounts(String id, Integer width) {
+    public AreaChart<Long, Float> getSessionProcessGcCounts(String id) {
+        return getProcessGcCounts(id, session.getVirtualMachineMetrics());
+    }
+
+    public AreaChart<Long, Float> getTrendProcessGcCounts(String id) {
+        return getProcessGcCounts(id, trendHelper.getVirtualMachineMetrics());
+    }
+
+    public AreaChart<Long, Float> getProcessGcCounts(String id, SeriesStore store) {
         AreaChart<Long, Float> chart = new AreaChart<>(id, "GC / Collections");
-        chart.add(convert("Eden", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.GC_EDEN_COUNT)));
-        chart.add(convert("Tenured", session.getServerMetrics().get(VirtualMachineMetrics.GC_TENURED_COUNT)));
+        chart.add(convert("Eden", store.get(VirtualMachineMetrics.GC_EDEN_COUNT)));
+        chart.add(convert("Tenured", store.get(VirtualMachineMetrics.GC_TENURED_COUNT)));
         chart.setStacked(true);
         return chart;
     }
 
-    public AreaChart<Long, Float> getProcessGcDuration(String id, Integer width) {
+    public AreaChart<Long, Float> getSessionProcessGcDuration(String id) {
+        return getProcessGcDuration(id, session.getVirtualMachineMetrics());
+    }
+
+    public AreaChart<Long, Float> getTrendProcessGcDuration(String id) {
+        return getProcessGcDuration(id, trendHelper.getVirtualMachineMetrics());
+    }
+
+    public AreaChart<Long, Float> getProcessGcDuration(String id, SeriesStore store) {
         AreaChart<Long, Float> chart = new AreaChart<>(id, "GC / Durations");
-        chart.add(convert("Eden", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.GC_EDEN_DURATION)));
-        chart.add(convert("Tenured", session.getVirtualMachineMetrics().get(VirtualMachineMetrics.GC_TENURED_DURATION)));
+        chart.add(convert("Eden", store.get(VirtualMachineMetrics.GC_EDEN_DURATION)));
+        chart.add(convert("Tenured", store.get(VirtualMachineMetrics.GC_TENURED_DURATION)));
         chart.getYaxis().setUnit(Unit.DURATION);
         return chart;
     }
 
-    public TreeMapChart<Integer> getDependenciesCountTreeMapChart(String id, Integer width) {
+    public TreeMapChart<Integer> getDependenciesCountTreeMapChart(String id) {
         TreeMapChart<Integer> chart = new TreeMapChart<>(id, "Dependency Count By Group");
-        chart.setWidth(width);
         chart.setHeight(500);
         chart.getLegend().setShow(false);
         reportHelper.getDependencyDetails(true, true).forEach(d -> chart.add(d.getGroupId(), d.getCount()));
         return chart;
     }
 
-    public TreeMapChart<Long> getDependenciesSizeTreeMapChart(String id, Integer width) {
+    public TreeMapChart<Long> getDependenciesSizeTreeMapChart(String id) {
         TreeMapChart<Long> chart = new TreeMapChart<>(id, "Dependency Size By Group");
-        chart.setWidth(width);
         chart.setHeight(500);
         chart.getLegend().setShow(false);
         chart.getYaxis().setUnit(Unit.BYTE);
@@ -251,7 +337,7 @@ public class ChartHelper {
         return chart;
     }
 
-    public AreaChart<Long, Float> getTrendSessionDuration(String id, Integer width) {
+    public AreaChart<Long, Float> getTrendSessionDuration(String id) {
         AreaChart<Long, Float> chart = new AreaChart<>(id, "Sessions");
         chart.add(convert("Duration", reportHelper.getTrends(), m -> toMillis(m.getStartTime()),
                 m -> (float) m.getDuration().toMillis()));
@@ -261,7 +347,7 @@ public class ChartHelper {
         return chart;
     }
 
-    public AreaChart<Long, Float> getTrendEventsDuration(String id, Integer width) {
+    public AreaChart<Long, Float> getTrendEventsDuration(String id) {
         AreaChart<Long, Float> chart = new AreaChart<>(id, "Events");
         for (LifecycleMetrics metrics : trendHelper.getLifecycleMetricsTypes()) {
             chart.add(convert(metrics.getName(), trendHelper.getLifecycleMetrics(metrics.getId()), m -> toMillis(m.getStartTime()),
@@ -272,7 +358,7 @@ public class ChartHelper {
         return chart;
     }
 
-    public AreaChart<Long, Float> getTrendTasksDuration(String id, Integer width) {
+    public AreaChart<Long, Float> getTrendTasksDuration(String id) {
         AreaChart<Long, Float> chart = new AreaChart<>(id, "Tasks");
         for (MojoMetrics metrics : trendHelper.getMojoMetricsTypes()) {
             chart.add(convert(metrics.getName(), trendHelper.getMojoMetrics(metrics.getId()), m -> toMillis(m.getStartTime()),

@@ -2,6 +2,7 @@ package net.microfalx.maven.report;
 
 import net.microfalx.lang.Identifiable;
 import net.microfalx.maven.model.*;
+import net.microfalx.metrics.SeriesStore;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,6 +17,9 @@ public class TrendHelper {
     private final SessionMetrics session;
     private final ReportHelper reportHelper;
 
+    private SeriesStore virtualMachineMetrics;
+    private SeriesStore serverMetrics;
+
     public TrendHelper(SessionMetrics session, ReportHelper reportHelper) {
         requireNonNull(session);
         requireNonNull(reportHelper);
@@ -25,6 +29,24 @@ public class TrendHelper {
 
     public boolean hasTrends() {
         return session.getTrends().size() > 2;
+    }
+
+    public SeriesStore getVirtualMachineMetrics() {
+        if (virtualMachineMetrics == null) {
+            virtualMachineMetrics = SeriesStore.memory();
+            session.getTrends().stream().map(TrendMetrics::getVirtualMachineMetrics)
+                    .forEach(store -> virtualMachineMetrics.add(store));
+        }
+        return virtualMachineMetrics;
+    }
+
+    public SeriesStore getServerMetrics() {
+        if (serverMetrics == null) {
+            serverMetrics = SeriesStore.memory();
+            session.getTrends().stream().map(TrendMetrics::getServerMetrics)
+                    .forEach(store -> serverMetrics.add(store));
+        }
+        return serverMetrics;
     }
 
     public Collection<LifecycleMetrics> getLifecycleMetricsTypes() {

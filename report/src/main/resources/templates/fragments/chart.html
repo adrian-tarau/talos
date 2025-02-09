@@ -373,40 +373,52 @@
 <div th:fragment="render" th:remove="tag">
     <div th:replace="~{fragments/chart :: utils}"></div>
 
-    <div th:replace="~{fragments/chart :: pie(${chartHelper.getBuildEventsPieChart('build_events', null)})}"></div>
+    <div th:replace="~{fragments/chart :: pie(${chartHelper.getBuildEventsPieChart('build_events')})}"></div>
 
-    <div th:replace="~{fragments/chart :: pie(${chartHelper.getTotalTestsPieChart('summary_tests_total', null)})}"></div>
-    <div th:replace="~{fragments/chart :: pie(${chartHelper.getFailedTestsPieChart('summary_tests_failed',null)})}"></div>
-    <div th:replace="~{fragments/chart :: pie(${chartHelper.getDurationTestsPieChart('summary_tests_duration',null)})}"></div>
+    <div th:replace="~{fragments/chart :: pie(${chartHelper.getTotalTestsPieChart('summary_tests_total')})}"></div>
+    <div th:replace="~{fragments/chart :: pie(${chartHelper.getFailedTestsPieChart('summary_tests_failed')})}"></div>
+    <div th:replace="~{fragments/chart :: pie(${chartHelper.getDurationTestsPieChart('summary_tests_duration')})}"></div>
 
-    <div th:replace="~{fragments/chart :: treemap(${chartHelper.getTotalTestsTreeMapChart('tests_total', null)})}"></div>
-    <div th:replace="~{fragments/chart :: treemap(${chartHelper.getFailedTestsTreeMapChart('tests_failed',null)})}"></div>
-    <div th:replace="~{fragments/chart :: treemap(${chartHelper.getErrorTestsTreeMapChart('tests_error',null)})}"></div>
-    <div th:replace="~{fragments/chart :: treemap(${chartHelper.getDurationTestsTreeMapChart('tests_duration',null)})}"></div>
+    <div th:replace="~{fragments/chart :: treemap(${chartHelper.getTotalTestsTreeMapChart('tests_total')})}"></div>
+    <div th:replace="~{fragments/chart :: treemap(${chartHelper.getFailedTestsTreeMapChart('tests_failed')})}"></div>
+    <div th:replace="~{fragments/chart :: treemap(${chartHelper.getErrorTestsTreeMapChart('tests_error')})}"></div>
+    <div th:replace="~{fragments/chart :: treemap(${chartHelper.getDurationTestsTreeMapChart('tests_duration')})}"></div>
 
-    <div th:replace="~{fragments/chart :: bar(${chartHelper.getTestFailureTypesBarChart('tests_failure_types',null)})}"></div>
-    <div th:replace="~{fragments/chart :: column(${chartHelper.getTestDurationDistributionColumnChart('tests_duration_distribution',null)})}"></div>
+    <div th:replace="~{fragments/chart :: bar(${chartHelper.getTestFailureTypesBarChart('tests_failure_types')})}"></div>
+    <div th:replace="~{fragments/chart :: column(${chartHelper.getTestDurationDistributionColumnChart('tests_duration_distribution')})}"></div>
 
-    <div th:replace="~{fragments/chart :: area(${chartHelper.getServerCpu('server_cpu',null)})}"></div>
-    <div th:replace="~{fragments/chart :: area(${chartHelper.getServerMemory('server_memory',null)})}"></div>
-    <div th:replace="~{fragments/chart :: area(${chartHelper.getServerLoad('server_load',null)})}"></div>
-    <div th:replace="~{fragments/chart :: area(${chartHelper.getServerKernel('server_kernel',null)})}"></div>
-    <div th:replace="~{fragments/chart :: area(${chartHelper.getServerIOCounts('server_io_counts',null)})}"></div>
-    <div th:replace="~{fragments/chart :: area(${chartHelper.getServerIOBytes('server_io_bytes',null)})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getSessionServerCpu('server_cpu')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendServerCpu('trend_server_cpu')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getSessionServerMemory('session_server_memory')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendServerMemory('trend_server_memory')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getSessionServerLoad('session_server_load')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendServerLoad('trend_server_load')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getSessionServerKernel('session_server_kernel')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendServerKernel('trend_server_kernel')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getSessionServerIOCounts('session_server_io_counts')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendServerIOCounts('trend_server_io_counts')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getSessionServerIOBytes('session_server_io_bytes')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendServerIOBytes('trend_server_io_bytes')})}"></div>
 
-    <div th:replace="~{fragments/chart :: area(${chartHelper.getProcessCpu('process_cpu',null)})}"></div>
-    <div th:replace="~{fragments/chart :: area(${chartHelper.getProcessMemory('process_memory',null)})}"></div>
-    <div th:replace="~{fragments/chart :: area(${chartHelper.getProcessThreads('process_threads',null)})}"></div>
-    <div th:replace="~{fragments/chart :: area(${chartHelper.getProcessIO('process_io',null)})}"></div>
-    <div th:replace="~{fragments/chart :: area(${chartHelper.getProcessGcCounts('process_gc_counts',null)})}"></div>
-    <div th:replace="~{fragments/chart :: area(${chartHelper.getProcessGcDuration('process_gc_durations',null)})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getSessionProcessCpu('session_process_cpu')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendProcessCpu('trend_process_cpu')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getSessionProcessMemory('session_process_memory')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendProcessMemory('trend_process_memory')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getSessionProcessThreads('session_process_threads')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendProcessThreads('trend_process_threads')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getSessionProcessIO('session_process_io')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendProcessIO('trend_process_io')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getSessionProcessGcCounts('session_process_gc_counts')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendProcessGcCounts('trend_process_gc_counts')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getSessionProcessGcDuration('session_process_gc_durations')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendProcessGcDuration('trend_process_gc_durations')})}"></div>
 
-    <div th:replace="~{fragments/chart :: treemap(${chartHelper.getDependenciesCountTreeMapChart('dependencies_count', null)})}"></div>
-    <div th:replace="~{fragments/chart :: treemap(${chartHelper.getDependenciesSizeTreeMapChart('dependencies_size', null)})}"></div>
+    <div th:replace="~{fragments/chart :: treemap(${chartHelper.getDependenciesCountTreeMapChart('dependencies_count')})}"></div>
+    <div th:replace="~{fragments/chart :: treemap(${chartHelper.getDependenciesSizeTreeMapChart('dependencies_size')})}"></div>
 
-    <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendSessionDuration('trend_sessions',null)})}"></div>
-    <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendEventsDuration('trend_events',null)})}"></div>
-    <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendTasksDuration('trend_tasks',null)})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendSessionDuration('trend_sessions')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendEventsDuration('trend_events')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendTasksDuration('trend_tasks')})}"></div>
 
 </div>
 </body>

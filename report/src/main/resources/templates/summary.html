@@ -54,7 +54,7 @@
                     <tbody>
                     <tr th:each="lifeCycle : ${helper.getLifeCycles()}">
                         <td><span th:text="${lifeCycle.name}"></span></td>
-                        <td><span th:text="${helper.formatDuration(lifeCycle.getDuration())}"></span></td>
+                        <td><span th:text="${helper.formatDuration(lifeCycle.getActiveDuration())}"></span></td>
                     </tr>
                     </tbody>
                 </table>

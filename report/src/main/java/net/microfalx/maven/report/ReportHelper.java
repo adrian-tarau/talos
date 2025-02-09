@@ -121,7 +121,7 @@ public class ReportHelper {
 
     public Collection<MojoMetrics> getMojos() {
         List<MojoMetrics> mojos = new ArrayList<>(session.getMojos());
-        mojos.sort(Comparator.comparing(MojoMetrics::getDuration).reversed());
+        mojos.sort(Comparator.comparing(MojoMetrics::getActiveDuration).reversed());
         return mojos;
     }
 
@@ -168,7 +168,7 @@ public class ReportHelper {
 
     public Collection<LifecycleMetrics> getLifeCycles() {
         List<LifecycleMetrics> lifeCycle = new ArrayList<>(session.getLifecycles());
-        lifeCycle.sort(Comparator.comparing(LifecycleMetrics::getDuration).reversed());
+        lifeCycle.sort(Comparator.comparing(LifecycleMetrics::getActiveDuration).reversed());
         return lifeCycle;
     }
 
