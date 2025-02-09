@@ -4,12 +4,14 @@ import net.microfalx.jvm.ServerMetrics;
 import net.microfalx.jvm.VirtualMachineMetrics;
 import net.microfalx.lang.Nameable;
 import net.microfalx.lang.NamedIdentityAware;
+import net.microfalx.lang.TimeUtils;
 import net.microfalx.maven.model.LifecycleMetrics;
 import net.microfalx.maven.model.MojoMetrics;
 import net.microfalx.maven.model.SessionMetrics;
 import net.microfalx.metrics.SeriesStore;
 import net.microfalx.metrics.Value;
 
+import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,6 +27,8 @@ import static net.microfalx.lang.StringUtils.EMPTY_STRING;
 import static net.microfalx.lang.TimeUtils.toMillis;
 
 public class ChartHelper {
+
+    private static final long offsetMillis = ZonedDateTime.now().getOffset().getTotalSeconds() * TimeUtils.MILLISECONDS_IN_SECOND;
 
     private final SessionMetrics session;
     private final ReportHelper reportHelper;
@@ -372,7 +376,7 @@ public class ChartHelper {
     private static Series<Long, Float> convert(String name, net.microfalx.metrics.Series metricsSeries) {
         Series<Long, Float> series = new Series<>(name);
         for (Value value : metricsSeries.getValues()) {
-            series.add(value.getTimestamp(), round(value.asFloat()));
+            series.add(toMillisLocalZone(value.getTimestamp()), round(value.asFloat()));
         }
         return series;
     }
@@ -381,9 +385,13 @@ public class ChartHelper {
                                                    Function<T, Float> valueFunction) {
         Series<Long, Float> series = new Series<>(name);
         for (T item : items) {
-            series.add(timestampFunction.apply(item), round(valueFunction.apply(item)));
+            series.add(toMillisLocalZone(timestampFunction.apply(item)), round(valueFunction.apply(item)));
         }
         return series;
+    }
+
+    private static long toMillisLocalZone(long millis) {
+        return millis + offsetMillis;
     }
 
     private static <V extends Number> String toString(V value) {

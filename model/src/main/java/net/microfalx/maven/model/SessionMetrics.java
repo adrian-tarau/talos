@@ -35,7 +35,7 @@ public class SessionMetrics extends AbstractSessionMetrics<SessionMetrics> {
     private SeriesStore serverMetrics = SeriesStore.memory();
 
     private String logs;
-    private boolean testsUpdated;
+    private transient boolean testsUpdated;
 
     public static SessionMetrics load(Resource resource) throws IOException {
         return AbstractSessionMetrics.load(resource, SessionMetrics.class);

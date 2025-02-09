@@ -136,6 +136,12 @@
                 height: [[${chart.height}]],
                 animations: {
                     enabled: false
+                },
+                toolbar: {
+                    show: false
+                },
+                zoom: {
+                    enabled: false,
                 }
             },
             labels: [[${chart.getLabels()}]],
@@ -159,6 +165,12 @@
                 height: [[${chart.height}]],
                 animations: {
                     enabled: false
+                },
+                toolbar: {
+                    show: false
+                },
+                zoom: {
+                    enabled: false,
                 }
             },
             title: {
@@ -199,6 +211,12 @@
                 height: [[${chart.height}]],
                 animations: {
                     enabled: false
+                },
+                toolbar: {
+                    show: false
+                },
+                zoom: {
+                    enabled: false,
                 }
             },
             plotOptions: {
@@ -251,6 +269,9 @@
                 width: [[${chart.width}]],
                 height: [[${chart.height}]],
                 stacked: [[${chart.stacked}]],
+                animations: {
+                    enabled: false
+                },
                 toolbar: {
                     show: false
                 },
@@ -387,7 +408,7 @@
     <div th:replace="~{fragments/chart :: bar(${chartHelper.getTestFailureTypesBarChart('tests_failure_types')})}"></div>
     <div th:replace="~{fragments/chart :: column(${chartHelper.getTestDurationDistributionColumnChart('tests_duration_distribution')})}"></div>
 
-    <div th:replace="~{fragments/chart :: area(${chartHelper.getSessionServerCpu('server_cpu')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getSessionServerCpu('session_server_cpu')})}"></div>
     <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendServerCpu('trend_server_cpu')})}"></div>
     <div th:replace="~{fragments/chart :: area(${chartHelper.getSessionServerMemory('session_server_memory')})}"></div>
     <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendServerMemory('trend_server_memory')})}"></div>

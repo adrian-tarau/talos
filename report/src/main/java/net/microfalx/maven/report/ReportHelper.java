@@ -9,6 +9,7 @@ import net.microfalx.resource.Resource;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -17,12 +18,17 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 public class ReportHelper {
 
     private final SessionMetrics session;
+    private final ZonedDateTime startupTime = ZonedDateTime.now();
 
     private List<TestDetails> testDetails;
 
     public ReportHelper(SessionMetrics session) {
         requireNonNull(session);
         this.session = session;
+    }
+
+    public ZonedDateTime getStartupTime() {
+        return startupTime;
     }
 
     public String formatDateTime(Object temporal) {

@@ -193,9 +193,7 @@ public class ProfilerMetrics {
         logNameValue("Package", formatDuration(getGoalsDuration(PACKAGE_GOALS)), true, SHORT_NAME_LENGTH);
         logNameValue("Install", formatDuration(getGoalsDuration(INSTALL_GOALS)), true, SHORT_NAME_LENGTH);
         logNameValue("Deploy", formatDuration(getGoalsDuration(DEPLOY_GOALS)), true, SHORT_NAME_LENGTH);
-        if (tracker.getDuration().toMillis() > configuration.getMinimumDuration().toMillis()) {
-            logNameValue("Performance", formatDuration(tracker.getDuration()), true, SHORT_NAME_LENGTH);
-        }
+        logNameValue("Extension", formatDuration(tracker.getDuration()), true, SHORT_NAME_LENGTH);
         if (!MavenTracker.getFailures().isEmpty()) {
             logNameValue("Extension Failures", FormatterUtils.formatNumber(MavenTracker.getFailures()), true, SHORT_NAME_LENGTH);
         }
@@ -350,7 +348,7 @@ public class ProfilerMetrics {
             StringBuilder buffer = new StringBuilder(128);
             buffer.append(metric.getName()).append(" (").append(metric.getGoal()).append(") ");
             MavenUtils.appendDots(buffer).append(' ');
-            buffer.append(buffer().strong(formatDuration(metric.getDuration())));
+            buffer.append(buffer().strong(formatDuration(metric.getActiveDuration())));
             buffer.append(" (");
             if (metric.getFailureCount() > 0) {
                 buffer.append(buffer().warning("FAILED, " + metric.getFailureCount() + " failures"));
@@ -366,7 +364,7 @@ public class ProfilerMetrics {
 
     private Collection<MojoMetrics> getMojoMetrics() {
         List<MojoMetrics> metrics = new ArrayList<>(mojoMetrics.values());
-        metrics.sort(Comparator.comparing(MojoMetrics::getDuration).reversed());
+        metrics.sort(Comparator.comparing(MojoMetrics::getActiveDuration).reversed());
         return metrics;
     }
 
@@ -461,7 +459,7 @@ public class ProfilerMetrics {
         Duration duration = Duration.ZERO;
         for (MojoMetrics metric : getMojoMetrics()) {
             if (StringUtils.containsInArray(metric.getGoal(), goals)) {
-                duration = duration.plus(metric.getDuration());
+                duration = duration.plus(metric.getActiveDuration());
             }
         }
         return duration;
@@ -550,6 +548,7 @@ public class ProfilerMetrics {
         lifecycles.add(new LifecycleMetrics("Package").addActiveDuration(getGoalsDuration(PACKAGE_GOALS)));
         lifecycles.add(new LifecycleMetrics("Install").addActiveDuration(getGoalsDuration(INSTALL_GOALS)));
         lifecycles.add(new LifecycleMetrics("Deploy").addActiveDuration(getGoalsDuration(DEPLOY_GOALS)));
+        lifecycles.add(new LifecycleMetrics("Extension").addActiveDuration(tracker.getDuration()));
         lifecycles.add(new LifecycleMetrics("Local Repository").addActiveDuration(getRepositoryDuration(repositoryMetrics)));
         lifecycles.add(new LifecycleMetrics("Remote Repository").addActiveDuration(getRepositoryDuration(transferMetrics)));
         sessionMetrics.setLifeCycles(lifecycles);

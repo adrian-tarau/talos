@@ -9,6 +9,10 @@
         finished at <span class="text-primary-emphasis fw-bold"
                           th:text="${helper.formatDateTime(session.endTime)}"></span>,
         build time: <span class="text-primary-emphasis fw-bold" th:text="${helper.formatDuration(session.duration)}"></span>
+        . Report generated at <span class="text-primary-emphasis fw-bold"
+                         th:text="${helper.formatDateTime(helper.startupTime)}"></span>, timezone
+        <span class="text-primary-emphasis fw-bold"
+              th:text="${helper.startupTime.zone}"></span>
     </p>
     <p>
         Local Repository <span class="text-primary-emphasis fw-bold" th:text="${session.localRepository}"></span>,
