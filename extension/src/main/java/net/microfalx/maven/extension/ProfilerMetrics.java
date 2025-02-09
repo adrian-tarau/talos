@@ -172,6 +172,7 @@ public class ProfilerMetrics {
         printRepositorySummary();
         printTestsSummary();
         if (configuration.isEnvironmentEnabled() || configuration.isVerbose()) printEnvironmentSummary();
+        printExtensionSummary();
         printFailureSummary();
         if (shouldShowLineSeparator()) infoLine('-');
         if (configuration.isQuiet() && net.microfalx.maven.core.MavenUtils.isMavenLoggerAvailable()) {
@@ -296,6 +297,7 @@ public class ProfilerMetrics {
                                + ", Memory: " + formatMemory(server.getMemoryActuallyUsed(), server.getMemoryTotal()));
         logNameValue("Process", "CPU: " + formatPercent(virtualMachineMetrics.getAverageCpu())
                                 + ", Memory: " + formatMemory(virtualMachineMetrics.getMemoryAverage(), virtualMachineMetrics.getMemoryMaximum()));
+        LOGGER.info("");
         decreaseIndent();
     }
 
@@ -336,6 +338,26 @@ public class ProfilerMetrics {
         }
         decreaseIndent();
         LOGGER.info("");
+    }
+
+    private void printExtensionSummary() {
+        if (!configuration.isVerbose()) return;
+        infoMain("Extension:");
+        LOGGER.info("");
+        increaseIndent();
+        List<LifecycleMetrics> metrics = new ArrayList<>(sessionMetrics.getExtensionEvents());
+        metrics.sort(Comparator.comparing(LifecycleMetrics::getActiveDuration).reversed());
+        for (LifecycleMetrics metric : metrics) {
+            StringBuilder buffer = new StringBuilder(128);
+            buffer.append(metric.getName());
+            MavenUtils.appendDots(buffer).append(' ');
+            buffer.append(buffer().strong(formatDuration(metric.getActiveDuration())));
+            buffer.append(" (");
+            buffer.append(", ").append(buffer().strong("Executions " + metric.getExecutionCount()));
+            buffer.append(")");
+            LOGGER.info(getIndentSpaces() + buffer);
+        }
+        decreaseIndent();
     }
 
     public void printTaskSummary() {

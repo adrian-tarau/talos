@@ -8,11 +8,9 @@ import net.microfalx.maven.core.MavenStorage;
 import net.microfalx.maven.core.MavenTracker;
 import net.microfalx.maven.core.MavenUtils;
 import net.microfalx.maven.junit.SurefireTests;
-import net.microfalx.maven.model.ExtensionMetrics;
-import net.microfalx.maven.model.SessionMetrics;
-import net.microfalx.maven.model.TestMetrics;
-import net.microfalx.maven.model.TrendMetrics;
+import net.microfalx.maven.model.*;
 import net.microfalx.maven.report.ReportBuilder;
+import net.microfalx.metrics.Timer;
 import net.microfalx.resource.Resource;
 import net.microfalx.resource.ResourceUtils;
 import org.apache.commons.io.FileUtils;
@@ -104,12 +102,13 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
         tracker.track("Session End", t -> {
             profilerMetrics.sessionsEnd(sessionMetrics);
             METRICS.time("Update Metrics", t2 -> updateMetrics(session));
-            METRICS.time("Store Metrics", t2 -> storeMetrics(session));
             METRICS.time("Generate Report", t2 -> generateHtmlReports(session));
+            METRICS.time("Cleanup", t2 -> cleanup(session));
+            METRICS.time("Collect Events", t2 -> collectExtensionEvents());
+            METRICS.time("Store Metrics", t2 -> storeMetrics(session));
+            METRICS.time("Move Results", t2 -> copyResults(session));
             profilerMetrics.print();
             printConsoleReport();
-            METRICS.time("Move Results", t2 -> copyResults(session));
-            METRICS.time("Cleanup", t2 -> cleanup(session));
             openHtmlReport();
         });
     }
@@ -286,6 +285,15 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
         copyResults(session, target, false);
         target = ResourceUtils.toFile(configuration.getTargetDirectory(null, true));
         copyResults(session, target, true);
+    }
+
+    private void collectExtensionEvents() {
+        Collection<LifecycleMetrics> extensionEvents = new ArrayList<>();
+        for (Timer timer : METRICS.getTimers()) {
+            if (timer.getCount() == 0) continue;
+            extensionEvents.add(new LifecycleMetrics(timer.getName()).addActiveDuration(timer.getDuration(), (int) timer.getCount()));
+        }
+        sessionMetrics.setExtensionsEvents(extensionEvents);
     }
 
     private void copyResults(MavenSession session, File target, boolean remove) {

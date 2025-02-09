@@ -52,6 +52,15 @@ public interface TimeAwareMetrics<T extends TimeAwareMetrics<T>> extends Identif
     T setEndTime(ZonedDateTime endTime);
 
     /**
+     * Resets the start/end timestamps.
+     *
+     * @param startTime the start time
+     * @param endTime   the end time
+     * @return self
+     */
+    T updateInterval(ZonedDateTime startTime, ZonedDateTime endTime);
+
+    /**
      * Returns the number of times the object was activated.
      *
      * @return a positive integer.

@@ -1,5 +1,6 @@
 package net.microfalx.maven.core;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.metrics.Timer;
@@ -132,5 +133,9 @@ public class MavenTracker {
         public Throwable getThrowable() {
             return throwable;
         }
+    }
+
+    static {
+        io.micrometer.core.instrument.Metrics.addRegistry(new SimpleMeterRegistry());
     }
 }

@@ -178,6 +178,12 @@ public class ReportHelper {
         return lifeCycle;
     }
 
+    public Collection<LifecycleMetrics> getExtensionEvents() {
+        List<LifecycleMetrics> extensionEvents = new ArrayList<>(session.getExtensionEvents());
+        extensionEvents.sort(Comparator.comparing(LifecycleMetrics::getActiveDuration).reversed());
+        return extensionEvents;
+    }
+
     public Collection<TrendMetrics> getTrends() {
         List<TrendMetrics> trends = new ArrayList<>(session.getTrends());
         trends.sort(Comparator.comparing(AbstractSessionMetrics::getStartTime));

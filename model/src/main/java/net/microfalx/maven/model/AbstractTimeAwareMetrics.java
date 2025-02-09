@@ -72,6 +72,14 @@ public abstract class AbstractTimeAwareMetrics<T extends AbstractTimeAwareMetric
         return self();
     }
 
+    public synchronized final T updateInterval(ZonedDateTime startTime, ZonedDateTime endTime) {
+        requireNonNull(startTime);
+        requireNonNull(endTime);
+        this.startTime = startTime;
+        this.endTime = endTime;
+        return self();
+    }
+
     @Override
     public synchronized final int getExecutionCount() {
         return executionCount;
@@ -86,13 +94,19 @@ public abstract class AbstractTimeAwareMetrics<T extends AbstractTimeAwareMetric
         return self();
     }
 
+    public synchronized final T addActiveDuration(Duration duration, int executionCount) {
+        this.durationNanos += duration.toNanos();
+        this.executionCount += executionCount;
+        return self();
+    }
+
     @Override
     public synchronized final Duration getActiveDuration() {
         return ofNanos(durationNanos);
     }
 
     public synchronized final Duration getAverageActiveDuration() {
-        return getExecutionCount() > 0 ? getDuration().dividedBy(getExecutionCount()) : Duration.ZERO;
+        return getExecutionCount() > 0 ? getActiveDuration().dividedBy(getExecutionCount()) : Duration.ZERO;
     }
 
     @SuppressWarnings("unchecked")

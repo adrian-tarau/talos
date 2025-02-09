@@ -1,5 +1,6 @@
 package net.microfalx.maven.model;
 
+import com.esotericsoftware.kryo.serializers.VersionFieldSerializer;
 import net.microfalx.jvm.model.Server;
 import net.microfalx.jvm.model.VirtualMachine;
 import net.microfalx.metrics.SeriesStore;
@@ -26,6 +27,8 @@ public class SessionMetrics extends AbstractSessionMetrics<SessionMetrics> {
     private final Collection<PluginMetrics> plugins = new ArrayList<>();
     private final Collection<TestMetrics> tests = new ArrayList<>();
     private final Collection<TrendMetrics> trends = new ArrayList<>();
+    @VersionFieldSerializer.Since(2)
+    private final Collection<LifecycleMetrics> extensionEvents = new ArrayList<>();
 
     private VirtualMachine virtualMachine;
     private final Map<String, String> systemProperties = new HashMap<>();
@@ -109,6 +112,15 @@ public class SessionMetrics extends AbstractSessionMetrics<SessionMetrics> {
     public void setTests(Collection<TestMetrics> tests) {
         requireNonNull(tests);
         this.tests.addAll(tests);
+    }
+
+    public Collection<LifecycleMetrics> getExtensionEvents() {
+        return unmodifiableCollection(extensionEvents);
+    }
+
+    public void setExtensionsEvents(Collection<LifecycleMetrics> extensionEvents) {
+        requireNonNull(extensionEvents);
+        this.extensionEvents.addAll(extensionEvents);
     }
 
     public VirtualMachine getVirtualMachine() {

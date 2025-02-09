@@ -80,7 +80,7 @@ public class TrendHelper {
         for (TrendMetrics trend : reportHelper.getTrends()) {
             try {
                 T value = mapper.apply(trend);
-                if (value != null) metrics.add(value.setStartTime(trend.getStartTime()));
+                if (value != null) metrics.add(value.updateInterval(trend.getStartTime(), trend.getEndTime()));
             } catch (IllegalArgumentException e) {
                 // ignore "cannot find this id"
             }

@@ -3,22 +3,54 @@
 <body>
 
 <div th:fragment="extensions">
-    <table class="table">
-        <thead class="table-light">
-        <tr>
-            <th scope="col">Group Id</th>
-            <th scope="col">Artifact Id</th>
-            <th scope="col">Version</th>
-        </tr>
-        </thead>
-        <tbody>
-            <tr th:each="projectDetails : ${session.getExtensions()}">
-                <td th:text="${projectDetails.project.groupId}"></td>
-                <td th:text="${projectDetails.project.artifactId}"></td>
-                <td th:text="${projectDetails.project.version}"></td>
+
+    <th:block th:unless="${session.getExtensions().isEmpty()}">
+        <h3>Registered</h3>
+        <table class="table">
+            <thead class="table-light">
+            <tr>
+                <th scope="col">Group Id</th>
+                <th scope="col">Artifact Id</th>
+                <th scope="col">Version</th>
             </tr>
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                <tr th:each="projectDetails : ${session.getExtensions()}">
+                    <td th:text="${projectDetails.project.groupId}"></td>
+                    <td th:text="${projectDetails.project.artifactId}"></td>
+                    <td th:text="${projectDetails.project.version}"></td>
+                </tr>
+            </tbody>
+        </table>
+    </th:block>
+
+    <h3>Events</h3>
+    <div class="container-fluid">
+        <div class="row justify-content-start g-0">
+            <div class="col-8">
+                <table class="table table-hover datatable">
+                    <thead class="table-light">
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Duration</th>
+                        <th scope="col">Average Duration</th>
+                        <th scope="col">Execution Count</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="lifeCycle : ${helper.getExtensionEvents()}">
+                        <td><span th:text="${lifeCycle.name}"></span></td>
+                        <td><span th:text="${helper.formatDuration(lifeCycle.getActiveDuration())}"></span></td>
+                        <td><span th:text="${helper.formatDuration(lifeCycle.getAverageActiveDuration())}"></span></td>
+                        <td><span th:text="${lifeCycle.executionCount}"></span></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-4" id="extension_events"></div>
+        </div>
+    </div>
+
     <div th:if="${helper.hasExtensionFailures()}">
         <h3 class="pt-2">Failures</h3>
         <div th:replace="~{fragments/utils :: failures_details(${session.getExtensionFailures()})}"></div>

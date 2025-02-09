@@ -74,6 +74,13 @@ public class ChartHelper {
         return chart;
     }
 
+    public PieChart<Long> getExtensionEventsPieChart(String id) {
+        PieChart<Long> chart = new PieChart<>(id, "Extension Events");
+        chart.getLegend().setShow(false);
+        reportHelper.getExtensionEvents().forEach(event -> chart.add(event.getName(), event.getActiveDuration().toMillis()));
+        return chart;
+    }
+
     public TreeMapChart<Integer> getTotalTestsTreeMapChart(String id) {
         TreeMapChart<Integer> chart = new TreeMapChart<>(id, "Total");
         chart.getLegend().setShow(false);

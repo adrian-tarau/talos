@@ -267,8 +267,7 @@ public abstract class AbstractSessionMetrics<T extends AbstractSessionMetrics<T>
         target.setName(source.getName());
         target.setDescription(source.getDescription());
         target.project = source.getProject();
-        target.setStartTime(source.getStartTime());
-        target.setEndTime(source.getEndTime());
+        target.updateInterval(source.getStartTime(), source.getEndTime());
         target.localRepository = source.localRepository;
         target.remoteRepositories.addAll(source.remoteRepositories);
 

@@ -24,6 +24,11 @@ class ProfilerLifecycleParticipantTest extends AbstractExtensionTestCase {
         Reflect.on(participant).call("storeMetrics", getSession());
     }
 
+    @Test
+    void collectExtensionEvents() {
+        Reflect.on(participant).call("collectExtensionEvents");
+    }
+
     private void prepare() throws MavenExecutionException {
         MavenSession session = initSession();
         Reflect.on(participant).set("mavenLogger", getLogger());
