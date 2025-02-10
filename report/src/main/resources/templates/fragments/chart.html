@@ -440,6 +440,8 @@
     <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendSessionDuration('trend_sessions')})}"></div>
     <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendEventsDuration('trend_events')})}"></div>
     <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendTasksDuration('trend_tasks')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendTestCounts('trend_tests_counts')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${chartHelper.getTrendTestFailuresByModuleCounts('trend_tests_failures_by_module')})}"></div>
 
     <div th:replace="~{fragments/chart :: pie(${chartHelper.getExtensionEventsPieChart('extension_events')})}"></div>
 

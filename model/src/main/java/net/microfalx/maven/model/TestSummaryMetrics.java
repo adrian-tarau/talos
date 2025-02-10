@@ -3,7 +3,9 @@ package net.microfalx.maven.model;
 import net.microfalx.lang.NamedIdentityAware;
 
 import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.unmodifiableSet;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -19,6 +21,7 @@ public class TestSummaryMetrics extends NamedIdentityAware<String> {
     private Duration duration = Duration.ZERO;
 
     transient ProjectMetrics module;
+    transient ZonedDateTime startTime;
 
     protected TestSummaryMetrics() {
     }
@@ -58,6 +61,10 @@ public class TestSummaryMetrics extends NamedIdentityAware<String> {
         return module;
     }
 
+    public ZonedDateTime getStartTime() {
+        return startTime;
+    }
+
     public Set<String> getFailureTypes() {
         return unmodifiableSet(failureTypes);
     }
@@ -66,7 +73,30 @@ public class TestSummaryMetrics extends NamedIdentityAware<String> {
         return duration;
     }
 
+    public static Collection<TestSummaryMetrics> summaries(Collection<TrendMetrics> metrics) {
+        requireNonNull(metrics);
+        return metrics.stream().map(t -> {
+                    TestSummaryMetrics summary = TestSummaryMetrics.summary(t.getTests());
+                    summary.startTime = t.getStartTime();
+                    return summary;
+                })
+                .collect(Collectors.toList());
+    }
+
+    public static TestSummaryMetrics summary(Collection<TestSummaryMetrics> metrics) {
+        requireNonNull(metrics);
+        TestSummaryMetrics summary = new TestSummaryMetrics("all");
+        for (TestSummaryMetrics metric : metrics) {
+            summary.total += metric.total;
+            summary.failure += metric.failure;
+            summary.error += metric.error;
+            summary.skipped += metric.skipped;
+        }
+        return summary;
+    }
+
     public static Collection<TestSummaryMetrics> from(Collection<TestMetrics> metrics) {
+        requireNonNull(metrics);
         Map<String, TestSummaryMetrics> summaryMetrics = new HashMap<>();
         for (TestMetrics metric : metrics) {
             TestSummaryMetrics summary = summaryMetrics.computeIfAbsent(metric.getModuleId(), TestSummaryMetrics::new);

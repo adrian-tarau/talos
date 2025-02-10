@@ -4,10 +4,8 @@ import net.microfalx.lang.Identifiable;
 import net.microfalx.maven.model.*;
 import net.microfalx.metrics.SeriesStore;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.time.ZonedDateTime;
+import java.util.*;
 import java.util.function.Function;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -65,6 +63,37 @@ public class TrendHelper {
         return getMetrics(id, (trend) -> trend.getMojo(id));
     }
 
+    public Collection<TestSummaryMetrics> getTestCountsMetrics() {
+        return TestSummaryMetrics.summaries(reportHelper.getTrends());
+    }
+
+    public Map<ProjectMetrics, Collection<ModuleFailures>> getTestFailuresByModule() {
+        Map<ProjectMetrics, Collection<ModuleFailures>> failures = new HashMap<>();
+        Set<ProjectMetrics> toKeep = new HashSet<>();
+        for (TrendMetrics trendMetrics : reportHelper.getTrends()) {
+            for (TestSummaryMetrics metrics : trendMetrics.getTests()) {
+                ProjectMetrics module = session.getModule(metrics.getModuleId());
+                Collection<ModuleFailures> failuresByModule = failures.computeIfAbsent(module, id -> new ArrayList<>());
+                ModuleFailures moduleFailures = new ModuleFailures(module, trendMetrics.getStartTime());
+                moduleFailures.count += metrics.getFailure() + metrics.getError();
+                failuresByModule.add(moduleFailures);
+            }
+        }
+        for (Map.Entry<ProjectMetrics, Collection<ModuleFailures>> entry : failures.entrySet()) {
+            for (ModuleFailures moduleFailures : entry.getValue()) {
+                if (moduleFailures.count > 0) {
+                    toKeep.add(entry.getKey());
+                    break;
+                }
+            }
+        }
+        Map<ProjectMetrics, Collection<ModuleFailures>> finalFailures = new HashMap<>();
+        for (ProjectMetrics module : toKeep) {
+            finalFailures.put(module, failures.getOrDefault(module, Collections.emptyList()));
+        }
+        return finalFailures;
+    }
+
     private <T extends Identifiable<String>> Collection<T> getTypes(Function<TrendMetrics, Collection<T>> mapper) {
         Map<String, T> types = new HashMap<>();
         for (TrendMetrics trend : session.getTrends()) {
@@ -86,5 +115,29 @@ public class TrendHelper {
             }
         }
         return metrics;
+    }
+
+    public static class ModuleFailures {
+
+        private final ProjectMetrics module;
+        private final ZonedDateTime startTime;
+        private int count;
+
+        public ModuleFailures(ProjectMetrics module, ZonedDateTime startTime) {
+            this.module = module;
+            this.startTime = startTime;
+        }
+
+        public ProjectMetrics getModule() {
+            return module;
+        }
+
+        public ZonedDateTime getStartTime() {
+            return startTime;
+        }
+
+        public int getCount() {
+            return count;
+        }
     }
 }

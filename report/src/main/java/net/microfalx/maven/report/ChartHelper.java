@@ -5,18 +5,13 @@ import net.microfalx.jvm.VirtualMachineMetrics;
 import net.microfalx.lang.Nameable;
 import net.microfalx.lang.NamedIdentityAware;
 import net.microfalx.lang.TimeUtils;
-import net.microfalx.maven.model.LifecycleMetrics;
-import net.microfalx.maven.model.MojoMetrics;
-import net.microfalx.maven.model.SessionMetrics;
+import net.microfalx.maven.model.*;
 import net.microfalx.metrics.SeriesStore;
 import net.microfalx.metrics.Value;
 
 import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.function.Function;
 
 import static java.util.Collections.unmodifiableCollection;
@@ -377,6 +372,34 @@ public class ChartHelper {
         }
         chart.setStacked(true);
         chart.getYaxis().setUnit(Unit.DURATION);
+        return chart;
+    }
+
+    public AreaChart<Long, Float> getTrendTestCounts(String id) {
+        AreaChart<Long, Float> chart = new AreaChart<>(id, "Tests Summary");
+        Collection<TestSummaryMetrics> testCountsMetrics = trendHelper.getTestCountsMetrics();
+        chart.add(convert("Passed", testCountsMetrics, m -> toMillis(m.getStartTime()),
+                m -> (float) m.getPassed()));
+        chart.add(convert("Failed", testCountsMetrics, m -> toMillis(m.getStartTime()),
+                m -> (float) m.getFailure()));
+        chart.add(convert("Errors", testCountsMetrics, m -> toMillis(m.getStartTime()),
+                m -> (float) m.getError()));
+        chart.add(convert("Skipped", testCountsMetrics, m -> toMillis(m.getStartTime()),
+                m -> (float) m.getSkipped()));
+        chart.setStacked(true);
+        return chart;
+    }
+
+    public AreaChart<Long, Float> getTrendTestFailuresByModuleCounts(String id) {
+        AreaChart<Long, Float> chart = new AreaChart<>(id, "Tests Failures");
+        Map<ProjectMetrics, Collection<TrendHelper.ModuleFailures>> testFailuresByModule = trendHelper.getTestFailuresByModule();
+        for (Map.Entry<ProjectMetrics, Collection<TrendHelper.ModuleFailures>> entry : testFailuresByModule.entrySet()) {
+            ProjectMetrics module = entry.getKey();
+            Collection<TrendHelper.ModuleFailures> failures = entry.getValue();
+            chart.add(convert(module.getName(), failures, m -> toMillis(m.getStartTime()),
+                    m -> (float) m.getCount()));
+        }
+        chart.setStacked(true);
         return chart;
     }
 
