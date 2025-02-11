@@ -2,6 +2,7 @@ package net.microfalx.maven.core;
 
 import net.microfalx.lang.*;
 import net.microfalx.metrics.Metrics;
+import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Plugin;
@@ -14,8 +15,12 @@ import org.eclipse.aether.metadata.Metadata;
 
 import java.net.URI;
 import java.time.Duration;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
@@ -382,9 +387,9 @@ public class MavenUtils {
      */
     public static Collection<URI> getRemoteRepositories(MavenSession session) {
         requireNonNull(session);
-        /*return session.getRequest().getRemoteRepositories().stream().map(ArtifactRepository::getUrl)
-                .map(UriUtils::parseUri).collect(Collectors.toList());*/
-        return new ArrayList<>(Arrays.asList(UriUtils.parseUri("https://repo.maven.apache.org/maven2")));
+        return session.getRequest().getRemoteRepositories().stream().map(ArtifactRepository::getUrl)
+                .map(UriUtils::parseUri).collect(Collectors.toList());
+        //return new ArrayList<>(Arrays.asList(UriUtils.parseUri("https://repo.maven.apache.org/maven2")));
     }
 
     /**
