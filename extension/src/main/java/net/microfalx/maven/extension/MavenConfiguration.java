@@ -87,7 +87,7 @@ public class MavenConfiguration extends net.microfalx.maven.core.MavenConfigurat
      */
     public Boolean isPerformanceEnabled() {
         if (performanceEnabled == null) {
-            performanceEnabled = getProperty(getSession(), "performance.enabled", true);
+            performanceEnabled = getProperty(getSession(), "extension.performance.enabled", true);
         }
         return isExtensionEnabled() && performanceEnabled;
     }
@@ -119,6 +119,6 @@ public class MavenConfiguration extends net.microfalx.maven.core.MavenConfigurat
      * @return {@code true} if enabled, {@code false} otherwise
      */
     public Boolean isEnvironmentEnabled() {
-        return getProperty(getSession(), "report.environment.enable", false);
+        return getProperty(getSession(), "report.environment.enabled", false);
     }
 }
