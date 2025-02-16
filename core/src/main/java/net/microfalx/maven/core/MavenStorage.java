@@ -3,9 +3,12 @@ package net.microfalx.maven.core;
 import net.microfalx.lang.Hashing;
 import net.microfalx.lang.JvmUtils;
 import net.microfalx.lang.StringUtils;
-import net.microfalx.resource.Resource;
+import net.microfalx.lang.TimeUtils;
+import net.microfalx.resource.*;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,11 +16,14 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
+import java.util.Date;
 
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofMillis;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.FileUtils.validateDirectoryExists;
+import static net.microfalx.lang.StringUtils.*;
+import static net.microfalx.lang.UriUtils.parseUri;
 import static net.microfalx.resource.Resource.Type.DIRECTORY;
 
 /**
@@ -25,15 +31,21 @@ import static net.microfalx.resource.Resource.Type.DIRECTORY;
  */
 public class MavenStorage {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MavenStorage.class);
+
     private static final String STORAGE_DIRECTORY = "maven";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
     private static final Duration MAX_WORKSPACE_RETENTION = Duration.ofDays(3);
 
+    private static final String TRENDS_DIRECTORY_NAME = "trends";
+    private static final String SESSIONS_DIRECTORY_NAME = "sessions";
+    private static final String STAGING_DIRECTORY_NAME = "staging";
 
     private static Resource storageDirectory;
-    private static Resource workspaceDirectory;
+    private static Resource sessionDirectory;
     private static Resource stagingDirectory;
     private static Resource trendDirectory;
+    private static Resource remoteStorageDirectory;
 
     /**
      * Returns a director used to store files for any maven plugins.
@@ -58,8 +70,8 @@ public class MavenStorage {
      *
      * @return a non-null instance
      */
-    public static synchronized Resource getWorkspaceDirectory() {
-        return getStorageDirectory().resolve("workspace", DIRECTORY);
+    public static synchronized Resource getLocalSessionsDirectory() {
+        return getStorageDirectory().resolve(SESSIONS_DIRECTORY_NAME, DIRECTORY);
     }
 
     /**
@@ -68,7 +80,7 @@ public class MavenStorage {
      * @return the staging directory for a session
      */
     public static synchronized Resource getStagingDirectory() {
-        return getStorageDirectory().resolve("staging", DIRECTORY);
+        return getStorageDirectory().resolve(STAGING_DIRECTORY_NAME, DIRECTORY);
     }
 
     /**
@@ -91,13 +103,26 @@ public class MavenStorage {
      * @param session the session
      * @return a non-null instance
      */
-    public static synchronized Resource getWorkspaceDirectory(MavenSession session) {
+    public static synchronized Resource getLocalSessionsDirectory(MavenSession session) {
         requireNonNull(session);
-        if (workspaceDirectory == null) {
-            workspaceDirectory = getWorkspaceDirectory().resolve(getProjectId(session), DIRECTORY)
-                    .resolve(getTimestampedName(), DIRECTORY);
+        if (sessionDirectory == null) {
+            sessionDirectory = getLocalSessionsDirectory().resolve(getProjectId(session), DIRECTORY)
+                    .resolve(getTimestampedName(session), DIRECTORY);
         }
-        return workspaceDirectory;
+        return sessionDirectory;
+    }
+
+    /**
+     * Returns the directory to store data for a given session (mostly temporary data).
+     *
+     * @param session the session
+     * @return a non-null instance
+     */
+    public static synchronized Resource getRemoteSessionsDirectory(MavenSession session) {
+        requireNonNull(session);
+        return getRemoteStorage(session).resolve(SESSIONS_DIRECTORY_NAME, DIRECTORY)
+                .resolve(getProjectId(session), DIRECTORY)
+                .resolve(getTimestampedName(session), DIRECTORY);
     }
 
     /**
@@ -106,10 +131,10 @@ public class MavenStorage {
      * @param session the session
      * @return a non-null instance
      */
-    public static synchronized Resource getTrendsDirectory(MavenSession session) {
+    public static synchronized Resource getLocalTrendsDirectory(MavenSession session) {
         requireNonNull(session);
         if (trendDirectory == null) {
-            trendDirectory = getStorageDirectory().resolve("trends", DIRECTORY)
+            trendDirectory = getStorageDirectory().resolve(TRENDS_DIRECTORY_NAME, DIRECTORY)
                     .resolve(getProjectId(session), DIRECTORY);
         }
         return trendDirectory;
@@ -122,11 +147,28 @@ public class MavenStorage {
      * @param trend   the trend resource
      * @throws IOException if an I/O error occurs
      */
-    public static void storeTrend(MavenSession session, Resource trend) throws IOException {
+    public static Resource storeTrend(MavenSession session, Resource trend) throws IOException {
         requireNonNull(session);
         requireNonNull(trend);
-        String fileName = "trend_" + getTimestampedName() + ".data";
-        getTrendsDirectory(session).resolve(fileName).copyFrom(trend);
+        String fileName = "trend_" + getTimestampedName(session) + ".data";
+        Resource resource = getLocalTrendsDirectory(session).resolve(fileName);
+        resource.copyFrom(trend);
+        return resource;
+    }
+
+    /**
+     * Uploads the trend metrics to a remote store.
+     *
+     * @param session the maven session
+     * @param trend   the trend resource
+     * @throws IOException if an I/O error occurs
+     */
+    public static void uploadTrend(MavenSession session, Resource trend) throws IOException {
+        if (hasRemoteStorage(session)) {
+            Resource remoteTrendsDirectory = getRemoteTrendsDirectory(session);
+            Resource remoteTrend = remoteTrendsDirectory.resolve(trend.getFileName());
+            remoteTrend.copyFrom(trend);
+        }
     }
 
     /**
@@ -136,8 +178,84 @@ public class MavenStorage {
      * @return a non-null instance
      * @throws IOException if an I/O error occurs
      */
-    public static Collection<Resource> getTrends(MavenSession session) throws IOException {
-        return getTrendsDirectory(session).list();
+    public static Collection<Resource> getLocalTrends(MavenSession session) throws IOException {
+        return getLocalTrendsDirectory(session).list();
+    }
+
+    /**
+     * Returns a list of resources containing trends information.
+     *
+     * @param session the session
+     * @return a non-null instance
+     * @throws IOException if an I/O error occurs
+     */
+    public static Collection<Resource> getRemoteTrends(MavenSession session) throws IOException {
+        return getRemoteTrendsDirectory(session).list();
+    }
+
+    /**
+     * Returns whether a remote storage was configured.
+     *
+     * @param session the session
+     * @return {@code true} if configured, {@code false} otherwise
+     */
+    public static boolean hasRemoteStorage(MavenSession session) {
+        return ResourceUtils.exists(getRemoteStorage(session));
+    }
+
+    /**
+     * Returns a resource used to store session data remotely.
+     * <p>
+     * If the remote store is not configured, the {@link Resource#NULL} is returned.
+     *
+     * @param session the session
+     * @return a non-null instance
+     */
+    public static Resource getRemoteStorage(MavenSession session) {
+        requireNonNull(session);
+        if (remoteStorageDirectory == null) {
+            String uri = MavenUtils.getProperty(session, "storage.uri", (String) null);
+            if (isNotEmpty(uri)) {
+                String userName = MavenUtils.getProperty(session, "storage.username", (String) null);
+                String password = MavenUtils.getProperty(session, "storage.password", (String) null);
+                Credential credential = Credential.NA;
+                if (isNotEmpty(userName) && isNotEmpty(password)) {
+                    credential = new UserPasswordCredential(userName, password);
+                }
+                LOGGER.info("Initialize remote storage, uri: {}, username {}", uri, defaultIfEmpty(userName, NA_STRING));
+                String endpoint = null;
+                String s3Bucket = MavenUtils.getProperty(session, "storage.s3.bucket", (String) null);
+                String s3Prefix = MavenUtils.getProperty(session, "storage.s3.prefix", (String) null);
+                if (isNotEmpty(s3Bucket)) {
+                    endpoint = uri;
+                    LOGGER.info("Use S3 bucket '{}', prefix {}", s3Bucket, defaultIfEmpty(s3Prefix, NA_STRING));
+                    uri = "s3:/" + removeStartSlash(removeEndSlash(s3Bucket));
+                    if (isNotEmpty(s3Prefix)) uri += "/" + removeStartSlash(removeEndSlash(s3Prefix));
+                }
+                remoteStorageDirectory = ResourceFactory.resolve(parseUri(uri), credential, DIRECTORY);
+                if (endpoint != null) {
+                    remoteStorageDirectory = remoteStorageDirectory.withAttribute(Resource.END_POINT_ATTR, endpoint);
+                }
+                boolean exist = ResourceUtils.exists(remoteStorageDirectory);
+                if (!exist) {
+                    LOGGER.error("Remote storage '{}', credential {} does not exist or cannot be accessed", remoteStorageDirectory, credential);
+                }
+            } else {
+                remoteStorageDirectory = Resource.NULL;
+            }
+        }
+        return remoteStorageDirectory;
+    }
+
+    /**
+     * Returns the directory to store data for trends a given project.
+     *
+     * @param session the session
+     * @return a non-null instance
+     */
+    public static synchronized Resource getRemoteTrendsDirectory(MavenSession session) {
+        return getRemoteStorage(session).resolve(TRENDS_DIRECTORY_NAME, DIRECTORY)
+                .resolve(getProjectId(session), DIRECTORY);
     }
 
     /**
@@ -145,7 +263,7 @@ public class MavenStorage {
      */
     public static void cleanupWorkspace(MavenSession session) {
         requireNonNull(session);
-        cleanupWorkspace(getWorkspaceDirectory());
+        cleanupWorkspace(getLocalSessionsDirectory());
         cleanupWorkspace(getStagingDirectory());
     }
 
@@ -166,8 +284,11 @@ public class MavenStorage {
         }
     }
 
-    private static String getTimestampedName() {
-        return DATE_FORMATTER.format(LocalDateTime.now());
+    private static String getTimestampedName(MavenSession session) {
+        Date date = session.getStartTime();
+        LocalDateTime startTime = LocalDateTime.now();
+        if (date != null) TimeUtils.toLocalDateTime(date);
+        return DATE_FORMATTER.format(startTime);
     }
 
     private static String getProjectId(MavenSession session) {
@@ -181,7 +302,7 @@ public class MavenStorage {
     private static String getBuildId(MavenSession session) {
         Hashing hashing = Hashing.create();
         hashing.update(session.getRequest().getBaseDirectory());
-        return StringUtils.toIdentifier(getTimestampedName(), hashing.asString());
+        return StringUtils.toIdentifier(getTimestampedName(session), hashing.asString());
     }
 
     private static boolean isOld(long timestamp, boolean file) {

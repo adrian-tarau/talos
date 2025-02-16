@@ -2,6 +2,7 @@ package net.microfalx.maven.extension;
 
 import net.microfalx.jvm.ServerMetrics;
 import net.microfalx.jvm.VirtualMachineMetrics;
+import net.microfalx.lang.ConcurrencyUtils;
 import net.microfalx.lang.TimeUtils;
 import net.microfalx.maven.core.MavenLogger;
 import net.microfalx.maven.core.MavenStorage;
@@ -41,6 +42,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
@@ -77,14 +80,16 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
     private final MavenTracker tracker = new MavenTracker(ProfilerLifecycleParticipant.class);
     private Resource report;
 
+    private final CountDownLatch remoteTrendsLatch = new CountDownLatch(1);
+
     @Override
     public void afterProjectsRead(MavenSession session) throws MavenExecutionException {
         super.afterProjectsRead(session);
         tracker.track("Project Read", t -> {
             sessionMetrics = new SessionMetrics(session).setStartTime(startTime).setVerbose(configuration.isVerbose());
             profilerMetrics.sessionMetrics = sessionMetrics;
-            loadProjectSettings(session);
             if (progressListener != null) progressListener.start();
+            startTrendsSync(session);
         });
     }
 
@@ -100,13 +105,16 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
     @Override
     public void afterSessionEnd(MavenSession session) throws MavenExecutionException {
         tracker.track("Session End", t -> {
+            loadProjectSettings(session);
             profilerMetrics.sessionsEnd(sessionMetrics);
             METRICS.time("Update Metrics", t2 -> updateMetrics(session));
-            METRICS.time("Generate Report", t2 -> generateHtmlReports(session));
-            METRICS.time("Cleanup", t2 -> cleanup(session));
+        });
+        tracker.track("Shutdown", t -> {
             METRICS.time("Collect Events", t2 -> collectExtensionEvents());
             METRICS.time("Store Metrics", t2 -> storeMetrics(session));
+            METRICS.time("Generate Report", t2 -> generateHtmlReports(session));
             METRICS.time("Move Results", t2 -> copyResults(session));
+            METRICS.time("Cleanup", t2 -> cleanup(session));
             profilerMetrics.print();
             printConsoleReport();
             openHtmlReport();
@@ -183,10 +191,16 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
                 TrendMetrics trendMetrics = TrendMetrics.from(sessionMetrics);
                 trendMetrics.store(outputStream);
             }
-            MavenStorage.storeTrend(session, resource);
+            Resource finalResource = MavenStorage.storeTrend(session, resource);
+            // upload trend metrics
+            upload(() -> {
+                MavenStorage.uploadTrend(session, finalResource);
+                return null;
+            });
         } catch (Exception e) {
             LOGGER.error("Failed to store metrics on disk", e);
         }
+
         // attach all trend metrics to session
         Collection<TrendMetrics> trends = getTrends(session);
         if (trends != null) sessionMetrics.setTrends(trends);
@@ -281,10 +295,17 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
     }
 
     private void copyResults(MavenSession session) {
-        File target = ResourceUtils.toFile(MavenStorage.getWorkspaceDirectory(session));
-        copyResults(session, target, false);
-        target = ResourceUtils.toFile(configuration.getTargetDirectory(null, true));
-        copyResults(session, target, true);
+        // copy results from staging to local sessions
+        File sessionTarget = ResourceUtils.toFile(MavenStorage.getLocalSessionsDirectory(session));
+        copyResults(session, sessionTarget, false);
+        // upload results to remote store
+        upload(() -> {
+            MavenStorage.getRemoteSessionsDirectory(session).copyFrom(Resource.directory(sessionTarget));
+            return null;
+        });
+        // copy results in $ROOT/target directory
+        File projectTarget = ResourceUtils.toFile(configuration.getTargetDirectory(null, true));
+        copyResults(session, projectTarget, true);
     }
 
     private void collectExtensionEvents() {
@@ -314,10 +335,11 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
 
     private Collection<TrendMetrics> getTrends(MavenSession session) {
         return tracker.trackCallable("Load Trends", () -> {
+            ConcurrencyUtils.await(remoteTrendsLatch);
             boolean trendReportingDaily = configuration.isTrendReportingDaily();
             LocalDateTime oldestTrend = LocalDateTime.now().minus(configuration.getTrendRetention());
             Collection<TrendMetrics> metrics = new ArrayList<>();
-            Collection<Resource> resources = MavenStorage.getTrends(session);
+            Collection<Resource> resources = MavenStorage.getLocalTrends(session);
             LocalDate prevDate = null;
             for (Resource resource : resources) {
                 LocalDateTime lastModified = TimeUtils.toLocalDateTime(resource.lastModified());
@@ -339,12 +361,85 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
         });
     }
 
+    private Collection<Resource> getRemoteTrends(MavenSession session) {
+        LocalDateTime oldestTrend = LocalDateTime.now().minus(configuration.getTrendRetention());
+        Collection<Resource> finalTrends = new ArrayList<>();
+        try {
+            Collection<Resource> remoteTrends = MavenStorage.getRemoteTrends(session);
+            for (Resource remoteTrend : remoteTrends) {
+                LocalDateTime lastModified = TimeUtils.toLocalDateTime(remoteTrend.lastModified());
+                if (lastModified.isAfter(oldestTrend)) {
+                    finalTrends.add(remoteTrend);
+                } else {
+                    try {
+                        remoteTrend.delete();
+                    } catch (IOException e) {
+                        // it does not matter, after some time it will be successful
+                    }
+                }
+            }
+        } catch (IOException e) {
+            LOGGER.warn("Failed to extract remote trends, root cause: {}", getRootCauseMessage(e));
+        }
+        return finalTrends;
+    }
+
+    private void copyRemoteTrendsLocally(MavenSession session) {
+        try {
+            Resource localTrendsDirectory = MavenStorage.getLocalTrendsDirectory(session);
+            Collection<Resource> remoteTrends = getRemoteTrends(session);
+            int successCount = 0;
+            int failureCount = 0;
+            for (Resource remoteTrend : remoteTrends) {
+                Resource localTrend = localTrendsDirectory.resolve(remoteTrend.getFileName(), Resource.Type.FILE);
+                try {
+                    if (!ResourceUtils.hasSameAttributes(localTrend, remoteTrend, false)) {
+                        localTrend.copyFrom(remoteTrend);
+                    }
+                    successCount++;
+                } catch (IOException e) {
+                    failureCount++;
+                    LOGGER.warn("Failed to copy remote trend '{}', root cause: {}", remoteTrend, getRootCauseMessage(e));
+                }
+            }
+            LOGGER.info("Synchronized successfuly {} trends, unsuccessfully {}", successCount, failureCount);
+        } finally {
+            remoteTrendsLatch.countDown();
+        }
+    }
+
+    private void startTrendsSync(MavenSession session) {
+        if (!session.getResult().hasExceptions()) {
+            Thread thread = new Thread(new CopyRemoteTrendsTask(session));
+            thread.setName("Sync Trends");
+            thread.start();
+        }
+    }
+
+    private void upload(Callable<?> callable) {
+        tracker.trackCallable("Upload", callable);
+    }
+
     private TrendMetrics loadTrend(Resource resource) {
-        return tracker.trackCallable("Load Trends", () -> TrendMetrics.load(resource));
+        return tracker.trackCallable("Load Trend", () -> TrendMetrics.load(resource));
     }
 
     private void cleanup(MavenSession session) {
         MavenStorage.cleanupWorkspace(session);
+    }
+
+    class CopyRemoteTrendsTask implements Runnable {
+
+        private final MavenSession session;
+
+        public CopyRemoteTrendsTask(MavenSession session) {
+            this.session = session;
+        }
+
+        @Override
+        public void run() {
+            copyRemoteTrendsLocally(session);
+        }
     }
 
 

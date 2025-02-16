@@ -95,6 +95,11 @@
         </dependency>
 
         <dependency>
+            <groupId>net.microfalx.resource</groupId>
+            <artifactId>resource-s3</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.fusesource.jansi</groupId>
             <artifactId>jansi</artifactId>
             <scope>provided</scope>

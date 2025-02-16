@@ -272,7 +272,7 @@ public class MavenUtils {
     public static Duration getProperty(MavenSession session, String name, Duration defaultValue) {
         String value = getProperty(session, name, (String) null);
         try {
-            if (StringUtils.isNotEmpty(value)) return TimeUtils.parseDuration(value);
+            if (isNotEmpty(value)) return TimeUtils.parseDuration(value);
         } catch (NumberFormatException e) {
             // ignore and fall back to default value
         }
@@ -290,7 +290,7 @@ public class MavenUtils {
     public static boolean getProperty(MavenSession session, String name, boolean defaultValue) {
         String value = getProperty(session, name, (String) null);
         try {
-            if (StringUtils.isNotEmpty(value)) return Boolean.parseBoolean(value);
+            if (isNotEmpty(value)) return Boolean.parseBoolean(value);
         } catch (NumberFormatException e) {
             // ignore and fall back to default value
         }
@@ -308,7 +308,7 @@ public class MavenUtils {
     public static int getProperty(MavenSession session, String name, int defaultValue) {
         String value = getProperty(session, name, (String) null);
         try {
-            if (StringUtils.isNotEmpty(value)) return Integer.parseInt(value);
+            if (isNotEmpty(value)) return Integer.parseInt(value);
         } catch (NumberFormatException e) {
             // ignore and fall back to default value
         }
@@ -316,7 +316,9 @@ public class MavenUtils {
     }
 
     /**
-     * Returns a property value.
+     * Returns a property or environment variable value.
+     * <p>
+     * The environment variable is created out of full property name, upper case and replacing "." with "_".
      *
      * @param session      the session
      * @param name         the property name
@@ -327,7 +329,10 @@ public class MavenUtils {
         requireNonNull(session);
         requireNonNull(name);
         name = PROPERTY_PREFIX + name;
-        String value = session.getSystemProperties().getProperty(name);
+        String envVar = StringUtils.replaceAll(name.toUpperCase(), ".", "_");
+        String value = System.getenv(envVar);
+        if (isNotEmpty(value)) return value;
+        value = session.getSystemProperties().getProperty(name);
         if (isNotEmpty(value)) return value;
         MavenProject project = session.getCurrentProject();
         if (project == null) project = session.getTopLevelProject();

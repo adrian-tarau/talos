@@ -22,11 +22,17 @@ class ProfilerLifecycleParticipantTest extends AbstractExtensionTestCase {
     @Test
     void storeMetrics() throws MavenExecutionException {
         Reflect.on(participant).call("storeMetrics", getSession());
+        Reflect.on(participant).call("copyResults", getSession());
     }
 
     @Test
     void collectExtensionEvents() {
         Reflect.on(participant).call("collectExtensionEvents");
+    }
+
+    @Test
+    void copyRemoteTrendsLocally() {
+        Reflect.on(participant).call("copyRemoteTrendsLocally", getSession());
     }
 
     private void prepare() throws MavenExecutionException {
