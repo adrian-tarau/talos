@@ -34,6 +34,7 @@
     </parent>
 
     <name>Talos :: Model</name>
+    <description>A data model for Maven performance metrics</description>
 
     <dependencies>
 

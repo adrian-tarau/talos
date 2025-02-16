@@ -34,6 +34,7 @@
     </parent>
 
     <name>Talos :: JUnit</name>
+    <description>JUnit support for Maven plugins and extensions</description>
 
     <dependencies>
 

@@ -35,6 +35,7 @@
     </parent>
 
     <name>Talos :: Maven :: Plugin</name>
+    <description>A module with Maven plugins</description>
 
     <prerequisites>
         <maven>3.6.3</maven>

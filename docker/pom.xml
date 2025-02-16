@@ -34,6 +34,7 @@
     </parent>
 
     <name>Talos :: Docker</name>
+    <description>Builds application images using Dockerrelated</description>
 
     <dependencies>
 

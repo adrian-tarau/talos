@@ -34,6 +34,7 @@
     <packaging>jar</packaging>
 
     <name>Talos :: Maven :: Extension</name>
+    <description>A Maven extension that tracks performance of Maven builds</description>
 
     <prerequisites>
         <maven>3.6.3</maven>

@@ -34,6 +34,7 @@
     </parent>
 
     <name>Talos :: Boot</name>
+    <description>Supports for application bootstrap using standard file system layout</description>
 
     <dependencies>
 

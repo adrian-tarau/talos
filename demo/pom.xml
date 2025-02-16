@@ -34,6 +34,7 @@
     </parent>
 
     <name>Talos :: Demo</name>
+    <description>A demo application using SpringBoot and the application bootstrap module</description>
 
     <dependencies>
 
