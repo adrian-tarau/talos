@@ -1,6 +1,6 @@
-# Maven
+# Talos
 
-Utilities, plugins and extensions for Java projects using Maven.
+A repository for various Maven plugins and extensions.
 
 ## Plugins
 
@@ -20,9 +20,9 @@ The parameters are declared as with any Maven plugins, in the <build></build> se
 
 ```xml
 <plugin>
-    <groupId>net.microfalx.maven</groupId>
-    <artifactId>maven-plugin</artifactId>
-    <version>0.8.1</version>
+    <groupId>net.microfalx.talos</groupId>
+    <artifactId>talos-maven-plugin</artifactId>
+    <version>0.8.3</version>
     <executions>
         <execution>
             <id>container</id>
@@ -68,9 +68,9 @@ To use this extension, it must be registered with Maven's extension support. Add
 ```xml
 <extensions>
     <extension>
-        <groupId>net.microfalx.maven</groupId>
-        <artifactId>maven-extension</artifactId>
-        <version>0.8.1</version>
+        <groupId>net.microfalx.talos</groupId>
+        <artifactId>talos-maven-extension</artifactId>
+        <version>0.8.3</version>
     </extension>
 </extensions>
 ```

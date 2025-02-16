@@ -23,17 +23,17 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>net.microfalx.maven</groupId>
-    <artifactId>maven-boot</artifactId>
+    <groupId>net.microfalx.talos</groupId>
+    <artifactId>talos-boot</artifactId>
     <version>0.8.3-SNAPSHOT</version>
 
     <parent>
-        <groupId>net.microfalx.maven</groupId>
-		<artifactId>maven</artifactId>
+        <groupId>net.microfalx.talos</groupId>
+		<artifactId>talos</artifactId>
 		<version>0.8.3-SNAPSHOT</version>
     </parent>
 
-    <name>Maven :: Boot</name>
+    <name>Talos :: Boot</name>
 
     <dependencies>
 

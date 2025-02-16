@@ -23,8 +23,8 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>net.microfalx.maven</groupId>
-    <artifactId>maven</artifactId>
+    <groupId>net.microfalx.talos</groupId>
+    <artifactId>talos</artifactId>
     <version>0.8.3-SNAPSHOT</version>
     <packaging>pom</packaging>
 
@@ -34,7 +34,7 @@
         <version>1.0.5</version>
     </parent>
 
-    <name>Maven</name>
+    <name>Talos</name>
     <description>All things Maven related</description>
     <url>https://github.com/adrian-tarau/maven</url>
 

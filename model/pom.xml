@@ -23,17 +23,17 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>net.microfalx.maven</groupId>
-    <artifactId>maven-model</artifactId>
+    <groupId>net.microfalx.talos</groupId>
+    <artifactId>talos-model</artifactId>
     <version>0.8.3-SNAPSHOT</version>
 
     <parent>
-        <groupId>net.microfalx.maven</groupId>
-        <artifactId>maven</artifactId>
+        <groupId>net.microfalx.talos</groupId>
+        <artifactId>talos</artifactId>
         <version>0.8.3-SNAPSHOT</version>
     </parent>
 
-    <name>Maven :: Model</name>
+    <name>Talos :: Model</name>
 
     <dependencies>
 
@@ -48,8 +48,8 @@
         </dependency>
 
         <dependency>
-            <groupId>net.microfalx.maven</groupId>
-            <artifactId>maven-core</artifactId>
+            <groupId>net.microfalx.talos</groupId>
+            <artifactId>talos-core</artifactId>
             <version>${project.version}</version>
         </dependency>
 

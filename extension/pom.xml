@@ -23,17 +23,17 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>net.microfalx.maven</groupId>
-        <artifactId>maven</artifactId>
+        <groupId>net.microfalx.talos</groupId>
+        <artifactId>talos</artifactId>
         <version>0.8.3-SNAPSHOT</version>
     </parent>
 
-    <groupId>net.microfalx.maven</groupId>
-    <artifactId>maven-extension</artifactId>
+    <groupId>net.microfalx.talos</groupId>
+    <artifactId>talos-maven-extension</artifactId>
     <version>0.8.3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Maven :: Extension</name>
+    <name>Talos :: Maven :: Extension</name>
 
     <prerequisites>
         <maven>3.6.3</maven>
@@ -72,20 +72,20 @@
         </dependency>
 
         <dependency>
-            <groupId>net.microfalx.maven</groupId>
-            <artifactId>maven-core</artifactId>
+            <groupId>net.microfalx.talos</groupId>
+            <artifactId>talos-core</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>net.microfalx.maven</groupId>
-            <artifactId>maven-junit</artifactId>
+            <groupId>net.microfalx.talos</groupId>
+            <artifactId>talos-junit</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>net.microfalx.maven</groupId>
-            <artifactId>maven-report</artifactId>
+            <groupId>net.microfalx.talos</groupId>
+            <artifactId>talos-report</artifactId>
             <version>${project.version}</version>
         </dependency>
 
