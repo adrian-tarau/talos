@@ -33,7 +33,7 @@ public class MavenStorage {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MavenStorage.class);
 
-    private static final String STORAGE_DIRECTORY = "maven";
+    private static final String STORAGE_DIRECTORY = "talos";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
     private static final Duration MAX_WORKSPACE_RETENTION = Duration.ofDays(3);
 

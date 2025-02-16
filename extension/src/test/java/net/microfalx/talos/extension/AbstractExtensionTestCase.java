@@ -51,7 +51,7 @@ public abstract class AbstractExtensionTestCase {
     }
 
     protected final ArtifactMetrics createArtifact() {
-        DefaultArtifact artifact = new DefaultArtifact("net.microfalx.maven", "test", "jar", "1.0.0");
+        DefaultArtifact artifact = new DefaultArtifact("net.microfalx.talos", "test", "jar", "1.0.0");
         ArtifactMetrics metrics = new ArtifactMetrics(artifact);
         metrics.artifactResolveStart(artifact);
         metrics.artifactResolveStop(artifact, null);
@@ -69,7 +69,7 @@ public abstract class AbstractExtensionTestCase {
     protected final MavenProject createProject(String name) {
         MavenProject project = new MavenProject();
         project.setName(name);
-        project.setGroupId("net.microfalx.maven");
+        project.setGroupId("net.microfalx.talos");
         project.setArtifactId(StringUtils.toIdentifier(name));
         project.setVersion("1.0." + ThreadLocalRandom.current().nextInt(10));
         return project;

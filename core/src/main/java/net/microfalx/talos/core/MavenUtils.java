@@ -34,9 +34,9 @@ import static net.microfalx.lang.TimeUtils.MILLISECONDS_IN_SECOND;
  */
 public class MavenUtils {
 
-    private static final String PROPERTY_PREFIX = "microfalx.";
+    private static final String PROPERTY_PREFIX = "talos.";
 
-    public static Metrics METRICS = Metrics.of("Maven");
+    public static Metrics METRICS = Metrics.of("Talos");
     public static final String ZERO_DURATION = "~0s";
 
     private static final int DURATION_LENGTH = 9;

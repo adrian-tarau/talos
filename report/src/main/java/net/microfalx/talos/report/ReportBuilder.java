@@ -43,7 +43,7 @@ public class ReportBuilder {
         Collection<Fragment> fragments = new ArrayList<>();
         for (Fragment.Type type : Fragment.Type.values()) {
             Fragment fragment = Fragment.create(type);
-            Resource temporary = Resource.temporary("maven_report_" + type.name().toLowerCase() + "_", ".html");
+            Resource temporary = Resource.temporary("talos_report_" + type.name().toLowerCase() + "_", ".html");
             FragmentBuilder.create(fragment, session).build(temporary);
             fragments.add(fragment);
         }

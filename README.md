@@ -215,16 +215,16 @@ Since most behaviors associated with a build session are influenced by system pr
 
 The behaviour of the extension can be changed with a few parameters:
 
-* `microfalx.extension.enabled=false` Disables the extension without the need to be removed from extensions.xml (might be useful if the extension misbehaves)
-* `microfalx.performance.enabled` Disables server & process performance monitoring (Performance reports in HTML)
-* `microfalx.quiet=false` The default build behaviour is be reverted (verbose logging), while preserving the build report at the end
-* `microfalx.verbose=true` The default output highlights the most important aspects of the build; however, additional information can be requested in the terminal in the build report at the end
+* `talos.extension.enabled=false` Disables the extension without the need to be removed from extensions.xml (might be useful if the extension misbehaves)
+* `talos.performance.enabled=false` Disables server & process performance monitoring (Performance reports in HTML)
+* `talos.quiet=false` The default build behaviour is be reverted (verbose logging), while preserving the build report at the end
+* `talos.verbose=true` The default output highlights the most important aspects of the build; however, additional information can be requested in the terminal in the build report at the end
 * `microfals.progress=false` The progress is disabled, and the build is fully quiet; The only thing displayed on the screen (console) would be the report at the end
-* `microfalx.report.html.enabled=false` The HTML report will not be generated
-* `microfalx.report.logs.enabled=false` The HTML report will not contain the logs
-* `microfalx.report.trend.retention=NNd` The trend report will contain only the last NN days
-* `microfalx.report.open` The HTML report will be open automatically in the browser at the end
-* `microfalx.report.environment.enabled` The terminal will include the environment report at the end
+* `talos.report.html.enabled=false` The HTML report will not be generated
+* `talos.report.logs.enabled=false` The HTML report will not contain the logs
+* `talos.report.trend.retention=NNd` The trend report will contain only the last NN days
+* `talos.report.open` The HTML report will be open automatically in the browser at the end
+* `talos.report.environment.enabled` The terminal will include the environment report at the end
 
 Configuration can be passed using environment variables. The environment variable name is the configuration key in upper case and `.` replaced by `_`.
 
@@ -232,8 +232,8 @@ Configuration can be passed using environment variables. The environment variabl
 
 The extension can store session data, including trends and reports, in a remote file system (object store) using SFTP or S3. This capability is essential when the build environment is not static or when multiple nodes are used to build projects. The following configuration options are available:
 
-* `microfalx.storage.uri`: The URI of the remote file system.
-* `microfalx.storage.username`: The username for accessing the remote file system.
-* `microfalx.storage.password`: The password for accessing the remote file system.
-* `microfalx.storage.s3.bucket`: The S3 bucket designated for storing the data (required for S3).
-* `microfalx.storage.s3.prefix`: An optional prefix (path) to customize where the data is stored.
+* `talos.storage.uri`: The URI of the remote file system.
+* `talos.storage.username`: The username for accessing the remote file system.
+* `talos.storage.password`: The password for accessing the remote file system.
+* `talos.storage.s3.bucket`: The S3 bucket designated for storing the data (required for S3).
+* `talos.storage.s3.prefix`: An optional prefix (path) to customize where the data is stored.

@@ -44,9 +44,9 @@
     </organization>
 
     <scm>
-        <connection>scm:git:https://github.com/adrian-tarau/maven</connection>
-        <developerConnection>scm:git:https://github.com/adrian-tarau/maven</developerConnection>
-        <url>https://github.com/adrian-tarau/maven/tree/main</url>
+        <connection>scm:git:https://github.com/adrian-tarau/talos</connection>
+        <developerConnection>scm:git:https://github.com/adrian-tarau/talos</developerConnection>
+        <url>https://github.com/adrian-tarau/talos/tree/main</url>
     </scm>
 
     <modules>
@@ -63,7 +63,7 @@
 
     <issueManagement>
         <system>github</system>
-        <url>https://github.com/adrian-tarau/maven/issues</url>
+        <url>https://github.com/adrian-tarau/talos/issues</url>
     </issueManagement>
 
     <inceptionYear>2024</inceptionYear>

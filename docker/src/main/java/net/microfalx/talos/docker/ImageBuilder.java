@@ -41,8 +41,8 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ImageBuilder.class.getName());
 
     public static final String DOMAIN_NAME = "microfalx";
-    public static final String GROUP_ID = "net.microfalx.maven";
-    public static final String BOOT_ARTIFACT_ID = "maven-boot";
+    public static final String GROUP_ID = "net.microfalx.talos";
+    public static final String BOOT_ARTIFACT_ID = "talos-boot";
     public static final String BOOT_ARTIFACT_PREFIX = "bootstrap-loader";
 
     private static final String RUN_CMD = "RUN set -eux && ";

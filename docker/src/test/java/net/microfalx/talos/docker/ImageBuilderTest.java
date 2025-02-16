@@ -41,10 +41,10 @@ class ImageBuilderTest {
     @Test
     void app() {
         builder.setBase(false).setImage("base.latest")
-                .setMainClass("net.microfalx.maven.Test");
+                .setMainClass("net.microfalx.talos.Test");
         Assertions.assertThat(builder.buildDescriptor()).doesNotContain("apt-get")
                 .contains("base.latest").contains("COPY")
-                .contains("APP_MAIN_CLASS").contains("net.microfalx.maven.Test");
+                .contains("APP_MAIN_CLASS").contains("net.microfalx.talos.Test");
     }
 
     @Test
@@ -58,7 +58,7 @@ class ImageBuilderTest {
     }
 
     void buildAndTag(String repository) {
-        builder.setMainClass("net.microfalx.maven.Test");
+        builder.setMainClass("net.microfalx.talos.Test");
         if (repository != null) {
             builder.setRepository(repository);
         }
