@@ -85,7 +85,7 @@ Second, after the build completes, a summary report will be logged. This report 
 * The second section (`Tasks`) displays information about Mojos. The name is made out by beautifying the Mojo simple class name and in some cases a bit of some hard-coded mapping.
 * The third section (`Tests`) displays information about executed tests (if enabled) by module.
 
-Additional information can be requested by using `microfalx.verbose=true` option, if needed.
+Additional information can be requested by using `talos.verbose=true` option, if needed.
 
 ![Extension Build Output](docs/images/extension_build_output.png)
 
@@ -165,7 +165,7 @@ Similar to the _Dependencies_ section, the artifacts section shows a list of art
 
 ![Extension HTML Report](docs/images/extension_report_html_artifacts.png)
 
-To visualize all artifacts, you can enable the `microfalx.verbose` option.
+To visualize all artifacts, you can enable the `talos.verbose` option.
 
 #### Plugins
 
@@ -173,7 +173,7 @@ This section displays all plugins used by the project, including their version, 
 
 ![Extension HTML Report](docs/images/extension_report_html_plugins.png)
 
-You can request more information about plugins by using the `microfalx.verbose` option.
+You can request more information about plugins by using the `talos.verbose` option.
 
 #### Extensions
 
@@ -193,7 +193,7 @@ The _tests_ section begins with several charts that provide a summary of the tes
 
 ![Extension HTML Report](docs/images/extension_report_html_tests.png)
 
-This section also includes a list of failed tests organized by module, along with the reasons for their failure. To help visualize all the tests—especially since large projects may have thousands or even tens of thousands of them—you can enable the `microfalx.verbose` option.
+This section also includes a list of failed tests organized by module, along with the reasons for their failure. To help visualize all the tests—especially since large projects may have thousands or even tens of thousands of them—you can enable the `talos.verbose` option.
 
 ![Extension HTML Report](docs/images/extension_report_html_tests2.png)
 

@@ -202,7 +202,7 @@ public class Bootstrap {
      * @return a non-null instance
      */
     static String getSystemProperty(String name) {
-        return System.getProperty("microfalx." + name);
+        return System.getProperty("talos." + name);
     }
 
     /**

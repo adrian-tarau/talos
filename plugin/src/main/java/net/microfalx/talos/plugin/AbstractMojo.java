@@ -39,10 +39,10 @@ public abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo 
     @Parameter(defaultValue = "${project.version}", readonly = true)
     private String projectVersion;
 
-    @Parameter(defaultValue = "false", readonly = true, property = "microfalx.dry_run")
+    @Parameter(defaultValue = "false", readonly = true, property = "talos.dry_run")
     private boolean dryRun;
 
-    @Parameter(defaultValue = "false", readonly = true, property = "microfalx.debug")
+    @Parameter(defaultValue = "false", readonly = true, property = "talos.debug")
     private boolean debug;
 
     @Component

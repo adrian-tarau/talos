@@ -597,7 +597,7 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
 
     private void appendFrom() {
         builder.append("FROM ").append(image).append("\n");
-        appendLabel("net.microfalx.image.base", image);
+        appendLabel("net.microfalx.talos.image.base", image);
     }
 
     private void appendInstallPackages() {

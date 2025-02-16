@@ -105,8 +105,8 @@
                     <outputDirectory>${project.build.outputDirectory}/boot-lib</outputDirectory>
                     <excludeTransitive>false</excludeTransitive>
                     <stripVersion>false</stripVersion>
-                    <includeGroupIds>net.microfalx.maven</includeGroupIds>
-                    <includeArtifactIds>maven-boot</includeArtifactIds>
+                    <includeGroupIds>net.microfalx.talos</includeGroupIds>
+                    <includeArtifactIds>talos-boot</includeArtifactIds>
                 </configuration>
                 <executions>
                     <execution>
@@ -123,7 +123,7 @@
                 <artifactId>maven-plugin-plugin</artifactId>
                 <version>3.15.1</version>
                 <configuration>
-                    <goalPrefix>microfalx</goalPrefix>
+                    <goalPrefix>talos</goalPrefix>
                 </configuration>
                 <executions>
                     <execution>

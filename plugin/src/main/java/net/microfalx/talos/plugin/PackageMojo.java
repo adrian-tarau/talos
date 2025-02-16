@@ -48,7 +48,7 @@ public class PackageMojo extends AbstractMojo {
     @Parameter
     private String libraryNamespaceSeparator = "@";
 
-    @Parameter(defaultValue = "false", readonly = true, property = "microfalx.container.enabled")
+    @Parameter(defaultValue = "false", property = "talos.container.enabled")
     private boolean containerEnabled;
 
     @Parameter(defaultValue = "true")
@@ -156,7 +156,7 @@ public class PackageMojo extends AbstractMojo {
         Resource bootLibDir = ClassPathResource.directory("boot-lib");
         try {
             bootLibDir.walk((root, child) -> {
-                if (child.getFileName().startsWith("maven-boot")) {
+                if (child.getFileName().startsWith("talos-boot")) {
                     bootResource.set(child);
                     return false;
                 } else {
