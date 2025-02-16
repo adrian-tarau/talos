@@ -1,4 +1,4 @@
-package net.microfalx.maven.report;
+package net.microfalx.talos.report;
 
 import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.Resource;

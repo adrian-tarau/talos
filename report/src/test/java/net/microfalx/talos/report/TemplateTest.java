@@ -1,4 +1,4 @@
-package net.microfalx.maven.report;
+package net.microfalx.talos.report;
 
 import net.microfalx.resource.Resource;
 import org.junit.jupiter.api.Test;

@@ -1,9 +1,9 @@
-package net.microfalx.maven.report;
+package net.microfalx.talos.report;
 
-import net.microfalx.maven.model.FailureMetrics;
-import net.microfalx.maven.model.SessionMetrics;
 import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.Resource;
+import net.microfalx.talos.model.FailureMetrics;
+import net.microfalx.talos.model.SessionMetrics;
 
 import java.io.IOException;
 

@@ -1,11 +1,11 @@
-package net.microfalx.maven.report;
+package net.microfalx.talos.report;
 
 import net.microfalx.jvm.ServerMetrics;
 import net.microfalx.jvm.VirtualMachineMetrics;
 import net.microfalx.lang.*;
-import net.microfalx.maven.core.MavenUtils;
-import net.microfalx.maven.model.*;
 import net.microfalx.resource.Resource;
+import net.microfalx.talos.core.MavenUtils;
+import net.microfalx.talos.model.*;
 
 import java.io.IOException;
 import java.time.Duration;

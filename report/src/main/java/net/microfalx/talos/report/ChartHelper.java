@@ -1,13 +1,13 @@
-package net.microfalx.maven.report;
+package net.microfalx.talos.report;
 
 import net.microfalx.jvm.ServerMetrics;
 import net.microfalx.jvm.VirtualMachineMetrics;
 import net.microfalx.lang.Nameable;
 import net.microfalx.lang.NamedIdentityAware;
 import net.microfalx.lang.TimeUtils;
-import net.microfalx.maven.model.*;
 import net.microfalx.metrics.SeriesStore;
 import net.microfalx.metrics.Value;
+import net.microfalx.talos.model.*;
 
 import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;

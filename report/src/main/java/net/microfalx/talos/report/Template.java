@@ -1,9 +1,9 @@
-package net.microfalx.maven.report;
+package net.microfalx.talos.report;
 
 import net.microfalx.lang.Nameable;
 import net.microfalx.lang.StringUtils;
-import net.microfalx.maven.model.SessionMetrics;
 import net.microfalx.resource.Resource;
+import net.microfalx.talos.model.SessionMetrics;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.TemplateSpec;
 import org.thymeleaf.cache.StandardCacheManager;

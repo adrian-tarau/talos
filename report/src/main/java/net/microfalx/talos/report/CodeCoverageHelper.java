@@ -1,6 +1,6 @@
-package net.microfalx.maven.report;
+package net.microfalx.talos.report;
 
-import net.microfalx.maven.model.SessionMetrics;
+import net.microfalx.talos.model.SessionMetrics;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 

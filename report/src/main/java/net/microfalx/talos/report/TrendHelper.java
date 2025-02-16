@@ -1,8 +1,8 @@
-package net.microfalx.maven.report;
+package net.microfalx.talos.report;
 
 import net.microfalx.lang.Identifiable;
-import net.microfalx.maven.model.*;
 import net.microfalx.metrics.SeriesStore;
+import net.microfalx.talos.model.*;
 
 import java.time.ZonedDateTime;
 import java.util.*;

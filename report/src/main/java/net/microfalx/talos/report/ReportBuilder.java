@@ -1,7 +1,7 @@
-package net.microfalx.maven.report;
+package net.microfalx.talos.report;
 
-import net.microfalx.maven.model.SessionMetrics;
 import net.microfalx.resource.Resource;
+import net.microfalx.talos.model.SessionMetrics;
 
 import java.io.IOException;
 import java.util.ArrayList;
