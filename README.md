@@ -226,4 +226,14 @@ The behaviour of the extension can be changed with a few parameters:
 * `microfalx.report.open` The HTML report will be open automatically in the browser at the end
 * `microfalx.report.environment.enabled` The terminal will include the environment report at the end
 
+Configuration can be passed using environment variables. The environment variable name is the configuration key in upper case and `.` replaced by `_`.
 
+### External Storage
+
+The extension can store session data, including trends and reports, in a remote file system (object store) using SFTP or S3. This capability is essential when the build environment is not static or when multiple nodes are used to build projects. The following configuration options are available:
+
+* `microfalx.storage.uri`: The URI of the remote file system.
+* `microfalx.storage.username`: The username for accessing the remote file system.
+* `microfalx.storage.password`: The password for accessing the remote file system.
+* `microfalx.storage.s3.bucket`: The S3 bucket designated for storing the data (required for S3).
+* `microfalx.storage.s3.prefix`: An optional prefix (path) to customize where the data is stored.
