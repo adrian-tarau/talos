@@ -230,7 +230,7 @@ Configuration can be passed using environment variables. The environment variabl
 
 ### External Storage
 
-The extension can store session data, including trends and reports, in a remote file system (object store) using SFTP or S3. This capability is essential when the build environment is not static or when multiple nodes are used to build projects. The following configuration options are available:
+The extension can store session data, including trends and reports, in a remote file system (object store) using SFTP or S3 (self-hosting using [MinIO](https://min.io/)). This capability is essential when the build environment is not static or when multiple nodes are used to build projects. The following configuration options are available:
 
 * `talos.storage.uri`: The URI of the remote file system.
 * `talos.storage.username`: The username for accessing the remote file system.
