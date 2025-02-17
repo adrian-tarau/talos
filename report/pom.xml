@@ -25,12 +25,12 @@
 
     <groupId>net.microfalx.talos</groupId>
     <artifactId>talos-report</artifactId>
-    <version>0.8.3-SNAPSHOT</version>
+    <version>0.8.3</version>
 
     <parent>
         <groupId>net.microfalx.talos</groupId>
         <artifactId>talos</artifactId>
-        <version>0.8.3-SNAPSHOT</version>
+        <version>0.8.3</version>
     </parent>
 
     <name>Talos :: Report</name>
