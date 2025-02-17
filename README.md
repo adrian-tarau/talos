@@ -219,7 +219,7 @@ The behaviour of the extension can be changed with a few parameters:
 * `talos.performance.enabled=false` Disables server & process performance monitoring (Performance reports in HTML)
 * `talos.quiet=false` The default build behaviour is be reverted (verbose logging), while preserving the build report at the end
 * `talos.verbose=true` The default output highlights the most important aspects of the build; however, additional information can be requested in the terminal in the build report at the end
-* `microfals.progress=false` The progress is disabled, and the build is fully quiet; The only thing displayed on the screen (console) would be the report at the end
+* `talos.progress=false` The progress is disabled, and the build is fully quiet; The only thing displayed on the screen (console) would be the report at the end
 * `talos.report.html.enabled=false` The HTML report will not be generated
 * `talos.report.logs.enabled=false` The HTML report will not contain the logs
 * `talos.report.trend.retention=NNd` The trend report will contain only the last NN days
