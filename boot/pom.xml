@@ -25,12 +25,12 @@
 
     <groupId>net.microfalx.talos</groupId>
     <artifactId>talos-boot</artifactId>
-    <version>0.8.3</version>
+    <version>0.8.4-SNAPSHOT</version>
 
     <parent>
         <groupId>net.microfalx.talos</groupId>
 		<artifactId>talos</artifactId>
-		<version>0.8.3</version>
+		<version>0.8.4-SNAPSHOT</version>
     </parent>
 
     <name>Talos :: Boot</name>
