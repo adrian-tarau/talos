@@ -70,7 +70,6 @@ public class MavenTracker {
         try {
             METRICS.time(name, supplier);
         } catch (Exception e) {
-            failures.add(new Failure(name, null, null, e));
             logFailure(name, e);
         }
     }
@@ -79,8 +78,7 @@ public class MavenTracker {
         try {
             return METRICS.timeCallable(name, consumer);
         } catch (Exception e) {
-            failures.add(new Failure(name, project, mojo, e));
-            logFailure(name, e);
+            logFailure(name, e, project, mojo);
             return null;
         }
     }
@@ -89,8 +87,7 @@ public class MavenTracker {
         try {
             METRICS.time(name, t -> consumer.accept(null));
         } catch (Exception e) {
-            failures.add(new Failure(name, project, mojo, e));
-            logFailure(name, e);
+            logFailure(name, e, project, mojo);
         }
     }
 
@@ -99,6 +96,11 @@ public class MavenTracker {
     }
 
     public void logFailure(String name, Throwable throwable) {
+        logFailure(name, throwable, null, null);
+    }
+
+    public void logFailure(String name, Throwable throwable, MavenProject project, Mojo mojo) {
+        failures.add(new Failure(name, project, mojo, throwable));
         String stackTrace = StringUtils.EMPTY_STRING;
         if (throwable != null) stackTrace = ", stack trace\n" + getStackTrace(throwable);
         logger.error("Failed action '{}' in '{}'{}", name, ClassUtils.getName(clazz), stackTrace);

@@ -196,7 +196,7 @@ public class ProfilerMetrics {
         logNameValue("Deploy", formatDuration(getGoalsDuration(DEPLOY_GOALS)), true, SHORT_NAME_LENGTH);
         logNameValue("Extension", formatDuration(tracker.getDuration()), true, SHORT_NAME_LENGTH);
         if (!MavenTracker.getFailures().isEmpty()) {
-            logNameValue("Extension Failures", FormatterUtils.formatNumber(MavenTracker.getFailures()), true, SHORT_NAME_LENGTH);
+            logNameValue("Extension Failures", buffer().failure(FormatterUtils.formatNumber(MavenTracker.getFailures().size())).toString(), false, SHORT_NAME_LENGTH);
         }
         logNameValue("Local Repository", getRepositoryReport(repositoryMetrics), true, SHORT_NAME_LENGTH);
         logNameValue("Remote Repository", getRepositoryReport(transferMetrics), true, SHORT_NAME_LENGTH);
@@ -303,15 +303,37 @@ public class ProfilerMetrics {
 
     private void printFailureSummary() {
         MavenExecutionResult result = session.getResult();
-        if (!result.hasExceptions()) return;
-        LOGGER.info("");
-        infoMain(buffer().failure("Failures") + " (" + result.getExceptions().size() + ")");
-        LOGGER.info("");
-        for (Throwable exception : result.getExceptions()) {
-            logNameValue("Exception Type", ClassUtils.getName(getRootCause(exception)));
-            logNameValue("Exception Message", getRootCauseMessage(exception));
-            if (session.getRequest().isShowErrors()) {
-                logNameValue("Stack Trace", "\n" + insertSpaces(getStackTrace(exception), 5));
+        if (result.hasExceptions()) {
+            LOGGER.info("");
+            infoMain("Failures (" + buffer().failure(result.getExceptions().size()) + ")");
+            LOGGER.info("");
+            for (Throwable exception : result.getExceptions()) {
+                if (result.getProject() != null) {
+                    logNameValue("Project", result.getProject().getName());
+                }
+                logNameValue("Exception Type", ClassUtils.getName(getRootCause(exception)));
+                logNameValue("Exception Message", getRootCauseMessage(exception));
+                if (session.getRequest().isShowErrors()) {
+                    logNameValue("Stack Trace", "\n" + insertSpaces(getStackTrace(exception), 5), false);
+                }
+            }
+        }
+        if (!MavenTracker.getFailures().isEmpty()) {
+            LOGGER.info("");
+            infoMain("Extension Failures (" + buffer().failure(MavenTracker.getFailures().size()) + ")");
+            LOGGER.info("");
+            for (MavenTracker.Failure failure : MavenTracker.getFailures()) {
+                logNameValue("Task", failure.getName());
+                if (failure.getProject() != null) logNameValue("Project", failure.getProject().getName());
+                if (failure.getMojo() != null) logNameValue("Mojo", ClassUtils.getName(failure.getMojo().getClass()));
+                Throwable throwable = failure.getThrowable();
+                if (throwable != null) {
+                    logNameValue("Exception Type", ClassUtils.getName(getRootCause(throwable)));
+                    logNameValue("Exception Message", getRootCauseMessage(throwable));
+                    if (session.getRequest().isShowErrors()) {
+                        logNameValue("Stack Trace", "\n" + insertSpaces(getStackTrace(throwable), 5));
+                    }
+                }
             }
         }
     }

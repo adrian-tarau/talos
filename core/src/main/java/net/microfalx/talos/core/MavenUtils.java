@@ -451,10 +451,13 @@ public class MavenUtils {
     private static final String SECRET_MASK = "*********************";
 
     static {
+        registerName("org.apache.maven.plugins.source.SourceJarNoForkMojo", "Source Code");
         registerName("org.jacoco.maven.AgentMojo", "Jacoco Agent");
         registerName("org.jacoco.maven.ReportMojo", "Jacoco Report");
         registerName("org.apache.maven.plugin.resources.remote.ProcessRemoteResourcesMojo", "Remote Resources");
         registerName("org.apache.maven.plugin.surefire.SurefireMojo", "Unit Tests");
+        registerName("org.apache.maven.plugin.failsafe.VerifyMojo", "Integration Tests");
+        registerName("org.apache.maven.plugins.javadoc.JavadocJarMojo", "JavaDoc");
     }
 
     static {

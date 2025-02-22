@@ -15,10 +15,10 @@
             </tr>
             </thead>
             <tbody>
-                <tr th:each="projectDetails : ${session.getExtensions()}">
-                    <td th:text="${projectDetails.project.groupId}"></td>
-                    <td th:text="${projectDetails.project.artifactId}"></td>
-                    <td th:text="${projectDetails.project.version}"></td>
+                <tr th:each="extension : ${session.getExtensions()}">
+                    <td th:text="${extension.groupId}"></td>
+                    <td th:text="${extension.artifactId}"></td>
+                    <td th:text="${extension.version}"></td>
                 </tr>
             </tbody>
         </table>

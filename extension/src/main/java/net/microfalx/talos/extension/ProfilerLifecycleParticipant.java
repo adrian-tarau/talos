@@ -285,7 +285,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
         try {
             ReportBuilder.create(sessionMetrics).build(resource);
         } catch (Exception e) {
-            LOGGER.error("Failed to generate build report", e);
+            tracker.logFailure("Generate HTML Report", e);
         }
         this.report = configuration.getTargetFile("build.report.html", true);
         if (configuration.isReportConsoleEnabled() && configuration.isVerbose()) {

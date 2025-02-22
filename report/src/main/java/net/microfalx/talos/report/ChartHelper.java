@@ -72,6 +72,7 @@ public class ChartHelper {
     public PieChart<Long> getExtensionEventsPieChart(String id) {
         PieChart<Long> chart = new PieChart<>(id, "Extension Events");
         chart.getLegend().setShow(false);
+        chart.getYaxis().setUnit(Unit.DURATION);
         reportHelper.getExtensionEvents().forEach(event -> chart.add(event.getName(), event.getActiveDuration().toMillis()));
         return chart;
     }
