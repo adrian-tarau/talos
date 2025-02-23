@@ -183,7 +183,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
                 sessionMetrics.setLogs(mavenLogger.getSystemOutput().loadAsString());
             }
         } catch (IOException e) {
-            LOGGER.error("Failed to attach log", e);
+            tracker.logFailure("Attach Logs", e);
         }
         // store trend metrics
         try {
@@ -199,7 +199,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
                 return null;
             });
         } catch (Exception e) {
-            LOGGER.error("Failed to store metrics on disk", e);
+            tracker.logFailure("Store Metrics", e);
         }
 
         // attach all trend metrics to session
@@ -212,7 +212,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
                 sessionMetrics.store(outputStream);
             }
         } catch (Exception e) {
-            LOGGER.error("Failed to store metrics on disk", e);
+            tracker.logFailure("Store Trends", e);
         }
     }
 
@@ -383,7 +383,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
                 }
             }
         } catch (IOException e) {
-            LOGGER.warn("Failed to extract remote trends, root cause: {}", getRootCauseMessage(e));
+            tracker.logFailure("Extract Remote Trends", e);
         }
         return finalTrends;
     }

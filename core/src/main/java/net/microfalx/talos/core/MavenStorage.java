@@ -228,7 +228,7 @@ public class MavenStorage {
                 String s3Prefix = MavenUtils.getProperty(session, "storage.s3.prefix", (String) null);
                 if (isNotEmpty(s3Bucket)) {
                     endpoint = uri;
-                    LOGGER.info("Use S3 bucket '{}', prefix {}", s3Bucket, defaultIfEmpty(s3Prefix, NA_STRING));
+                    LOGGER.info("Use S3 bucket '{}', prefix '{}'", s3Bucket, defaultIfEmpty(s3Prefix, NA_STRING));
                     uri = "s3:/" + removeStartSlash(removeEndSlash(s3Bucket));
                     if (isNotEmpty(s3Prefix)) uri += "/" + removeStartSlash(removeEndSlash(s3Prefix));
                 }
