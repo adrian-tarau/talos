@@ -25,12 +25,12 @@
 
     <groupId>net.microfalx.talos</groupId>
     <artifactId>talos-docker</artifactId>
-    <version>0.8.4</version>
+    <version>0.8.5-SNAPSHOT</version>
 
     <parent>
         <groupId>net.microfalx.talos</groupId>
         <artifactId>talos</artifactId>
-        <version>0.8.4</version>
+        <version>0.8.5-SNAPSHOT</version>
     </parent>
 
     <name>Talos :: Docker</name>

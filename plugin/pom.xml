@@ -25,13 +25,13 @@
 
     <groupId>net.microfalx.talos</groupId>
     <artifactId>talos-maven-plugin</artifactId>
-    <version>0.8.4</version>
+    <version>0.8.5-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <parent>
         <groupId>net.microfalx.talos</groupId>
         <artifactId>talos</artifactId>
-        <version>0.8.4</version>
+        <version>0.8.5-SNAPSHOT</version>
     </parent>
 
     <name>Talos :: Maven :: Plugin</name>
