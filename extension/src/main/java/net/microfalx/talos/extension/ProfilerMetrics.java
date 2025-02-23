@@ -41,7 +41,8 @@ import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.joining;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.ExceptionUtils.*;
+import static net.microfalx.lang.ExceptionUtils.getRootCause;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
 import static net.microfalx.lang.FormatterUtils.formatNumber;
 import static net.microfalx.lang.FormatterUtils.formatPercent;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
@@ -314,7 +315,8 @@ public class ProfilerMetrics {
                 logNameValue("Exception Type", ClassUtils.getName(getRootCause(exception)));
                 logNameValue("Exception Message", getRootCauseMessage(exception));
                 if (session.getRequest().isShowErrors()) {
-                    logNameValue("Stack Trace", "\n" + insertSpaces(getStackTrace(exception), 5), false);
+                    insertSpaces(getStackTrace(exception), 10, true, true, true);
+                    logNameValue("Stack Trace", "\n" + getStackTrace(exception), false);
                 }
             }
         }
@@ -331,7 +333,7 @@ public class ProfilerMetrics {
                     logNameValue("Exception Type", ClassUtils.getName(getRootCause(throwable)));
                     logNameValue("Exception Message", getRootCauseMessage(throwable));
                     if (session.getRequest().isShowErrors()) {
-                        logNameValue("Stack Trace", "\n" + insertSpaces(getStackTrace(throwable), 5));
+                        logNameValue("Stack Trace", "\n" + getStackTrace(throwable), false);
                     }
                 }
             }
@@ -612,11 +614,11 @@ public class ProfilerMetrics {
         return dependencyMetrics.computeIfAbsent(net.microfalx.talos.core.MavenUtils.getId(dependency), k -> new DependencyMetrics(dependency));
     }
 
-    private PluginMetrics getMetrics(Plugin plugin) {
+    PluginMetrics getMetrics(Plugin plugin) {
         return pluginMetrics.computeIfAbsent(net.microfalx.talos.core.MavenUtils.getId(plugin), k -> new PluginMetrics(plugin));
     }
 
-    private ProjectMetrics getMetrics(MavenProject project) {
+    ProjectMetrics getMetrics(MavenProject project) {
         return projectMetrics.computeIfAbsent(net.microfalx.talos.core.MavenUtils.getId(project), k -> new ProjectMetrics(project));
     }
 
@@ -647,6 +649,11 @@ public class ProfilerMetrics {
 
     private boolean shouldShowLineSeparator() {
         return !configuration.isQuietAndWithProgress();
+    }
+
+    private static String getStackTrace(Throwable throwable) {
+        return insertSpaces(insertSpaces(ExceptionUtils.getStackTrace(throwable), 1,
+                true, true, true), 5, true);
     }
 
     private static final String[] COMPILE_GOALS = {"compiler:compile", "compiler:testCompile", "resources:resources", "resources:testResources"};

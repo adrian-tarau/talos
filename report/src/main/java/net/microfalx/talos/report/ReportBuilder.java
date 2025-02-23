@@ -1,5 +1,6 @@
 package net.microfalx.talos.report;
 
+import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.resource.Resource;
 import net.microfalx.talos.model.SessionMetrics;
 
@@ -8,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.StringJoiner;
 
+import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 /**
@@ -16,6 +18,8 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 public class ReportBuilder {
 
     private final SessionMetrics session;
+    private boolean failOnError;
+    private final Collection<Fragment> fragments = new ArrayList<>();
 
     public static ReportBuilder create(SessionMetrics session) {
         return new ReportBuilder(session);
@@ -26,6 +30,25 @@ public class ReportBuilder {
     }
 
     /**
+     * Returns a collection of exceptions encountered during report generation.
+     *
+     * @return a non-null instance
+     */
+    public Collection<Fragment> getFragments() {
+        return unmodifiableCollection(fragments);
+    }
+
+    /**
+     * Changes whether the report build should fail due to an error in one of the fragments.
+     *
+     * @param failOnError <code>true</code> to fail the report on
+     */
+    public ReportBuilder setFailOnError(boolean failOnError) {
+        this.failOnError = failOnError;
+        return this;
+    }
+
+    /**
      * Renders the template for this fragment.
      *
      * @param resource the resource
@@ -33,21 +56,39 @@ public class ReportBuilder {
      */
     public void build(Resource resource) throws IOException {
         requireNonNull(resource);
-        Collection<Fragment> fragments = buildFragments();
-        Template.create("report")
-                .setSession(session).addVariable("fragments", fragments)
-                .render(resource);
+        buildFragments();
+        Template template = Template.create("report").setSession(session);
+        template.addVariable("fragments", fragments);
+        try {
+            template.render(resource);
+        } finally {
+            cleanup();
+        }
     }
 
-    private Collection<Fragment> buildFragments() throws IOException {
-        Collection<Fragment> fragments = new ArrayList<>();
+    private void buildFragments() throws IOException {
         for (Fragment.Type type : Fragment.Type.values()) {
             Fragment fragment = Fragment.create(type);
-            Resource temporary = Resource.temporary("talos_report_" + type.name().toLowerCase() + "_", ".html");
-            FragmentBuilder.create(fragment, session).build(temporary);
             fragments.add(fragment);
+            Resource temporary = Resource.temporary("talos_report_" + type.name().toLowerCase() + "_", ".html");
+            try {
+                FragmentBuilder.create(fragment, session).build(temporary);
+            } catch (Exception e) {
+                if (failOnError) ExceptionUtils.throwException(e);
+            }
         }
-        return fragments;
+    }
+
+    private void cleanup() {
+        for (Fragment fragment : fragments) {
+            if (fragment.getResource() != null) {
+                try {
+                    fragment.getResource().delete();
+                } catch (Exception e) {
+                    // not important
+                }
+            }
+        }
     }
 
     @Override

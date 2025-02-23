@@ -16,6 +16,7 @@ public class Fragment implements Identifiable<String>, Nameable {
     private final String id;
     private final Type type;
     Resource content;
+    Throwable throwable;
 
     public static Fragment create(Type type) {
         return new Fragment(type);
@@ -37,10 +38,29 @@ public class Fragment implements Identifiable<String>, Nameable {
         return EnumUtils.toLabel(type);
     }
 
+    /**
+     * Returns the type of the fragment.
+     *
+     * @return a non-null instance
+     */
     public Type getType() {
         return type;
     }
 
+    /**
+     * Returns the exception raised during fragment rendering.
+     *
+     * @return the exception, null if no exception
+     */
+    public Throwable getThrowable() {
+        return throwable;
+    }
+
+    /**
+     * Returns the icon associated with the fragment.
+     *
+     * @return a non-null string
+     */
     public String getIcon() {
         switch (type) {
             case SUMMARY:

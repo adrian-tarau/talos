@@ -1,5 +1,6 @@
 package net.microfalx.talos.report;
 
+import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.resource.Resource;
 import net.microfalx.talos.model.SessionMetrics;
 
@@ -43,8 +44,13 @@ public class FragmentBuilder {
     public void build(Resource resource) throws IOException {
         requireNonNull(resource);
         String name = fragment.getType().name().toLowerCase();
-        Template.create(name).setSession(session).setSelector(name).render(resource);
         fragment.content = resource;
+        try {
+            Template.create(name).setSession(session).setSelector(name).render(resource);
+        } catch (Exception e) {
+            fragment.throwable = e;
+            ExceptionUtils.throwException(e);
+        }
     }
 
     @Override

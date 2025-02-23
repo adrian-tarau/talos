@@ -89,6 +89,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
             sessionMetrics = new SessionMetrics(session).setStartTime(startTime).setVerbose(configuration.isVerbose());
             profilerMetrics.sessionMetrics = sessionMetrics;
             if (progressListener != null) progressListener.start();
+            readModules(session);
             startTrendsSync(session);
         });
     }
@@ -283,7 +284,10 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
         if (!configuration.isReportHtmlEnabled()) return;
         Resource resource = MavenStorage.getStagingDirectory(session).resolve("build.report.html");
         try {
-            ReportBuilder.create(sessionMetrics).build(resource);
+            ReportBuilder reportBuilder = ReportBuilder.create(sessionMetrics).setFailOnError(false);
+            reportBuilder.build(resource);
+            reportBuilder.getFragments().stream().filter(f -> f.getThrowable() != null)
+                    .forEach(f -> tracker.logFailure("Generate HTML Report / " + f.getName(), f.getThrowable()));
         } catch (Exception e) {
             tracker.logFailure("Generate HTML Report", e);
         }
@@ -406,6 +410,12 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
         } finally {
             remoteTrendsLatch.countDown();
         }
+    }
+
+    private void readModules(MavenSession session) {
+        session.getAllProjects().forEach(project -> {
+            sessionMetrics.addModule(profilerMetrics.getMetrics(project));
+        });
     }
 
     private void startTrendsSync(MavenSession session) {

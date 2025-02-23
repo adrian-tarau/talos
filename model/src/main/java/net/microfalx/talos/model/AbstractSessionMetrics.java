@@ -10,6 +10,7 @@ import com.esotericsoftware.kryo.serializers.VersionFieldSerializer;
 import net.microfalx.jvm.model.Process;
 import net.microfalx.jvm.model.*;
 import net.microfalx.lang.IOUtils;
+import net.microfalx.lang.StringUtils;
 import net.microfalx.metrics.DefaultSeries;
 import net.microfalx.metrics.Metric;
 import net.microfalx.metrics.SeriesMemoryStore;
@@ -17,6 +18,7 @@ import net.microfalx.metrics.Value;
 import net.microfalx.resource.Resource;
 import org.apache.maven.execution.MavenExecutionRequest;
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.project.MavenProject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -130,8 +132,7 @@ public abstract class AbstractSessionMetrics<T extends AbstractSessionMetrics<T>
                 modulesById.put(module.getArtifactId(), module);
             }
         }
-        ProjectMetrics metrics = modulesById.get(id);
-        if (metrics == null) throw new IllegalArgumentException("A module with id " + id + " does not exist");
+        ProjectMetrics metrics = modulesById.computeIfAbsent(id, s -> new ProjectMetrics(createFromModuleId(id)));
         return metrics;
     }
 
@@ -143,14 +144,9 @@ public abstract class AbstractSessionMetrics<T extends AbstractSessionMetrics<T>
         return unmodifiableCollection(modules);
     }
 
-    public void setModules(Collection<ProjectMetrics> modules) {
-        requireNonNull(modules);
-        this.modules.addAll(modules);
-    }
-
     public void addModule(ProjectMetrics module) {
         requireNonNull(module);
-        this.modules.add(module);
+        if (!this.modules.contains(module)) this.modules.add(module);
     }
 
     public Collection<MojoMetrics> getMojos() {
@@ -246,12 +242,21 @@ public abstract class AbstractSessionMetrics<T extends AbstractSessionMetrics<T>
         }
     }
 
-    public static <T extends AbstractSessionMetrics> T load(Resource resource, Class<T> type) throws IOException {
+    private static MavenProject createFromModuleId(String id) {
+        MavenProject project = new MavenProject();
+        project.setName(StringUtils.capitalizeWords(id));
+        project.setGroupId("missing");
+        project.setArtifactId(id);
+        project.setVersion("0.0.1");
+        return project;
+    }
+
+    public static <T extends AbstractSessionMetrics<T>> T load(Resource resource, Class<T> type) throws IOException {
         requireNonNull(resource);
         return load(resource.getInputStream(), type);
     }
 
-    public static <T extends AbstractSessionMetrics> T load(InputStream inputStream, Class<T> type) throws IOException {
+    public static <T extends AbstractSessionMetrics<T>> T load(InputStream inputStream, Class<T> type) throws IOException {
         requireNonNull(inputStream);
         inputStream = IOUtils.getComporessedInputStream(inputStream);
         try (Input input = new Input(inputStream)) {
