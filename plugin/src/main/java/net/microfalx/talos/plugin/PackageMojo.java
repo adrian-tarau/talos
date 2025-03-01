@@ -127,8 +127,8 @@ public class PackageMojo extends AbstractMojo {
 
     private void addLibraries(ImageBuilder builder) throws ArtifactResolutionException, MojoFailureException {
         Set<Artifact> artifacts = getArtifacts();
-        getLog().debug("Process dependency list, " + artifacts.size() + " artifact(s)");
         if (includeModule) artifacts.add(project.getArtifact());
+        getLog().debug("Process dependency list, " + artifacts.size() + " artifact(s)");
         boolean bootAdded = false;
         for (Artifact artifact : artifacts) {
             if (isBoot(artifact)) {
@@ -137,7 +137,12 @@ public class PackageMojo extends AbstractMojo {
             }
             resolve(artifact);
             boolean included = shouldIncludeArtifact(artifact);
-            getLog().debug(" - " + (included ? "Included: " : "Excluded: ") + artifact.getId() + ", scope " + artifact.getScope());
+            String message = " - " + (included ? "Included: " : "Excluded: ") + artifact.getId() + ", scope " + artifact.getScope();
+            if (isDebug()) {
+                getLog().info(message);
+            } else {
+                getLog().debug(message);
+            }
             if (included) {
                 builder.addLibrary(Resource.file(artifact.getFile()), getNamespace(artifact));
             }
@@ -148,7 +153,7 @@ public class PackageMojo extends AbstractMojo {
         }
         String extraInfo = StringUtils.EMPTY_STRING;
         if (includeModule) extraInfo = " (including current module)";
-        getLog().info("Include dependencies (" + builder.getLibraries().size() + " JARs)" + extraInfo);
+        getLog().info("Packaged dependencies (" + builder.getLibraries().size() + " JARs)" + extraInfo);
     }
 
     private Resource getBootArtifact() throws MojoFailureException {
@@ -192,7 +197,7 @@ public class PackageMojo extends AbstractMojo {
     }
 
     private boolean shouldIncludeArtifact(Artifact artifact) {
-        if (!shouldIncludeArtifactByScore(artifact)) return false;
+        if (!shouldIncludeArtifactByScope(artifact)) return false;
         if (includes.isEmpty() && excludes.isEmpty()) return true;
         if (!includes.isEmpty()) {
             PatternIncludesArtifactFilter filter = new PatternIncludesArtifactFilter(new ArrayList<>(includes));
@@ -205,8 +210,8 @@ public class PackageMojo extends AbstractMojo {
         return !"pom".equalsIgnoreCase(artifact.getType());
     }
 
-    private boolean shouldIncludeArtifactByScore(Artifact artifact) {
-        return Artifact.SCOPE_COMPILE.equals(artifact.getScope()) || Artifact.SCOPE_RUNTIME.equals(artifact.getScope());
+    private boolean shouldIncludeArtifactByScope(Artifact artifact) {
+        return artifact.getScope() == null || Artifact.SCOPE_COMPILE.equals(artifact.getScope()) || Artifact.SCOPE_RUNTIME.equals(artifact.getScope());
     }
 
     private String getNamespace(Artifact artifact) {
