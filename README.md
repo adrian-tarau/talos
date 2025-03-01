@@ -1,5 +1,7 @@
 # Talos
 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.microfalx.talos/talos/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/net.microfalx.talos/talos/)
+
 A repository for various Maven plugins and extensions.
 
 ## Plugins
