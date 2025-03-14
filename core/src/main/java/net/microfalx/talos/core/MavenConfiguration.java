@@ -52,7 +52,16 @@ public class MavenConfiguration {
      */
     public final boolean isQuiet() {
         if (quiet == null) quiet = getProperty(session, "quiet", true);
-        return quiet || isMavenQuiet();
+        if (isMavenQuiet()) {
+            return true;
+        } else {
+            Boolean quietOverride = getQuietOverride();
+            if (quietOverride != null) {
+                return quietOverride;
+            } else {
+                return quiet;
+            }
+        }
     }
 
 
@@ -157,6 +166,15 @@ public class MavenConfiguration {
      */
     public Resource getTargetFile(MavenProject project, String name) {
         return Resource.file(validateFileExists(getTargetReference(project, name)));
+    }
+
+    /**
+     * Subclasses can override the quiet mode.
+     *
+     * @return {@code true} to be quiet, {@code false} for verbose, {@code NULL} if there is no override
+     */
+    protected Boolean getQuietOverride() {
+        return null;
     }
 
     private File getTargetReference(String name, boolean topLevel) {

@@ -1,5 +1,6 @@
 package net.microfalx.talos.extension;
 
+import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.TimeUtils;
 import org.apache.maven.execution.MavenSession;
 
@@ -20,6 +21,12 @@ public class MavenConfiguration extends net.microfalx.talos.core.MavenConfigurat
 
     public MavenConfiguration(MavenSession session) {
         super(session);
+        initVerboseGoals();
+    }
+
+    @Override
+    protected Boolean getQuietOverride() {
+        return MavenUtils.isVerboseGoal(getSession().getGoals()) ? false : null;
     }
 
     /**
@@ -120,5 +127,12 @@ public class MavenConfiguration extends net.microfalx.talos.core.MavenConfigurat
      */
     public Boolean isEnvironmentEnabled() {
         return getProperty(getSession(), "report.environment.enabled", false);
+    }
+
+    private void initVerboseGoals() {
+        String[] goals = StringUtils.split(getProperty(getSession(), "verbose.goals", (String) null), ",");
+        for (String goal : goals) {
+            MavenUtils.registerVerboseGoal(goal);
+        }
     }
 }

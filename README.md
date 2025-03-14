@@ -220,6 +220,7 @@ The behaviour of the extension can be changed with a few parameters:
 * `talos.extension.enabled=false` Disables the extension without the need to be removed from extensions.xml (might be useful if the extension misbehaves)
 * `talos.performance.enabled=false` Disables server & process performance monitoring (Performance reports in HTML)
 * `talos.quiet=false` The default build behaviour is be reverted (verbose logging), while preserving the build report at the end
+* `talos.verbose.goals` A collection of goals (regex) which will turn the quiet mode off; the normal Maven output will be displayed since the goal would produce an output that the user needs to see
 * `talos.verbose=true` The default output highlights the most important aspects of the build; however, additional information can be requested in the terminal in the build report at the end
 * `talos.progress=false` The progress is disabled, and the build is fully quiet; The only thing displayed on the screen (console) would be the report at the end
 * `talos.report.html.enabled=false` The HTML report will not be generated
