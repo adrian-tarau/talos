@@ -2,7 +2,9 @@ package net.microfalx.talos.core;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class MavenUtilsTest {
 
@@ -29,8 +31,15 @@ class MavenUtilsTest {
 
     @Test
     void maskSecret() {
-         assertEquals("*********************", MavenUtils.maskSecret("password", "p1"));
-         assertEquals("http://secret.domain/path?q1=1#a", MavenUtils.maskSecret("url", "http://maven.apache.org/path?q1=1#a"));
+        assertEquals("*********************", MavenUtils.maskSecret("password", "p1"));
+        assertEquals("http://secret.domain/path?q1=1#a", MavenUtils.maskSecret("url", "http://maven.apache.org/path?q1=1#a"));
+    }
+
+    @Test
+    void isVerboseGoal() {
+        assertFalse(MavenUtils.isVerboseGoal(Arrays.asList("clean", "install")));
+        assertTrue(MavenUtils.isVerboseGoal(Arrays.asList("dependency:tree")));
+        assertTrue(MavenUtils.isVerboseGoal(Arrays.asList("dependency:aaa")));
     }
 
 }

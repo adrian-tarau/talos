@@ -7,13 +7,8 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
 
 import java.time.Duration;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.regex.Pattern;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.StringUtils.COMMA_WITH_SPACE;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 import static net.microfalx.lang.TimeUtils.NANOSECONDS_IN_MILLISECONDS;
@@ -26,8 +21,6 @@ public class MavenUtils {
     static final int LONG_NAME_LENGTH = 60;
     static final int MEDIUM_NAME_LENGTH = 50;
     static final int SHORT_NAME_LENGTH = 40;
-
-    private static final Set<Pattern> verboseGoals = new HashSet<>();
 
     private static int indent;
 
@@ -117,32 +110,6 @@ public class MavenUtils {
     }
 
     /**
-     * Registers a goal which turns off quiet mode.
-     *
-     * @param goal the goal
-     */
-    public static void registerVerboseGoal(String goal) {
-        requireNotEmpty(goal);
-        verboseGoals.add(Pattern.compile(goal, Pattern.CASE_INSENSITIVE));
-    }
-
-    /**
-     * Returns whether the goal should turn verbose logging.
-     *
-     * @param goals the goals
-     * @return {@code true} if the output should be verbose, <code>false</code> otherwise
-     */
-    public static boolean isVerboseGoal(Collection<String> goals) {
-        requireNotEmpty(goals);
-        for (String goal : goals) {
-            for (Pattern verboseGoal : verboseGoals) {
-                if (verboseGoal.matcher(goal).matches()) return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * Returns the number of spaces to be used in console.
      *
      * @return a non-null instance
@@ -179,12 +146,5 @@ public class MavenUtils {
     }
 
     private static final String[] INDENTS = {"", "  ", "    "};
-
-    static {
-        registerVerboseGoal("dependency:(.*)");
-        registerVerboseGoal("buildplan:(.*");
-        registerVerboseGoal("versions:display-(.*)");
-    }
-
 
 }

@@ -34,6 +34,7 @@ public class MavenConfiguration {
     public MavenConfiguration(MavenSession session) {
         requireNonNull(session);
         this.session = session;
+        initVerboseGoals();
     }
 
     /**
@@ -51,19 +52,20 @@ public class MavenConfiguration {
      * @return {@code true} to disable all logging, {@code false} otherwise
      */
     public final boolean isQuiet() {
-        if (quiet == null) quiet = getProperty(session, "quiet", true);
-        if (isMavenQuiet()) {
-            return true;
-        } else {
-            Boolean quietOverride = getQuietOverride();
-            if (quietOverride != null) {
-                return quietOverride;
+        if (quiet == null) {
+            if (isMavenQuiet()) {
+                quiet = true;
             } else {
-                return quiet;
+                Boolean quietOverride = getQuietOverride();
+                if (quietOverride != null) {
+                    quiet = quietOverride;
+                } else {
+                    quiet = getProperty(session, "quiet", true);
+                }
             }
         }
+        return quiet;
     }
-
 
     /**
      * Returns whether Maven was asked to build without any output.
@@ -82,6 +84,15 @@ public class MavenConfiguration {
     public final boolean isVerbose() {
         if (verbose == null) initVerbose();
         return verbose;
+    }
+
+    /**
+     * Returns whether the goals requested expect the output of Maven to have the usual verbosity.
+     *
+     * @return {@code true} to shaw default Maven logging, {@code false} otherwise
+     */
+    public boolean isVerboseGoals() {
+        return MavenUtils.isVerboseGoal(getSession().getGoals());
     }
 
     /**
@@ -174,7 +185,7 @@ public class MavenConfiguration {
      * @return {@code true} to be quiet, {@code false} for verbose, {@code NULL} if there is no override
      */
     protected Boolean getQuietOverride() {
-        return null;
+        return isVerboseGoals() ? false : null;
     }
 
     private File getTargetReference(String name, boolean topLevel) {
@@ -216,8 +227,12 @@ public class MavenConfiguration {
         if (verbose) verbosityLevel = VERBOSE_ALL;
     }
 
-
-    private void initProgress() {
+    private void initVerboseGoals() {
+        String[] goals = StringUtils.split(getProperty(getSession(), "verbose.goals", (String) null), ",");
+        for (String goal : goals) {
+            MavenUtils.registerVerboseGoal(goal);
+        }
     }
+
 
 }

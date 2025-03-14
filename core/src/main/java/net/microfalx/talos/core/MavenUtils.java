@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -41,6 +42,7 @@ public class MavenUtils {
 
     private static final int DURATION_LENGTH = 9;
     private static final Map<String, String> mojoNames = new ConcurrentHashMap<>();
+    private static final Set<Pattern> verboseGoals = new HashSet<>();
 
     /**
      * Returns whether a known logger to intercept is available.
@@ -342,6 +344,32 @@ public class MavenUtils {
     }
 
     /**
+     * Registers a goal which turns off quiet mode.
+     *
+     * @param goal the goal
+     */
+    public static void registerVerboseGoal(String goal) {
+        requireNotEmpty(goal);
+        verboseGoals.add(Pattern.compile(goal, Pattern.CASE_INSENSITIVE));
+    }
+
+    /**
+     * Returns whether the goal should turn verbose logging.
+     *
+     * @param goals the goals
+     * @return {@code true} if the output should be verbose, <code>false</code> otherwise
+     */
+    public static boolean isVerboseGoal(Collection<String> goals) {
+        requireNotEmpty(goals);
+        for (String goal : goals) {
+            for (Pattern verboseGoal : verboseGoals) {
+                if (verboseGoal.matcher(goal).matches()) return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Registers a name for a Mojo.
      *
      * @param mojoClass the Mojo class.
@@ -458,6 +486,12 @@ public class MavenUtils {
         registerName("org.apache.maven.plugin.surefire.SurefireMojo", "Unit Tests");
         registerName("org.apache.maven.plugin.failsafe.VerifyMojo", "Integration Tests");
         registerName("org.apache.maven.plugins.javadoc.JavadocJarMojo", "JavaDoc");
+    }
+
+    static {
+        registerVerboseGoal("dependency:(.*)");
+        registerVerboseGoal("buildplan:(.*)");
+        registerVerboseGoal("versions:display-(.*)");
     }
 
     static {

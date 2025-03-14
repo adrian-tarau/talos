@@ -49,6 +49,7 @@ import java.util.stream.Collectors;
 import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
 import static net.microfalx.lang.UriUtils.parseUri;
 import static net.microfalx.talos.core.MavenUtils.METRICS;
+import static net.microfalx.talos.core.MavenUtils.isMavenLoggerAvailable;
 
 @Named("microfalx")
 @Singleton
@@ -124,8 +125,9 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
 
     private void initialize(MavenSession session) {
         configuration = new MavenConfiguration(session);
-        LOGGER.info("Initialize performance extension, logger: {}, verbose: {}, quiet: {}, console report: {}, HTML report: {}, progress: {}, performance: {}",
-                MavenUtils.isMavenLoggerAvailable(), configuration.isVerbose(), configuration.isQuiet(),
+        LOGGER.info("Initialize performance extension, logger: {}, verbose: {}, quiet: (extension: {}, Maven: {}), verbose goals: {}, console report: {}, HTML report: {}, progress: {}, performance: {}",
+                isMavenLoggerAvailable(), configuration.isVerbose(),
+                configuration.isQuiet(), configuration.isMavenQuiet(), configuration.isVerboseGoals(),
                 configuration.isReportConsoleEnabled(), configuration.isReportHtmlEnabled(),
                 configuration.isProgress(), configuration.isPerformanceEnabled()
         );
