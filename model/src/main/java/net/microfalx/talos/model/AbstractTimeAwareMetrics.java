@@ -48,14 +48,13 @@ public abstract class AbstractTimeAwareMetrics<T extends AbstractTimeAwareMetric
         if (this.startTime == null) {
             this.startTime = startTime;
         } else {
-            setEndTime(endTime);
+            setEndTime(startTime);
         }
         return self();
     }
 
     public synchronized final ZonedDateTime getEndTime() {
-        if (endTime == null) endTime = ZonedDateTime.now();
-        return endTime;
+        return endTime == null ? ZonedDateTime.now() : endTime;
     }
 
     public synchronized final T setEndTime(ZonedDateTime endTime) {
