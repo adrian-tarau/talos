@@ -231,6 +231,13 @@ The behaviour of the extension can be changed with a few parameters:
 
 Configuration can be passed using environment variables. The environment variable name is the configuration key in upper case and `.` replaced by `_`.
 
+### Verbose Goals
+
+Some Maven plugins are specifically designed to display a textual report related to the project. The extension has several goals (Mojos) registered and will not suppress the standard Maven output. The following goals will automatically disable the quiet mode when using regular expressions: `dependency:(.*)`, `buildplan:(.*)`, and `versions:display-(.*)`.
+
+Additionally, the `talos.verbose.goals` configuration can be used to specify additional goals that will disable quiet mode. Note that these goals will not create any HTML report or track trends.
+
+
 ### External Storage
 
 The extension can store session data, including trends and reports, in a remote file system (object store) using SFTP or S3 (self-hosting using [MinIO](https://min.io/)). This capability is essential when the build environment is not static or when multiple nodes are used to build projects. The following configuration options are available:
