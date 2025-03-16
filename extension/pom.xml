@@ -25,12 +25,12 @@
     <parent>
         <groupId>net.microfalx.talos</groupId>
         <artifactId>talos</artifactId>
-        <version>0.8.5-SNAPSHOT</version>
+        <version>1.0.0</version>
     </parent>
 
     <groupId>net.microfalx.talos</groupId>
     <artifactId>talos-maven-extension</artifactId>
-    <version>0.8.5-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
 
     <name>Talos :: Maven :: Extension</name>
