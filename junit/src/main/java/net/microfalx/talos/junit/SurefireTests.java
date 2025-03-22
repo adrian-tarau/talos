@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -110,7 +111,7 @@ public class SurefireTests {
         if (loaded) return;
         LOGGER.debug("Load surefire test suites");
         for (MavenProject project : session.getProjects()) {
-            SurefireReportParser parser = createParser(session, project);
+            SurefireReportParser parser = createParser(project);
             if (parser == null) continue;
             List<ReportTestSuite> reportTestSuites = parser.parseXMLReportFiles();
             testSuites.put(project, reportTestSuites);
@@ -133,11 +134,20 @@ public class SurefireTests {
         loaded = false;
     }
 
-    private SurefireReportParser createParser(MavenSession session, MavenProject project) {
-        File directory = new File(new File(project.getBuild().getDirectory()), "surefire-reports");
-        LOGGER.debug("Load tests for project {} from {}", project.getName(), directory);
-        if (!directory.exists()) return null;
-        return new SurefireReportParser(List.of(directory), new NullConsoleLogger());
+    private SurefireReportParser createParser(MavenProject project) {
+        List<File> directories = new ArrayList<>();
+        appendDirectory(project, directories, "surefire-reports");
+        appendDirectory(project, directories, "failsafe-reports");
+        if (directories.isEmpty()) return null;
+        return new SurefireReportParser(directories, new NullConsoleLogger());
+    }
+
+    private void appendDirectory(MavenProject project, List<File> directories, String subDirectory) {
+        File directory = new File(new File(project.getBuild().getDirectory()), subDirectory);
+        if (directory.exists()) {
+            LOGGER.info("Load tests for project {} from {}", project.getName(), directory);
+            directories.add(directory);
+        }
     }
 
     private void updateStat(MavenProject project, List<ReportTestSuite> suites) {
