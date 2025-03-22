@@ -360,7 +360,7 @@ public class MavenUtils {
      * @return {@code true} if the output should be verbose, <code>false</code> otherwise
      */
     public static boolean isVerboseGoal(Collection<String> goals) {
-        requireNotEmpty(goals);
+        if (ObjectUtils.isEmpty(goals)) return false;
         for (String goal : goals) {
             for (Pattern verboseGoal : verboseGoals) {
                 if (verboseGoal.matcher(goal).matches()) return true;
