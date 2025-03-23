@@ -22,16 +22,13 @@
 
     <modelVersion>4.0.0</modelVersion>
 
+    <artifactId>talos-maven-extension</artifactId>
+
     <parent>
         <groupId>net.microfalx.talos</groupId>
         <artifactId>talos</artifactId>
-        <version>1.0.1-SNAPSHOT</version>
+        <version>1.0.1</version>
     </parent>
-
-    <groupId>net.microfalx.talos</groupId>
-    <artifactId>talos-maven-extension</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
-    <packaging>jar</packaging>
 
     <name>Talos :: Maven :: Extension</name>
     <description>A Maven extension that tracks performance of Maven builds</description>

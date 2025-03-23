@@ -24,7 +24,7 @@ The parameters are declared as with any Maven plugins, in the <build></build> se
 <plugin>
     <groupId>net.microfalx.talos</groupId>
     <artifactId>talos-maven-plugin</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <executions>
         <execution>
             <id>container</id>
@@ -72,7 +72,7 @@ To use this extension, it must be registered with Maven's extension support. Add
     <extension>
         <groupId>net.microfalx.talos</groupId>
         <artifactId>talos-maven-extension</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.1</version>
     </extension>
 </extensions>
 ```
