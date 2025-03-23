@@ -59,7 +59,7 @@
             <plugin>
                 <groupId>net.microfalx.talos</groupId>
                 <artifactId>talos-maven-plugin</artifactId>
-                <version>${project.version}</version>
+                <version>${talos.version}</version>
                 <executions>
                     <execution>
                         <id>container</id>
