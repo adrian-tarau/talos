@@ -489,6 +489,7 @@ public class MavenUtils {
     }
 
     static {
+        registerVerboseGoal("help:(.*)");
         registerVerboseGoal("dependency:(.*)");
         registerVerboseGoal("buildplan:(.*)");
         registerVerboseGoal("versions:display-(.*)");
