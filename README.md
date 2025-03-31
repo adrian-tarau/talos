@@ -42,6 +42,8 @@ The parameters are declared as with any Maven plugins, in the <build></build> se
 </plugin>
 ```
 
+The `containerEnabled` configuration can be removed to prevent image building during standard builds. The container build can be initiated by setting the system property `talos.container.enabled`.
+
 ## Extension
 
 I have used Maven as my build tool for over 15 years. While it is not perfect, it performs remarkably well for projects ranging from small to highly complex. However, there are a few aspects I wish were different, many of which have been echoed by other developers over the years in the issues they’ve logged.
