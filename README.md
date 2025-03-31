@@ -35,6 +35,7 @@ The parameters are declared as with any Maven plugins, in the <build></build> se
                 <image></image>
                 <repository></repository>
                 <mainClass></mainClass>
+                <containerEnabled>true</containerEnabled>
             </configuration>
         </execution>
     </executions>
