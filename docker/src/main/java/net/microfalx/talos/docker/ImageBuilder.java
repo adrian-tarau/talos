@@ -540,6 +540,10 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
         try {
             LOGGER.info("Tag image '{}' as '{}'", getImageFullName(), getRepositoryImageName());
             client.tag(getImageFullName(), getRepositoryImageName(), true);
+            if (debug) {
+                LOGGER.info("Image '{}' tagged successfully using '{}', log:\n{}", getImageFullName(), client.getHost(),
+                        getLog());
+            }
         } catch (Exception e) {
             throw new ImageException("Failed to tag image '" + imageWithDigest + "' to '" + getRepositoryImageName()
                     + "' using " + client.getHost(), e);
@@ -554,8 +558,8 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
             LOGGER.info("Push image '{}' to '{}'", getRepositoryImageName(), registry.serverAddress());
             client.push(getRepositoryImageName(), dockerLogger, registry);
             success = !dockerLogger.hasErrors();
-            if (debug && success) {
-                LOGGER.info("Image '{}' pushed successfuly to '{}', log:\n{}", getRepositoryImageName(),
+            if (debug) {
+                LOGGER.info("Image '{}' pushed successfully to '{}', log:\n{}", getRepositoryImageName(),
                         registry.serverAddress(), getLog());
             }
         } catch (Exception e) {
