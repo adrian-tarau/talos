@@ -27,6 +27,8 @@ import static java.util.Collections.unmodifiableCollection;
 import static java.util.Collections.unmodifiableMap;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.ExceptionUtils.rethrowException;
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.FileUtils.*;
 import static net.microfalx.lang.IOUtils.*;
 import static net.microfalx.lang.JvmUtils.getTemporaryDirectory;
@@ -588,7 +590,7 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
         try {
             appendStream(getBufferedWriter(new File(workspaceDirectory, "Dockerfile")), new StringReader(descriptor));
         } catch (IOException e) {
-            ExceptionUtils.throwException(e);
+            rethrowException(e);
         }
     }
 
@@ -750,7 +752,7 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
         try {
             return DockerClientBuilder.fromEnv().build();
         } catch (DockerCertificateException e) {
-            return ExceptionUtils.throwException(e);
+            return rethrowExceptionAndReturn(e);
         }
     }
 

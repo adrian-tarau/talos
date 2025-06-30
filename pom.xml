@@ -71,8 +71,8 @@
     <properties>
         <java.version>11</java.version>
         <bom.version>1.0.11</bom.version>
-        <lang.version>1.0.0</lang.version>
-        <resource.version>1.0.0</resource.version>
+        <lang.version>1.0.1-SNAPSHOT</lang.version>
+        <resource.version>1.0.1-SNAPSHOT</resource.version>
         <meters.version>1.0.0</meters.version>
         <jvm.version>1.0.0</jvm.version>
         <talos.version>1.0.1</talos.version>

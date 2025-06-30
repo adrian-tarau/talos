@@ -3,7 +3,6 @@ package net.microfalx.talos.extension;
 import lombok.extern.slf4j.Slf4j;
 import net.microfalx.jvm.model.Server;
 import net.microfalx.jvm.model.VirtualMachine;
-import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.talos.core.MavenLogger;
 import net.microfalx.talos.model.ArtifactMetrics;
@@ -17,6 +16,8 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 
 @Slf4j
 public abstract class AbstractExtensionTestCase {
@@ -38,7 +39,7 @@ public abstract class AbstractExtensionTestCase {
             initMavenLogger();
             return session;
         } catch (MavenExecutionException e) {
-            return ExceptionUtils.throwException(e);
+            return rethrowExceptionAndReturn(e);
         }
     }
 

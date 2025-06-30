@@ -1,6 +1,5 @@
 package net.microfalx.talos.report;
 
-import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.resource.Resource;
 import net.microfalx.talos.model.SessionMetrics;
 
@@ -11,6 +10,7 @@ import java.util.StringJoiner;
 
 import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ExceptionUtils.rethrowException;
 
 /**
  * Builds an HTML report out of metrics of a Maven session.
@@ -74,7 +74,7 @@ public class ReportBuilder {
             try {
                 FragmentBuilder.create(fragment, session).build(temporary);
             } catch (Exception e) {
-                if (failOnError) ExceptionUtils.throwException(e);
+                if (failOnError) rethrowException(e);
             }
         }
     }
