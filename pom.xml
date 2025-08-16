@@ -31,7 +31,7 @@
     <parent>
         <groupId>net.microfalx</groupId>
         <artifactId>pom</artifactId>
-        <version>1.0.8</version>
+        <version>1.0.9</version>
     </parent>
 
     <name>Talos</name>
@@ -70,7 +70,7 @@
 
     <properties>
         <java.version>11</java.version>
-        <bom.version>1.0.13</bom.version>
+        <bom.version>1.0.14</bom.version>
         <lang.version>1.0.1-SNAPSHOT</lang.version>
         <resource.version>1.0.1-SNAPSHOT</resource.version>
         <meters.version>1.0.0</meters.version>
