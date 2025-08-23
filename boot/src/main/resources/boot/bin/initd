@@ -27,6 +27,7 @@ export APP_LIB_SCRIPT=${APP_LIB}/sh
 export APP_LOGS=${APP_HOME}/logs
 export APP_TMP=${APP_HOME}/tmp
 export APP_VAR=${APP_VAR:-"/var${APP_HOME}"}
+export APP_DEBUG=${APP_DEBUG:1}
 
 export APP_MAX_MEMORY=${APP_MAX_MEMORY:-512}
 export APP_MIN_MEMORY=${APP_MIN_MEMORY:-250}
@@ -65,7 +66,7 @@ function getPid {
 function setupBoot {
     APP_BOOT_JAR=$(find "$APP_LIB" -name "microfalx*boot*loader*.jar" | head -n 1)
     APP_BOOT_CP="${APP_CONFIG}:${APP_BOOT_JAR}"
-    APP_BOOT_OPTS+=" -cp $APP_BOOT_CP net.microfalx.boot.Bootstrap ${APP_MAIN_CLASS} $*"
+    APP_BOOT_OPTS+=" -Dtalos.log=${APP_DEBUG} -cp $APP_BOOT_CP net.microfalx.boot.Bootstrap ${APP_MAIN_CLASS} $*"
 }
 
 function setupJvmGc {
@@ -239,7 +240,8 @@ function dumpNative {
 }
 
 function startProcess {
-    log "Prepare application, home '${APP_HOME}'"
+    log "Prepare application, home '${APP_HOME}', debug '${APP_DEBUG}', keep alive '${APP_KEEP_ALIVE}'"
+    showVersion
     # validate settings
     [[ -z $APP_MAIN_CLASS ]] && die "APP_MAIN_CLASS is missing, abort." 1
     # setup the class path boot

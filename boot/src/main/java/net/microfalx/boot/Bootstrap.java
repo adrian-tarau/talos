@@ -214,9 +214,10 @@ public class Bootstrap {
     static boolean getSystemProperty(String name, boolean defaultValue) {
         String value = getSystemProperty(name);
         if (isNotEmpty(value)) {
-            return Boolean.parseBoolean(value);
+            return "1".equals(value) || Boolean.parseBoolean(value);
+        } else {
+            return defaultValue;
         }
-        return defaultValue;
     }
 
     public static void main(String[] args) {
