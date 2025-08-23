@@ -51,6 +51,9 @@ public class PackageMojo extends AbstractMojo {
     @Parameter(defaultValue = "false", property = "talos.container.enabled")
     private boolean containerEnabled;
 
+    @Parameter(defaultValue = "true", property = "talos.container.push")
+    private boolean containerPush = true;
+
     @Parameter(defaultValue = "true")
     private boolean includeModule;
 
@@ -114,7 +117,7 @@ public class PackageMojo extends AbstractMojo {
                 getLog().info("User server secrets for '" + registry.getHostname() + "', username: '" + server.getUsername() + "'");
                 registry = registry.withUser(server.getUsername(), server.getPassword());
             }
-            builder.setRepository(repository).setRegistry(registry);
+            builder.setRepository(repository).setRegistry(registry).setPush(containerPush);
         }
         try {
             addLibraries(builder);

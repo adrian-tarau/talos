@@ -57,6 +57,7 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     private final String tag;
     private String image = "eclipse-temurin:21-jre-jammy";
     private boolean pull = true;
+    private boolean push = true;
     private boolean base;
     private boolean debug;
     private String packages;
@@ -368,6 +369,25 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     }
 
     /**
+     * Returns whether the image should be pushed to the repository.
+     *
+     * @return {@code true} if the image should be pushed, {@code false} otherwise
+     */
+    public boolean isPush() {
+        return push;
+    }
+
+    /**
+     * Changes whether the image should be pushed to the repository.
+     *
+     * @param push {@code true} if the image should be pushed, {@code false} otherwise
+     */
+    public ImageBuilder setPush(boolean push) {
+        this.push = push;
+        return this;
+    }
+
+    /**
      * Returns the maintainer of the image (usually an email address).
      *
      * @return the maintainer, null if not provided.
@@ -553,6 +573,7 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     }
 
     public void push(DockerClient client) {
+        if (!push) return;
         boolean success = true;
         Throwable throwable = null;
         RegistryAuth registry = getRegistryAuth();
