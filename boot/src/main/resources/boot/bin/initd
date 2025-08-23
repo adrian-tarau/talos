@@ -27,7 +27,6 @@ export APP_LIB_SCRIPT=${APP_LIB}/sh
 export APP_LOGS=${APP_HOME}/logs
 export APP_TMP=${APP_HOME}/tmp
 export APP_VAR=${APP_VAR:-"/var${APP_HOME}"}
-export APP_DEBUG=${APP_DEBUG:1}
 
 export APP_MAX_MEMORY=${APP_MAX_MEMORY:-512}
 export APP_MIN_MEMORY=${APP_MIN_MEMORY:-250}
@@ -37,7 +36,7 @@ export APP_GC_THREADS=${APP_GC_THREADS:-4}
 export APP_GC_LOG_ENABLED=${APP_GC_LOG_ENABLED:-0}
 export APP_REMOTE_DEBUG_PORT=${APP_REMOTE_DEBUG_PORT:-0}
 export APP_REMOTE_DEBUG_SUSPEND=${APP_REMOTE_DEBUG_SUSPEND:-"n"}
-export APP_DEBUG_ENABLED=${APP_DEBUG_ENABLED:-0}
+export APP_DEBUG=${APP_DEBUG:1}
 export APP_GC_ZGC=${APP_GC_ZGC:-0}
 
 # Source in application environment
@@ -124,7 +123,7 @@ function setupJvmMisc {
     export APP_JVM_MISC_OPTS=""
     APP_JVM_MISC_OPTS+="-XX:ThreadStackSize=220k"
     APP_JVM_MISC_OPTS+=" -Djava.awt.headless=true -Djava.io.tmpdir=${APP_TMP}"
-    if [[ $APP_DEBUG_ENABLED -eq 1 ]] ; then
+    if [[ $APP_DEBUG -eq 1 ]] ; then
         APP_JVM_MISC_OPTS+=" -XX:NativeMemoryTracking=detail -XX:+UnlockDiagnosticVMOptions"
     fi
     APP_JVM_COMPILER_COUNT=2
@@ -233,8 +232,8 @@ function dumpVmInternals {
 }
 
 function dumpNative {
-    if [[ $APP_DEBUG_ENABLED -ne 1 ]] ; then
-      echo "Displaying native memory requires native memory tracking to be activate. Set APP_DEBUG_ENABLED=1 to active native memory tracking"
+    if [[ $APP_DEBUG -ne 1 ]] ; then
+      echo "Displaying native memory requires native memory tracking to be activate. Set APP_DEBUG=1 to active native memory tracking"
     fi
     callJattach "native" "native" "native memory"
 }
@@ -300,7 +299,7 @@ function showUsage {
   printCommand "heap" "Displays heap information for the running process"
   printCommand "memory" "Dumps heap information (hprof) for the running process"
   printCommand "histogram" "Extracts histogram information (allocated memory per object type) for the running process"
-  printCommand "vm-native" "Extracts native memory allocation for the running process. Native memory allocation needs to be enabled with 'export APP_DEBUG_ENABLED=1'"
+  printCommand "vm-native" "Extracts native memory allocation for the running process. Native memory allocation needs to be enabled with 'export APP_DEBUG=1'"
   printCommand "vm-info" "Extracts a complete set of JVM information for the running process"
   printCommand "vm-struct" "Extracts a collection of internal JVM structures (interned strings, system tables, system dictionary, etc) for the running process"
 }
