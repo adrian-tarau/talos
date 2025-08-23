@@ -122,7 +122,7 @@ public class PackageMojo extends AbstractMojo {
             throw new MojoFailureException("Failed to resolve libraries", e);
         }
         Image dockerImage = builder.build();
-        getLog().info("Image built successfuly, " + dockerImage.getId());
+        getLog().info("Image built successfully, " + dockerImage.getId());
     }
 
     private void addLibraries(ImageBuilder builder) throws ArtifactResolutionException, MojoFailureException {
@@ -130,7 +130,9 @@ public class PackageMojo extends AbstractMojo {
         if (includeModule) artifacts.add(project.getArtifact());
         getLog().debug("Process dependency list, " + artifacts.size() + " artifact(s)");
         boolean bootAdded = false;
-        for (Artifact artifact : artifacts) {
+        List<Artifact> sortedArtifacts = new ArrayList<>(artifacts);
+        sortedArtifacts.sort(Comparator.comparing(Artifact::getId));
+        for (Artifact artifact : sortedArtifacts) {
             if (isBoot(artifact)) {
                 if (!boot) continue;
                 bootAdded = true;
