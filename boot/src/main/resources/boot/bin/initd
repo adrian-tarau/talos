@@ -251,12 +251,12 @@ function startProcess {
     # sum all setting
     export APP_JVM_OPTS="${APP_AGENT} ${APP_REMOTE_DEBUG_OPTS} ${APP_CORE_OPTS} ${JAVA_DEFAULT_OPTS} ${APP_CONFIG_OPTS}"
     JAVA_ARGS="${APP_JVM_OPTS} ${APP_BOOT_OPTS}"
-    JAVA_EXEC="$JAVA_HOME/bin/java"
+    JAVA_EXEC="${JAVA_HOME}/bin/java"
     JAVA_CMD="$JAVA_EXEC $JAVA_ARGS"
     echo $JAVA_CMD > ${APP_LOGS}/boot.cmd.log
     if [[ $APP_DRY_RUN -eq 1 ]] ; then
         echo "Java Command Line:\t\t\t\t '$JAVA_CMD'"
-        EXIT_CODE="0"
+        EXIT_CODE=0
     else
         log "Start JVM"
         exec $JAVA_CMD
@@ -267,6 +267,10 @@ function startProcess {
         _interrupted=0
         trap "_interrupted=1" INT
         while [ $_interrupted -ne 1 ]; do sleep 1; done
+    fi
+    if [[ $EXIT_CODE -ne 0 ]] ; then
+        log "Application terminated with exit code $EXIT_CODE"
+        cat ${APP_LOGS}/boot.log
     fi
     return $EXIT_CODE
 }
