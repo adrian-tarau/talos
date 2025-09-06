@@ -29,11 +29,10 @@ public class Dependency extends NamedIdentityAware<String> {
     public Dependency(String groupId, String artifactId, String version) {
         requireNonNull(groupId);
         requireNonNull(artifactId);
-        requireNonNull(version);
         setId(toIdentifier(groupId + ":" + artifactId));
         this.groupId = groupId;
         this.artifactId = artifactId;
-        this.version = version;
+        this.version = defaultIfEmpty(version, "latest");
     }
 
     public final String getGroupId() {
