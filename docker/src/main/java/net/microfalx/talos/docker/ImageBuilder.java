@@ -772,7 +772,10 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
 
     private DockerClient createClient() {
         try {
-            return DockerClientBuilder.fromEnv().build();
+            DockerClientBuilder clientBuilder = DockerClientBuilder.fromEnv();
+            clientBuilder.connectTimeoutMillis(TimeUtils.TEN_SECONDS)
+                    .readTimeoutMillis(TimeUtils.ONE_MINUTE);
+            return clientBuilder.build();
         } catch (DockerCertificateException e) {
             return rethrowExceptionAndReturn(e);
         }
