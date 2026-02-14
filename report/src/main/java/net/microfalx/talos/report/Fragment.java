@@ -1,12 +1,16 @@
 package net.microfalx.talos.report;
 
-import net.microfalx.lang.*;
+import net.microfalx.lang.EnumUtils;
+import net.microfalx.lang.Identifiable;
+import net.microfalx.lang.Nameable;
+import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.Resource;
 
 import java.io.IOException;
 import java.util.StringJoiner;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 
 /**
  * Identifies a fragment in the report.
@@ -103,7 +107,7 @@ public class Fragment implements Identifiable<String>, Nameable {
             return content.loadAsString();
         } catch (IOException e) {
             return "<div class=\"alert alert-primary\" role=\"alert\">\n" +
-                   "Failed to load fragment " + type + ", root cause: " + ExceptionUtils.getRootCauseMessage(e) +
+                   "Failed to load fragment " + type + ", root cause: " + getRootCauseDescription(e) +
                    "    </div>";
         }
     }

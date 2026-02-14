@@ -14,6 +14,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 
 public class ReportHelper {
 
@@ -282,7 +283,7 @@ public class ReportHelper {
             Resource resource = ansiToHtml.transform(Resource.text(session.getLogs()));
             return resource.loadAsString();
         } catch (IOException e) {
-            return "#ERROR: " + ExceptionUtils.getRootCauseMessage(e);
+            return "#ERROR: " + getRootCauseDescription(e);
         }
     }
 

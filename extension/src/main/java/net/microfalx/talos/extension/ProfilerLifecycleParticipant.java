@@ -46,7 +46,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
-import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 import static net.microfalx.lang.UriUtils.parseUri;
 import static net.microfalx.talos.core.MavenUtils.METRICS;
 import static net.microfalx.talos.core.MavenUtils.isMavenLoggerAvailable;
@@ -328,13 +328,13 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
         try {
             FileUtils.copyDirectory(source, target);
         } catch (IOException e) {
-            LOGGER.error("Failed to copy results to {}, root cause: {}", target, getRootCauseMessage(e));
+            LOGGER.error("Failed to copy results to {}, root cause: {}", target, getRootCauseDescription(e));
         }
         if (remove) {
             try {
                 FileUtils.deleteDirectory(source);
             } catch (IOException e) {
-                LOGGER.error("Failed to remove source {}, root cause: {}", source, getRootCauseMessage(e));
+                LOGGER.error("Failed to remove source {}, root cause: {}", source, getRootCauseDescription(e));
             }
         }
     }
@@ -405,7 +405,7 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
                     successCount++;
                 } catch (IOException e) {
                     failureCount++;
-                    LOGGER.warn("Failed to copy remote trend '{}', root cause: {}", remoteTrend, getRootCauseMessage(e));
+                    LOGGER.warn("Failed to copy remote trend '{}', root cause: {}", remoteTrend, getRootCauseDescription(e));
                 }
             }
             LOGGER.info("Synchronized successfuly {} trends, unsuccessfully {}", successCount, failureCount);

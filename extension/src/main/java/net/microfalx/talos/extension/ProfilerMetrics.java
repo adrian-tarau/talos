@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 import static java.util.stream.Collectors.joining;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ExceptionUtils.getRootCause;
-import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 import static net.microfalx.lang.FormatterUtils.formatNumber;
 import static net.microfalx.lang.FormatterUtils.formatPercent;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
@@ -313,7 +313,7 @@ public class ProfilerMetrics {
                     logNameValue("Project", result.getProject().getName());
                 }
                 logNameValue("Exception Type", ClassUtils.getName(getRootCause(exception)));
-                logNameValue("Exception Message", getRootCauseMessage(exception));
+                logNameValue("Exception Message", getRootCauseDescription(exception));
                 if (session.getRequest().isShowErrors()) {
                     insertSpaces(getStackTrace(exception), 10, true, true, true);
                     logNameValue("Stack Trace", "\n" + getStackTrace(exception), false);
@@ -331,7 +331,7 @@ public class ProfilerMetrics {
                 Throwable throwable = failure.getThrowable();
                 if (throwable != null) {
                     logNameValue("Exception Type", ClassUtils.getName(getRootCause(throwable)));
-                    logNameValue("Exception Message", getRootCauseMessage(throwable));
+                    logNameValue("Exception Message", getRootCauseDescription(throwable));
                     if (session.getRequest().isShowErrors()) {
                         logNameValue("Stack Trace", "\n" + getStackTrace(throwable), false);
                     }

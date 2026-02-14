@@ -22,7 +22,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 
 /**
  * A logger which forwards the logging to a logger and also accumulates the messages
@@ -162,7 +162,7 @@ public class MavenLogger extends AbstractMavenLifecycleParticipant {
             systemErrorPrintStream = new PrintStream(systemErrorResourceStream, true);
             System.setErr(systemErrorPrintStream);
         } catch (IOException e) {
-            warn("Failed to initialize system output stream, root cause: {}", getRootCauseMessage(e));
+            warn("Failed to initialize system output stream, root cause: {}", getRootCauseDescription(e));
         }
     }
 
@@ -185,7 +185,7 @@ public class MavenLogger extends AbstractMavenLifecycleParticipant {
             Object outputChoice = Reflect.onClass("org.slf4j.impl.OutputChoice").create(systemOutputPrintStream).get();
             Reflect.on(config).set("outputChoice", outputChoice);
         } catch (NoClassDefFoundError e) {
-            logger.warn("Failed to initialize logging, root cause: {}", getRootCauseMessage(e));
+            logger.warn("Failed to initialize logging, root cause: {}", getRootCauseDescription(e));
         }
     }
 }

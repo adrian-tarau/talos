@@ -1,7 +1,6 @@
 package net.microfalx.talos.model;
 
 import net.microfalx.lang.ClassUtils;
-import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.NamedIdentityAware;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.talos.core.MavenUtils;
@@ -12,6 +11,7 @@ import java.time.ZonedDateTime;
 import java.util.StringJoiner;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ExceptionUtils.*;
 
 /**
  * Holds metrics about a failure.
@@ -39,9 +39,9 @@ public class FailureMetrics extends NamedIdentityAware<String> {
         if (name == null && project != null) name = project.getName();
 
         throwableClass = ClassUtils.getName(throwable);
-        throwableStacktrace = ExceptionUtils.getStackTrace(throwable);
-        rootCauseThrowableClass = ClassUtils.getName(ExceptionUtils.getRootCause(throwable));
-        rootCauseMessage = ExceptionUtils.getRootCauseMessage(throwable);
+        throwableStacktrace = getStackTrace(throwable);
+        rootCauseThrowableClass = ClassUtils.getName(getRootCause(throwable));
+        rootCauseMessage = getRootCauseDescription(throwable);
 
         setId(StringUtils.toIdentifier(moduleId, mojoId, throwableClass));
         setName(name);
