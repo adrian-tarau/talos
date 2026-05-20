@@ -2,6 +2,7 @@ package net.microfalx.talos.docker;
 
 import net.microfalx.lang.FileUtils;
 import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.Version;
 import net.microfalx.resource.Resource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,7 +20,7 @@ class ImageBuilderTest {
 
     @BeforeEach
     void setup() {
-        builder = new ImageBuilder("microfalx-base")
+        builder = new ImageBuilder("microfalx-base", Version.parse("0.0.1+6"))
                 .setBase(true);
     }
 

@@ -90,7 +90,7 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     }
 
     public ImageBuilder(String name, Version version) {
-        this(name, version.toTag());
+        this(name, version.withBuild(Version.NO_VALUE).toTag());
         this.version = version;
     }
 
