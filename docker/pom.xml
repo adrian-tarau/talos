@@ -63,7 +63,7 @@
         <dependency>
             <groupId>org.mandas</groupId>
             <artifactId>docker-client</artifactId>
-            <version>9.0.0</version>
+            <version>11.0.0</version>
         </dependency>
 
     </dependencies>

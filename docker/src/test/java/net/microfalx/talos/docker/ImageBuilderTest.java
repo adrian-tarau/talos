@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.util.Arrays;
 
+import static net.microfalx.lang.StringUtils.isNotEmpty;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ImageBuilderTest {
@@ -62,6 +63,7 @@ class ImageBuilderTest {
         if (repository != null) {
             builder.setRepository(repository);
         }
+        builder.setPush(isNotEmpty(repository));
         //addLibraries();
         Image image = builder.build();
         assertNotNull(image);

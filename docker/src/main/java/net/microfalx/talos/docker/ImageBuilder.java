@@ -83,7 +83,7 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     private File workspaceDirectory;
     private File stagingDirectory;
 
-    private ProgressHandlerLogger dockerLogger = new ProgressHandlerLogger();
+    private final ProgressHandlerLogger dockerLogger = new ProgressHandlerLogger();
 
     public ImageBuilder(String name) {
         this(name, DEFAULT_TAG);
@@ -794,7 +794,7 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     private Image convert(ImageInfo info) {
         Image.Builder imageBuilder = new Image.Builder(info.id());
         imageBuilder.architecture(info.architecture()).os(info.os())
-                .size(info.size()).virtualSize(info.virtualSize())
+                .size(info.size()).virtualSize(info.size())
                 .createdAt(toLocalDateTime(info.created())).digest(info.id())
                 .author(info.author()).name(getName()).description(info.comment());
         info.config().labels().forEach(imageBuilder::label);
