@@ -644,6 +644,7 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
         environment.put("APP_MAX_MEMORY", "1024");
         environment.put("APP_DEBUG", "false");
         environment.put("APP_KEEP_ALIVE", "false");
+        environment.put("APP_DRY_RUN", "false");
         environment.put("APP_GC_THREADS", "2");
         builder.append("ENV");
         for (Map.Entry<String, String> entry : new TreeMap<>(environment).entrySet()) {
