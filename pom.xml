@@ -43,6 +43,14 @@
         <url>https://github.com/adrian-tarau</url>
     </organization>
 
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
     <scm>
         <connection>scm:git:https://github.com/adrian-tarau/talos</connection>
         <developerConnection>scm:git:https://github.com/adrian-tarau/talos</developerConnection>
