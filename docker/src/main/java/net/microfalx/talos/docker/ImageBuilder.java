@@ -573,7 +573,7 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     }
 
     public void push(DockerClient client) {
-        if (!push) return;
+        if (StringUtils.isEmpty(repository) || !push) return;
         boolean success = true;
         Throwable throwable = null;
         RegistryAuth registry = getRegistryAuth();

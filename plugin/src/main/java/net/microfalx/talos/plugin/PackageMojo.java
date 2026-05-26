@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
+import static net.microfalx.lang.StringUtils.EMPTY_STRING;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 import static org.apache.maven.plugins.annotations.LifecyclePhase.INSTALL;
 import static org.apache.maven.plugins.annotations.ResolutionScope.COMPILE_PLUS_RUNTIME;
@@ -52,7 +53,7 @@ public class PackageMojo extends AbstractMojo {
     private boolean containerEnabled;
 
     @Parameter(defaultValue = "true", property = "talos.container.push")
-    private boolean containerPush = true;
+    private boolean containerPush;
 
     @Parameter(defaultValue = "true")
     private boolean includeModule;
@@ -95,7 +96,9 @@ public class PackageMojo extends AbstractMojo {
         String imageDesc = StringUtils.EMPTY_STRING;
         if (containerEnabled) imageDesc = "image '" + image + "'";
         getLog().info("Package module '" + project.getGroupId() + ":" + project.getArtifactId() + ":" + getVersion()
-                      + "' to " + imageDesc + ", boot '" + boot + "', main class '" + mainClass + "'" + extraDesc);
+                + "' to " + imageDesc + ", boot '" + boot
+                + "', push '" + containerPush + (isNotEmpty(repository) ? "', repository '" + repository : EMPTY_STRING)
+                + "', main class '" + mainClass + "'" + extraDesc);
         if (getLog().isDebugEnabled()) {
             getLog().debug(" - include dependencies: " + includes);
             getLog().debug(" - exclude dependencies: " + excludes);
@@ -108,7 +111,7 @@ public class PackageMojo extends AbstractMojo {
             return;
         }
         ImageBuilder builder = new ImageBuilder(image, getVersion())
-                .setMainClass(mainClass).setBase(boot).setDebug(isDebug())
+                .setMainClass(mainClass).setBase(boot).setDebug(isDebug()).setPush(containerPush)
                 .setLibraryNamespaceSeparator(libraryNamespaceSeparator);
         if (isNotEmpty(repository)) {
             Registry registry = Registry.fromRepository(repository);
