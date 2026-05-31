@@ -90,8 +90,9 @@ function setupJvmGc {
 }
 
 function setupJvmFlags {
+    JAVA_MODULE_ENABLE="--add-modules jdk.incubator.vector"
     JAVA_MODULE_OPENS="${JAVA_MODULE_OPENS:-"--add-opens java.base/jdk.internal.misc=ALL-UNNAMED --add-opens java.base/jdk.internal.loader=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.security=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.util.stream=ALL-UNNAMED --add-opens java.base/javax.net=ALL-UNNAMED --add-opens java.base/javax.net.ssl=ALL-UNNAMED --add-opens java.base/java.util.concurrent=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED --add-opens java.sql/java.sql=ALL-UNNAMED --add-opens java.xml/jdk.xml.internal=ALL-UNNAMED"}"
-    export JAVA_DEFAULT_OPTS="$JAVA_DEFAULT_OPTS $JAVA_MODULE_OPENS"
+    export JAVA_DEFAULT_OPTS="$JAVA_DEFAULT_OPTS $JAVA_MODULE_ENABLE $JAVA_MODULE_OPENS"
 }
 
 function setupJvmMemory {
