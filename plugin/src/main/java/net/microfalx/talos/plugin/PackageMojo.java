@@ -58,6 +58,9 @@ public class PackageMojo extends AbstractMojo {
     @Parameter(defaultValue = "true")
     private boolean includeModule;
 
+    @Parameter(property = "talos.build.number")
+    private Integer buildNumber;
+
     /**
      * A list of dependencies which will be included in the lib directory.
      */
@@ -89,11 +92,11 @@ public class PackageMojo extends AbstractMojo {
     }
 
     private void logConfiguration() {
-        String extraDesc = StringUtils.EMPTY_STRING;
+        String extraDesc = EMPTY_STRING;
         if (isNotEmpty(repository)) {
             extraDesc = ", repository '" + repository + "'";
         }
-        String imageDesc = StringUtils.EMPTY_STRING;
+        String imageDesc = EMPTY_STRING;
         if (containerEnabled) imageDesc = "image '" + image + "'";
         getLog().info("Package module '" + project.getGroupId() + ":" + project.getArtifactId() + ":" + getVersion()
                 + "' to " + imageDesc + ", boot '" + boot
@@ -110,9 +113,11 @@ public class PackageMojo extends AbstractMojo {
             getLog().info("Container support is disabled");
             return;
         }
+        String buildNumber = getBuildNumber(this.buildNumber) + " (" + getBuildHash() + ")";
         ImageBuilder builder = new ImageBuilder(image, getVersion())
                 .setMainClass(mainClass).setBase(boot).setDebug(isDebug()).setPush(containerPush)
-                .setLibraryNamespaceSeparator(libraryNamespaceSeparator);
+                .setLibraryNamespaceSeparator(libraryNamespaceSeparator)
+                .setBuildTime(getBuildTime()).setBuildNumber(buildNumber);
         if (isNotEmpty(repository)) {
             Registry registry = Registry.fromRepository(repository);
             Server server = getServer(registry.getId(), registry.getHostname());
@@ -159,7 +164,7 @@ public class PackageMojo extends AbstractMojo {
         if (!bootAdded) {
             builder.addLibrary(bootArtifact, ImageBuilder.DOMAIN_NAME);
         }
-        String extraInfo = StringUtils.EMPTY_STRING;
+        String extraInfo = EMPTY_STRING;
         if (includeModule) extraInfo = " (including current module)";
         getLog().info("Packaged dependencies (" + builder.getLibraries().size() + " JARs)" + extraInfo);
     }

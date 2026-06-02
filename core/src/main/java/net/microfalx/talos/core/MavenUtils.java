@@ -37,6 +37,13 @@ public class MavenUtils {
 
     private static final String PROPERTY_PREFIX = "talos.";
 
+    public static final String CI_BUILD_NUMBER_PROP = "build.number";
+    public static final String MAVEN_BUILD_TIMESTAMP_PROP = "maven.build.timestamp";
+    public static final String MAVEN_BUILD_TIMESTAMP_PATTERN_PROP = "maven.build.timestamp.format";
+    public static final String MAVEN_BUILD_TIMESTAMP_PATTERN_DEFAULT = "yyyyMMdd-HHmm";
+    public static final String MAVEN_BUILD_NUMBER_PROP = "maven.build.number";
+    public static final String ENV_BUILD_NUMBER_PROP = "BUILD_NUMBER";
+
     public static Metrics METRICS = Metrics.of("Talos");
     public static final String ZERO_DURATION = "~0s";
 
@@ -259,7 +266,7 @@ public class MavenUtils {
      */
     public static String formatMemory(long used, long maximum) {
         return formatBytes(used) + " of " + formatBytes(maximum)
-               + " (" + formatPercent(NumberUtils.percent(used, maximum)) + ")";
+                + " (" + formatPercent(NumberUtils.percent(used, maximum)) + ")";
     }
 
     /**

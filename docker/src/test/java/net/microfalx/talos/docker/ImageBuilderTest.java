@@ -21,6 +21,8 @@ class ImageBuilderTest {
     @BeforeEach
     void setup() {
         builder = new ImageBuilder("microfalx-base", Version.parse("0.0.1+6"))
+                .setBuildTime("2024-06-01T12:00:00Z")
+                .setBuildNumber("123")
                 .setBase(true);
     }
 

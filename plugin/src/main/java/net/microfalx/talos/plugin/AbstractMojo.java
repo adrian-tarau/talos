@@ -1,6 +1,11 @@
 package net.microfalx.talos.plugin;
 
+import com.google.common.primitives.Ints;
+import net.microfalx.lang.ObjectUtils;
+import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.Version;
+import net.microfalx.resource.Resource;
+import net.microfalx.talos.core.MavenStorage;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Plugin;
@@ -13,11 +18,18 @@ import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
 import org.sonatype.plexus.components.sec.dispatcher.SecDispatcherException;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.StringReader;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.IOUtils.appendStream;
+import static net.microfalx.lang.StringUtils.*;
+import static net.microfalx.talos.core.MavenUtils.*;
 
 /**
  * Base class for all Mojos.
@@ -90,9 +102,7 @@ public abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo 
      * @see #getVersion()
      */
     protected final Version getVersion() {
-        // Extract build number from CI-provided property
-        // If CI did not build this, default to 0 to indicate a local build
-        String buildNumber = System.getProperty("build.number", Integer.toString(5 + ThreadLocalRandom.current().nextInt(10)));
+        String buildNumber = System.getProperty(getBuildNumber(), Integer.toString(5 + ThreadLocalRandom.current().nextInt(10)));
         Version version = Version.parse(getVersionAsString());
         version = version.withBuild(Integer.parseInt(buildNumber));
         return version;
@@ -108,12 +118,30 @@ public abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo 
     }
 
     /**
+     * Returns the current project.
+     *
+     * @return a non-null instance
+     */
+    protected final MavenProject getProject() {
+        return project;
+    }
+
+    /**
      * Returns the top project.
      *
      * @return the project
      */
     protected final MavenProject getTopProject() {
         return session.getTopLevelProject();
+    }
+
+    /**
+     * Returns the Maven session.
+     *
+     * @return a non-null instance
+     */
+    protected final MavenSession getSession() {
+        return session;
     }
 
     /**
@@ -178,12 +206,104 @@ public abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo 
     }
 
     /**
+     * Returns the build timestamp as returned by the Maven BuildNumber plugin.
+     * <p>
+     * If the plugin is not enabled, it will be generated.
+     *
+     * @return a non-null instance
+     */
+    protected final String getBuildTime() {
+        String buildTime = (String) getProperty(MAVEN_BUILD_TIMESTAMP_PROP);
+        if (StringUtils.isEmpty(buildTime)) {
+            String timestampPattern = defaultIfEmpty((String) getProperty(MAVEN_BUILD_TIMESTAMP_PATTERN_PROP), MAVEN_BUILD_TIMESTAMP_PATTERN_DEFAULT);
+            buildTime = DateTimeFormatter.ofPattern(timestampPattern).format(LocalDateTime.now());
+        }
+        return buildTime;
+    }
+
+    /**
+     * Returns the build hash (SCM commit) as returned by the Maven BuildNumber plugin.
+     *
+     * @return a non-null instance
+     */
+    protected final String getBuildHash() {
+        return StringUtils.defaultIfEmpty((String) getProperty(MAVEN_BUILD_NUMBER_PROP), "na");
+    }
+
+    /**
+     * Returns the build number for the current session.
+     *
+     * @return the build number as a string
+     */
+    protected final String getBuildNumber() {
+        return getBuildNumber(1);
+    }
+
+    /**
+     * Returns the build number for the current session.
+     *
+     * @return the build number as a string
+     */
+    protected final String getBuildNumber(Integer defaultValue) {
+        if (defaultValue == null) defaultValue = 1;
+        String sessionBuildNumber = StringUtils.trim((String) getSession().getUserProperties().get(CI_BUILD_NUMBER_PROP));
+        if (isNotEmpty(sessionBuildNumber)) return sessionBuildNumber;
+        String ciBuildNumber = defaultIfEmpty(getProject().getProperties().getProperty(CI_BUILD_NUMBER_PROP),
+                getTopProject().getProperties().getProperty(CI_BUILD_NUMBER_PROP));
+        ciBuildNumber = defaultIfEmpty(ciBuildNumber, System.getenv(CI_BUILD_NUMBER_PROP));
+        sessionBuildNumber = emptyIfNull(ciBuildNumber);
+        if (isEmpty(sessionBuildNumber)) {
+            sessionBuildNumber = getBuildNumber(getTopProject().getArtifact(), defaultValue);
+        }
+        getSession().getUserProperties().put(CI_BUILD_NUMBER_PROP, sessionBuildNumber);
+        return sessionBuildNumber;
+    }
+
+    /**
+     * Returns the build number associated with an artifact.
+     *
+     * @param artifact the artifact
+     * @return a positive integer
+     */
+    protected final String getBuildNumber(Artifact artifact, int defaultValue) {
+        Resource buildNumbers = MavenStorage.getConfigurationDirectory().resolve("build_number", Resource.Type.DIRECTORY);
+        Resource versionResource = buildNumbers.resolve(toIdentifier(artifact.getGroupId() + "_" + artifact.getArtifactId()));
+        int version = defaultValue - 1;
+        try {
+            if (versionResource.exists()) {
+                Integer storedVersion = Ints.tryParse(emptyIfNull(versionResource.loadAsString().trim()));
+                if (storedVersion != null) {
+                    version = storedVersion + 1;
+                }
+            }
+            appendStream(versionResource.getWriter(), new StringReader(Integer.toString(version)));
+        } catch (IOException e) {
+            getLog().warn("Failed to extract build number from artifact " + artifact, e);
+        }
+        return Integer.toString(Math.max(1, version));
+    }
+
+    /**
      * Returns the artifacts available to the project (module).
      *
      * @return a non-null set
      */
     protected final Set<Artifact> getArtifacts() {
         return project.getArtifacts();
+    }
+
+    /**
+     * Returns the property value by looking up into various project and session properties.
+     *
+     * @param name the property name
+     * @return the value
+     */
+    protected final Object getProperty(String name) {
+        Object value = getProject().getProperties().getProperty(name);
+        if (ObjectUtils.isEmpty(value)) value = getTopProject().getProperties().getProperty(name);
+        if (ObjectUtils.isEmpty(value)) value = getSession().getUserProperties().getProperty(name);
+        if (ObjectUtils.isEmpty(value)) value = System.getProperty(name);
+        return value;
     }
 
 }

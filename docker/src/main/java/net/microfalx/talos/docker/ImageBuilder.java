@@ -69,6 +69,8 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     private final Map<Resource, String> libraryNamespaces = new HashMap<>();
     private String libraryNamespaceSeparator = "@";
     private Version version = Version.parse("0.0.1");
+    private String buildTime;
+    private String buildNumber;
     private String repository;
     private Registry registry = Registry.create();
 
@@ -187,6 +189,28 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     public ImageBuilder setUser(String user) {
         requireNotEmpty(user);
         this.appUser = user;
+        return this;
+    }
+
+    /**
+     * Adds a build time to the image.
+     *
+     * @param buildTime the build time
+     * @return self
+     */
+    public ImageBuilder setBuildTime(String buildTime) {
+        this.buildTime = buildTime;
+        return this;
+    }
+
+    /**
+     * Adds a build number to the image.
+     *
+     * @param buildNumber the build number
+     * @return a non-null instance
+     */
+    public ImageBuilder setBuildNumber(String buildNumber) {
+        this.buildNumber = buildNumber;
         return this;
     }
 
@@ -498,6 +522,7 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
      * @return a non-null instance
      */
     public String buildDescriptor() {
+        initialize();
         builder.setLength(0);
         initStagingArea();
         appendFrom();
@@ -530,7 +555,7 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
             try {
                 id = client.build(workspaceDirectory.toPath(), getImageFullName(), dockerLogger, getBuildOptions());
                 if (debug) {
-                    LOGGER.info("Image '{}' built successfuly using '{}', log:\n{}", getImageFullName(), client.getHost(),
+                    LOGGER.info("Image '{}' built successfully using '{}', log:\n{}", getImageFullName(), client.getHost(),
                             getLog());
                 }
             } catch (Exception e) {
@@ -587,7 +612,6 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
             }
         } catch (Exception e) {
             throwable = e;
-
         }
         if (!success || throwable != null) {
             throw new ImageException("Failed to push image '" + getRepositoryImageName() + "' to " + registry.serverAddress()
@@ -640,7 +664,6 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     }
 
     private void appendEnvironment() {
-        environment.put("APP_BUILD_TIME", LocalDateTime.now().withNano(0).withSecond(0).toString());
         environment.put("APP_MAX_MEMORY", "1024");
         environment.put("APP_DEBUG", "false");
         environment.put("APP_KEEP_ALIVE", "false");
@@ -677,7 +700,11 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
     }
 
     private void appendAppEnv() {
-        if (isNotEmpty(mainClass)) appendEnvironment("APP_MAIN_CLASS", mainClass);
+        if (isNotEmpty(mainClass)) {
+            appendEnvironment("APP_MAIN_CLASS", mainClass);
+            appendEnvironment("APP_VERSION", version.toString());
+        }
+        appendEnvironment("APP_BUILD_INFO", buildNumber + " / " + buildTime);
     }
 
     private void appendEntryPoint() {
@@ -704,6 +731,8 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
 
     private void appendAppMetadata() throws IOException {
         write(".version", version.toString());
+        if (isNotEmpty(buildTime)) write(".build-time", buildTime);
+        if (isNotEmpty(buildNumber)) write(".build-number", buildNumber);
     }
 
     private void appendAppLibs() throws IOException {
@@ -822,6 +851,15 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
         return TextUtils.insertSpaces(output, 5, true, true, true);
     }
 
+    private void initialize() {
+        if (isEmpty(buildTime)) {
+            buildTime = LocalDateTime.now().withNano(0).withSecond(0).toString();
+        }
+        if (isEmpty(buildNumber)) {
+            buildNumber = "1";
+        }
+    }
+
     private static class ProgressHandlerLogger implements ProgressHandler {
 
         private final StringBuilder logger = new StringBuilder();
@@ -837,7 +875,7 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
         }
 
         private boolean hasErrors() {
-            return StringUtils.isNotEmpty(lastError);
+            return isNotEmpty(lastError);
         }
 
         @Override

@@ -39,6 +39,7 @@ public class MavenStorage {
 
     private static final String TRENDS_DIRECTORY_NAME = "trends";
     private static final String SESSIONS_DIRECTORY_NAME = "sessions";
+    private static final String CONFIG_DIRECTORY_NAME = "config";
     private static final String STAGING_DIRECTORY_NAME = "staging";
 
     private static Resource storageDirectory;
@@ -63,6 +64,15 @@ public class MavenStorage {
             storageDirectory = Resource.directory(validateDirectoryExists(directory));
         }
         return storageDirectory;
+    }
+
+    /**
+     * Returns the directory to store configurations.
+     *
+     * @return a non-null instance
+     */
+    public static synchronized Resource getConfigurationDirectory() {
+        return getStorageDirectory().resolve(CONFIG_DIRECTORY_NAME, DIRECTORY);
     }
 
     /**
