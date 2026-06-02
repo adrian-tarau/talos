@@ -704,7 +704,8 @@ public final class ImageBuilder extends NamedIdentityAware<String> {
             appendEnvironment("APP_MAIN_CLASS", mainClass);
             appendEnvironment("APP_VERSION", version.toString());
         }
-        appendEnvironment("APP_BUILD_INFO", buildNumber + " / " + buildTime);
+        appendEnvironment("APP_BUILD_NUMBER", buildNumber);
+        appendEnvironment("APP_BUILD_TIME", buildTime);
     }
 
     private void appendEntryPoint() {

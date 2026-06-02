@@ -113,7 +113,7 @@ public class PackageMojo extends AbstractMojo {
             getLog().info("Container support is disabled");
             return;
         }
-        String buildNumber = getBuildNumber(this.buildNumber) + " (" + getBuildHash() + ")";
+        String buildNumber = getBuildNumber(this.buildNumber) + " / " + getBuildHash();
         ImageBuilder builder = new ImageBuilder(image, getVersion())
                 .setMainClass(mainClass).setBase(boot).setDebug(isDebug()).setPush(containerPush)
                 .setLibraryNamespaceSeparator(libraryNamespaceSeparator)
