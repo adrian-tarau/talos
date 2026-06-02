@@ -6,6 +6,7 @@ import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.Version;
 import net.microfalx.resource.Resource;
 import net.microfalx.talos.core.MavenStorage;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Plugin;
@@ -104,7 +105,9 @@ public abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo 
     protected final Version getVersion() {
         String buildNumber = System.getProperty(getBuildNumber(), Integer.toString(5 + ThreadLocalRandom.current().nextInt(10)));
         Version version = Version.parse(getVersionAsString());
-        version = version.withBuild(Integer.parseInt(buildNumber));
+        if (NumberUtils.isDigits(buildNumber)) {
+            version = version.withBuild(Integer.parseInt(buildNumber));
+        }
         return version;
     }
 

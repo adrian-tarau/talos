@@ -164,9 +164,9 @@ function setupDirectories {
 # Print process version
 function showVersion {
     VERSION=`cat ${APP_HOME}/.version`
-    BUILD_NUMBER = `cat ${APP_HOME}/.build-number`
-    BUILD_TIME = `cat ${APP_HOME}/.build-time`
-    echo "\nApplication version: '$VERSION', build: '$BUILD_NUMBER', build time: '$BUILD_TIME'\n"
+    BUILD_NUMBER=`cat ${APP_HOME}/.build-number`
+    BUILD_TIME=`cat ${APP_HOME}/.build-time`
+    echo -e "\nApplication version: '$VERSION', build: '$BUILD_NUMBER', build time: '$BUILD_TIME'\n"
 }
 
 function profile {
