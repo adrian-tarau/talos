@@ -348,7 +348,9 @@ public class ProfilerLifecycleParticipant extends AbstractMavenLifecycleParticip
             Collection<Resource> resources = MavenStorage.getLocalTrends(session);
             LocalDate prevDate = null;
             for (Resource resource : resources) {
+                if (!ResourceUtils.exists(resource)) continue;
                 LocalDateTime lastModified = TimeUtils.toLocalDateTime(resource.lastModified());
+                if (lastModified == null) continue;
                 LocalDate date = lastModified.toLocalDate();
                 if (lastModified.isAfter(oldestTrend)) {
                     if (!trendReportingDaily || (prevDate == null || !prevDate.equals(date))) {
